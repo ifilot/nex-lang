@@ -1,0 +1,76 @@
+# NEX
+
+`nex` is a small experimental programming language implemented in Python.
+
+The project currently includes:
+
+- a lexer
+- a recursive-descent parser
+- a tree-walking interpreter
+- a small CLI runner
+
+## Example
+
+```nex
+var x = 0;
+while(x < 10) {
+    print(x);
+    x = x + 1;
+}
+```
+
+## Installation
+
+Install the package in editable mode:
+
+```bash
+python -m pip install -e .
+```
+
+Install development dependencies as well:
+
+```bash
+python -m pip install -e ".[dev]"
+```
+
+## Running Programs
+
+The package exposes a `nex` command:
+
+```bash
+nex examples/hello.nex
+```
+
+You can also run the CLI module directly:
+
+```bash
+python -m nex.cli examples/hello.nex
+```
+
+## Testing
+
+Run the test suite with:
+
+```bash
+python -m pytest -q tests
+```
+
+Using `python -m pytest` is the most reliable form across environments and editors.
+
+## Project Structure
+
+```text
+nex/
+  lexer/         Tokenization
+  parser/        Recursive-descent parser
+  interpreter/   AST nodes, environment, and interpreter
+  cli.py         Command-line entry point
+tests/           Unit tests
+examples/        Example programs
+```
+
+## Current Status
+
+This is an early interpreter project and the language is still evolving. The
+syntax is intentionally simple and currently leans toward a small C-like
+language.
