@@ -75,7 +75,7 @@ class Interpreter:
 
     def exec_If(self, node):
         """
-        Evaluate If statement
+        Evaluate If statement.
         """
         val = self.eval(node.condition)
         if val:
@@ -85,16 +85,10 @@ class Interpreter:
     
     def exec_While(self, node):
         """
-        Evaluate While statements. The while block also results in scoping, but
-        that scoping is only applied once for the whole While block.
+        Evaluate While statements.
         """
-        self.env.push()
-        try:
-            while self.eval(node.condition):
-                for stmt in node.body:
-                    self.exec(stmt)
-        finally:
-            self.env.pop()
+        while self.eval(node.condition):
+            self.exec(node.body)
 
     # -------------------------------------------------------------------------
     # EXPRESSION EVALUATION
