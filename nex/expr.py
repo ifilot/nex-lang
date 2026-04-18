@@ -1,5 +1,16 @@
 from dataclasses import dataclass
 
+# Design choice: AST nodes (including expressions) are immutable.
+#
+# Expressions represent the syntactic structure of the program and are
+# treated as read-only data. This prevents accidental mutation during
+# interpretation and enforces a clear separation between:
+#   - program structure (AST, immutable)
+#   - program state (environment, mutable)
+#
+# Any transformation of the AST should produce new nodes rather than
+# modifying existing ones.
+
 class Expr:
     """
     Base class for expressions. Expressions are constructs that eventually evaluate
@@ -17,7 +28,7 @@ class Literal(Expr):
     def __repr__(self):
         return f"{self.value}"
 
-@dataclass
+@dataclass(frozen=True)
 class Unary(Expr):
     """
     An expression that applies a single operator to one sub-expression to
@@ -29,7 +40,7 @@ class Unary(Expr):
     def __repr__(self):
         return f"({self.op}{self.expr})"
     
-@dataclass
+@dataclass(frozen=True)
 class Binary(Expr):
     """
     An expression that applies a binary operator to two sub-expressions to
@@ -42,7 +53,7 @@ class Binary(Expr):
     def __repr__(self):
         return f"({self.left} {self.op} {self.right})"
 
-@dataclass
+@dataclass(frozen=True)
 class Variable(Expr):
     """
     An expression that refers to a variable by name and evaluates to the value
