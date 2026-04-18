@@ -11,6 +11,7 @@ class TokenType(Enum):
     STAR = auto()
     SLASH = auto()
     LT = auto()
+    GT = auto()
     EQ = auto()
 
     # punctuation

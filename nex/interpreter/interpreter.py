@@ -144,6 +144,8 @@ class Interpreter:
         ops = {
             '+': lambda l, r: l + r,
             '-': lambda l, r: l - r,
+            '*': lambda l, r: l * r,
+            '/': lambda l, r: l / r,
             '<': lambda l, r: l < r,
             '>': lambda l, r: l > r,
             '>=': lambda l, r: l >= r,
