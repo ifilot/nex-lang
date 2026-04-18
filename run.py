@@ -1,32 +1,14 @@
 from nex import *
 
-program = Program((
-    VarDecl("x", Unary('-', Literal(5))),
-    Assign("x", Binary(Variable("x"), "+", Literal(1))),
-    Print(Variable("x")),
-    While(Binary(Variable("x"), "<", Literal(10)), 
-          Block([
-              Print(Variable("x")),
-              Assign("x", Binary(Variable("x"), "+", Literal(1)))
-          ])),
-    Print(Variable("x")),
-    If(Binary(Variable("x"), "<", Literal(5)),
-       Block([Print(Literal("x < 5"))]),
-       Block([Print(Literal("x >= 5"))]),
-    ),
-    Print(Variable("x")),
-    If(Binary(Variable("x"), ">=", Literal(10)),
-       Block([
-           VarDecl("x", Literal(0)),
-           Print(Variable("x")),
-        ]),
-       Block([Print(Literal("x < 10"))]),
-    ),
-    Print(Variable("x")),
-))
+with open("examples/hello.nex") as f:
+    source = f.read()
+    lexer = Lexer(source)
+    tokens = lexer.tokenize()
+    for token in tokens:
+        print(token.type)
+    
+    parser = Parser(tokens)
+    program = parser.parse()
 
-pp = PrettyPrinter()
-print(pp.print_program(program))
-
-inptr = Interpreter()
-inptr.run(program)
+    inptr = Interpreter()
+    inptr.run(program)
