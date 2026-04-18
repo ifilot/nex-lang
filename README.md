@@ -1,6 +1,10 @@
 # NEX
 
-`nex` is a small experimental programming language implemented in Python.
+[![Unit Tests](https://github.com/ifilot/nex-lang/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/ifilot/nex-lang/actions/workflows/unit-tests.yml)
+
+`NEX` is a small experimental programming language implemented in Python.
+
+![Nex logo](img/nex-lang-logo-256.png)
 
 The project currently includes:
 
