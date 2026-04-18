@@ -24,6 +24,7 @@ class TokenType(Enum):
     # keywords
     VAR = auto()
     IF = auto()
+    ELSE = auto()
     WHILE = auto()
     PRINT = auto()
 
