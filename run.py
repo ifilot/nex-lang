@@ -16,9 +16,13 @@ program = Program((
     ),
     Print(Variable("x")),
     If(Binary(Variable("x"), ">=", Literal(10)),
-       Block([Print(Literal("x >= 10"))]),
+       Block([
+           VarDecl("x", Literal(0)),
+           Print(Variable("x")),
+        ]),
        Block([Print(Literal("x < 10"))]),
     ),
+    Print(Variable("x")),
 ))
 
 pp = PrettyPrinter()

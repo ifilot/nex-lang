@@ -53,14 +53,30 @@ class Interpreter:
         self.env.assign(node.name, val)
 
     def exec_Print(self, node):
+        """
+        Built-in print function that outputs the result of an expression to the
+        screen
+        """
         val = self.eval(node.expr)
         print(val)
 
     def exec_Block(self, node):
-        for stmt in node:
-            self.exec(stmt)
+        """
+        Evaluate a block statement. Blocks result in scoping and variables
+        declared inside a block statement shadow variables defined in a higher
+        scope.
+        """
+        self.env.push()
+        try:
+            for stmt in node:
+                self.exec(stmt)
+        finally:
+            self.env.pop()
 
     def exec_If(self, node):
+        """
+        Evaluate If statement
+        """
         val = self.eval(node.condition)
         if val:
             self.exec(node.then_branch)
@@ -68,8 +84,17 @@ class Interpreter:
             self.exec(node.else_branch)
     
     def exec_While(self, node):
-        while self.eval(node.condition):
-            self.exec(node.body)
+        """
+        Evaluate While statements. The while block also results in scoping, but
+        that scoping is only applied once for the whole While block.
+        """
+        self.env.push()
+        try:
+            while self.eval(node.condition):
+                for stmt in node.body:
+                    self.exec(stmt)
+        finally:
+            self.env.pop()
 
     # -------------------------------------------------------------------------
     # EXPRESSION EVALUATION

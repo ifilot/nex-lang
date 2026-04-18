@@ -6,26 +6,41 @@ class Environment:
         """
         Default initializer (empty dictionary)
         """
-        self.values = {}
+        self.values = [{}]
+
+    def push(self):
+        """
+        Push a new environment onto the stack
+        """
+        self.values.append({})
+
+    def pop(self):
+        """
+        Pop an environment from the stack
+        """
+        self.values.pop()
 
     def declare(self, name, value):
         """
         Declare a new variable
         """
-        self.values[name] = value
+        self.values[-1][name] = value
 
     def assign(self, name, value):
         """
         Assign a value to a variable
         """
-        if name not in self.values:
-            raise NameError(f"Undefined variable '{name}'")
-        self.values[name] = value
+        for env in reversed(self.values):
+            if name in env:
+                env[name] = value
+                return
+        raise NameError(f"Undefined variable '{name}'")
 
     def lookup(self, name):
         """
         Look up the value associated to a variable
         """
-        if name not in self.values:
-            raise NameError(f"Undefined variable '{name}'")
-        return self.values[name]
+        for env in reversed(self.values):
+            if name in env:
+                return env[name]
+        raise NameError(f"Undefined variable '{name}'")
