@@ -60,3 +60,6 @@ class Variable(Expr):
     currently bound to that name in the environment.
     """
     name: str
+
+    def __repr__(self):
+        return self.name

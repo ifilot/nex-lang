@@ -33,6 +33,12 @@ class PrettyPrinter:
             lines.extend(self.print(child, prefix, index == len(children) - 1))
         return lines
 
+    def _render_labeled_child(self, label, child, prefix, is_last):
+        lines = [self._branch(prefix, is_last, label)]
+        child_prefix = self._child_prefix(prefix, is_last)
+        lines.extend(self.print(child, child_prefix, True))
+        return lines
+
     def print_Literal(self, node, prefix="", is_last=True):
         return [self._branch(prefix, is_last, f"Literal({node!r})")]
 
@@ -67,4 +73,36 @@ class PrettyPrinter:
         lines = [self._branch(prefix, is_last, "Print")]
         child_prefix = self._child_prefix(prefix, is_last)
         lines.extend(self.print(node.expr, child_prefix, True))
+        return lines
+
+    def print_Block(self, node, prefix="", is_last=True):
+        lines = [self._branch(prefix, is_last, "Block")]
+        child_prefix = self._child_prefix(prefix, is_last)
+        lines.extend(self._render_children(list(node), child_prefix))
+        return lines
+
+    def print_If(self, node, prefix="", is_last=True):
+        lines = [self._branch(prefix, is_last, "If")]
+        child_prefix = self._child_prefix(prefix, is_last)
+        children = [
+            ("Condition", node.condition),
+            ("Then", node.then_branch),
+        ]
+
+        if node.else_branch is not None:
+            children.append(("Else", node.else_branch))
+
+        for index, (label, child) in enumerate(children):
+            lines.extend(
+                self._render_labeled_child(
+                    label, child, child_prefix, index == len(children) - 1
+                )
+            )
+        return lines
+
+    def print_While(self, node, prefix="", is_last=True):
+        lines = [self._branch(prefix, is_last, "While")]
+        child_prefix = self._child_prefix(prefix, is_last)
+        lines.extend(self._render_labeled_child("Condition", node.condition, child_prefix, False))
+        lines.extend(self._render_labeled_child("Body", node.body, child_prefix, True))
         return lines

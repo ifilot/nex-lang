@@ -47,3 +47,32 @@ class Print(Stmt):
     Built-in function for printing expressions
     """
     expr: Expr
+
+@dataclass(frozen=True)
+class Block(Stmt):
+    """
+    Block statement, contains a set of statements.
+    """
+    statements: tuple[Stmt, ...]
+
+    def __iter__(self):
+        return iter(self.statements)
+    
+@dataclass(frozen=True)
+class If(Stmt):
+    """
+    If statement. If the condition is true, execute then_branch, else execute
+    the else_branch.
+    """
+    condition: Expr
+    then_branch: Stmt
+    else_branch: Stmt | None
+
+@dataclass(frozen=True)
+class While(Stmt):
+    """
+    While statement. While the condition evaluates to true, keep on executing
+    the body statement.
+    """
+    condition: Expr
+    body: Stmt

@@ -56,6 +56,21 @@ class Interpreter:
         val = self.eval(node.expr)
         print(val)
 
+    def exec_Block(self, node):
+        for stmt in node:
+            self.exec(stmt)
+
+    def exec_If(self, node):
+        val = self.eval(node.condition)
+        if val:
+            self.exec(node.then_branch)
+        elif node.else_branch is not None:
+            self.exec(node.else_branch)
+    
+    def exec_While(self, node):
+        while self.eval(node.condition):
+            self.exec(node.body)
+
     # -------------------------------------------------------------------------
     # EXPRESSION EVALUATION
     # -------------------------------------------------------------------------
@@ -88,12 +103,15 @@ class Interpreter:
         """
         val = self.eval(node.expr)
 
-        if node.op == '-':
-            return -val
-        elif node.op == '!':
-            return not val
-        else:
-            raise NotImplementedError(f"Unsupported unary operator: {node.op}")
+        ops = {
+            '-': lambda v: -v,
+            '!': lambda v: not v,
+        }
+
+        try:
+            return ops[node.op](val)
+        except KeyError:
+            raise NotImplementedError(f"Unsupported operator: {node.op}")
     
     def eval_Binary(self, node):
         """
@@ -103,12 +121,19 @@ class Interpreter:
         left = self.eval(node.left)
         right = self.eval(node.right)
 
-        if node.op == '+':
-            return left + right
-        elif node.op == '-':
-            return left - right
-        else:
-            raise NotImplementedError(f"Unsupported unary operator: {node.op}")
+        # list binary operations
+        ops = {
+            '+': lambda l, r: l + r,
+            '-': lambda l, r: l - r,
+            '<': lambda l, r: l < r,
+            '>': lambda l, r: l > r,
+            '>=': lambda l, r: l >= r,
+        }
+
+        try:
+            return ops[node.op](left, right)
+        except KeyError:
+            raise NotImplementedError(f"Unsupported operator: {node.op}")
         
     def eval_Variable(self, node):
         """
