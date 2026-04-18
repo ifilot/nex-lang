@@ -49,3 +49,36 @@ class Binary(Expr):
 
     def __repr__(self):
         return f"({self.left} {self.op} {self.right})"
+
+@dataclass
+class Variable(Expr):
+    """
+    An expression that refers to a variable by name and evaluates to the value
+    currently bound to that name in the environment.
+    """
+    name: str
+
+@dataclass
+class VarDecl(Stmt):
+    """
+    A statement that declares a new variable in the current scope and
+    initializes it with the value of the given expression.
+    """
+    name: str
+    initializer: Expr
+
+@dataclass
+class Assign(Stmt):
+    """
+    A statement that updates the value of an existing variable by assigning it
+    the result of evaluating the given expression.
+    """
+    name: str
+    expr: Expr
+
+@dataclass
+class Print(Stmt):
+    """
+    Built-in function for printing expressions
+    """
+    expr: Expr
