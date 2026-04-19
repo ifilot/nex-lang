@@ -22,13 +22,25 @@ def test_lexes_keywords_and_punctuation():
     """
     Test that the lexer correctly identifies keywords and punctuation symbols.
     """
-    source = 'var x = 1; if (x < 10) { print("ok"); } true false'
+    source = (
+        'int x = 1; bool flag = true; str msg = "ok"; if (x < 10) { print(msg); } false'
+    )
 
     assert token_types(source) == [
-        TokenType.VAR,
+        TokenType.INT,
         TokenType.IDENTIFIER,
         TokenType.EQ,
         TokenType.NUMBER,
+        TokenType.SEMICOLON,
+        TokenType.BOOL,
+        TokenType.IDENTIFIER,
+        TokenType.EQ,
+        TokenType.TRUE,
+        TokenType.SEMICOLON,
+        TokenType.STR,
+        TokenType.IDENTIFIER,
+        TokenType.EQ,
+        TokenType.STRING,
         TokenType.SEMICOLON,
         TokenType.IF,
         TokenType.LPAREN,
@@ -39,11 +51,10 @@ def test_lexes_keywords_and_punctuation():
         TokenType.LBRACE,
         TokenType.PRINT,
         TokenType.LPAREN,
-        TokenType.STRING,
+        TokenType.IDENTIFIER,
         TokenType.RPAREN,
         TokenType.SEMICOLON,
         TokenType.RBRACE,
-        TokenType.TRUE,
         TokenType.FALSE,
         TokenType.EOF,
     ]
@@ -54,7 +65,7 @@ def test_lexes_number_and_string_literals():
     Test that the lexer correctly identifies numbers (non-negative integers) and
     strings.
     """
-    tokens = lex('print("hello"); var n = 42;')
+    tokens = lex('print("hello"); int n = 42;')
 
     assert tokens[2].literal == "hello"
     assert tokens[8].literal == 42
@@ -112,10 +123,10 @@ def test_tracks_line_and_column_numbers():
     """
     Test that the lexer correctly keeps track of line and column numbers.
     """
-    tokens = lex('var x = 1;\nprint("hi");\nfoo = 42;')
+    tokens = lex('int x = 1;\nprint("hi");\nfoo = 42;')
 
     assert [(token.type, token.line, token.column) for token in tokens] == [
-        (TokenType.VAR, 1, 3),
+        (TokenType.INT, 1, 3),
         (TokenType.IDENTIFIER, 1, 5),
         (TokenType.EQ, 1, 7),
         (TokenType.NUMBER, 1, 9),
@@ -151,8 +162,8 @@ def test_skips_trailing_comments():
     """
     Test that the lexer ignores comments after valid code on the same line.
     """
-    assert token_types("var x = 1; # trailing comment\nprint(x);") == [
-        TokenType.VAR,
+    assert token_types("int x = 1; # trailing comment\nprint(x);") == [
+        TokenType.INT,
         TokenType.IDENTIFIER,
         TokenType.EQ,
         TokenType.NUMBER,
@@ -170,8 +181,8 @@ def test_skips_comment_at_end_of_file():
     """
     Test that a final '#'-style comment without a trailing newline is ignored.
     """
-    assert token_types("var x = 1; # trailing comment") == [
-        TokenType.VAR,
+    assert token_types("int x = 1; # trailing comment") == [
+        TokenType.INT,
         TokenType.IDENTIFIER,
         TokenType.EQ,
         TokenType.NUMBER,
@@ -192,4 +203,4 @@ def test_raises_on_unexpected_character():
     with pytest.raises(
         RuntimeError, match="Unexpected character: '@' at Line 2, Column 1"
     ):
-        lex("var x = 5;\n@")
+        lex("int x = 5;\n@")

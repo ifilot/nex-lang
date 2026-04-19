@@ -21,6 +21,10 @@ version = { attr = "nex.__version__" }
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
+addopts = '-m "not repo_checks"'
+markers = [
+    "repo_checks: repository-wide checks that are slower than normal unit tests",
+]
 
 [tool.ruff]
 target-version = "py312"

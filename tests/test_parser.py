@@ -16,16 +16,11 @@ def parse(source: str):
 
 
 def test_parses_variable_declaration():
-    program = parse("var x = 1 + 2;")
+    program = parse("int x = 1 + 2;")
 
     assert len(program) == 1
     stmt = program[0]
-    assert isinstance(stmt, VarDecl)
-    assert stmt.name == "x"
-    assert isinstance(stmt.initializer, Binary)
-    assert stmt.initializer.op == "+"
-    assert stmt.initializer.left == Literal(1)
-    assert stmt.initializer.right == Literal(2)
+    assert stmt == VarDecl("x", Binary(Literal(1), "+", Literal(2)), "int")
 
 
 def test_parses_expression_statement():
@@ -106,13 +101,13 @@ def test_parses_while_statement():
     assert isinstance(stmt.body.statements[0], Print)
 
 
-def test_parses_for_statement_with_var_initializer():
-    program = parse("for (var i = 0; i < 3; i = i + 1) { print(i); }")
+def test_parses_for_statement_with_typed_initializer():
+    program = parse("for (int i = 0; i < 3; i = i + 1) { print(i); }")
 
     assert len(program) == 1
     stmt = program[0]
     assert isinstance(stmt, For)
-    assert stmt.init == VarDecl("i", Literal(0))
+    assert stmt.init == VarDecl("i", Literal(0), "int")
     assert isinstance(stmt.condition, Binary)
     assert stmt.condition.left == Variable("i")
     assert stmt.condition.op == "<"
@@ -160,12 +155,32 @@ def test_executes_expression_statement_without_output(capsys):
 
 
 def test_executes_unary_not_expression(capsys):
-    program = parse("print(!0); print(!1);")
+    program = parse("print(!true); print(!false);")
 
     Interpreter().run(program)
 
     captured = capsys.readouterr()
-    assert captured.out == "True\nFalse\n"
+    assert captured.out == "False\nTrue\n"
+
+
+def test_rejects_unary_not_on_non_boolean():
+    program = parse("!0;")
+
+    with pytest.raises(
+        RuntimeError,
+        match=r"Cannot apply unary operator '!' to type int; expected bool",
+    ):
+        Interpreter().run(program)
+
+
+def test_rejects_unary_minus_on_non_integer():
+    program = parse("-true;")
+
+    with pytest.raises(
+        RuntimeError,
+        match=r"Cannot apply unary operator '-' to type bool; expected int",
+    ):
+        Interpreter().run(program)
 
 
 def test_executes_boolean_literals(capsys):
@@ -175,6 +190,15 @@ def test_executes_boolean_literals(capsys):
 
     captured = capsys.readouterr()
     assert captured.out == "True\nFalse\n"
+
+
+def test_executes_string_concatenation_and_comparison(capsys):
+    program = parse('print("he" + "llo"); print("apple" < "banana");')
+
+    Interpreter().run(program)
+
+    captured = capsys.readouterr()
+    assert captured.out == "hello\nTrue\n"
 
 
 def test_executes_two_character_comparisons(capsys):
@@ -195,3 +219,33 @@ def test_executes_modulus_expression(capsys):
 
     captured = capsys.readouterr()
     assert captured.out == "1\n2\n"
+
+
+def test_rejects_mixed_type_addition():
+    program = parse('1 + "x";')
+
+    with pytest.raises(
+        RuntimeError,
+        match=r"Operator '\+' expects int\+int or str\+str, got int and str",
+    ):
+        Interpreter().run(program)
+
+
+def test_rejects_mixed_type_equality():
+    program = parse('1 == "1";')
+
+    with pytest.raises(
+        RuntimeError,
+        match=r"Operator '==' expects operands of the same type, got int and str",
+    ):
+        Interpreter().run(program)
+
+
+def test_rejects_mixed_type_ordering():
+    program = parse('1 < "2";')
+
+    with pytest.raises(
+        RuntimeError,
+        match=r"Operator '<' expects matching int or str operands, got int and str",
+    ):
+        Interpreter().run(program)

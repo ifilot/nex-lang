@@ -3,13 +3,13 @@
 #
 
 # Regular for loop
-var N = 3;
-for(var i=0; i<N; i=i+1) {
+int N = 3;
+for(int i=0; i<N; i=i+1) {
     print(i);
 }
 
 # For loop with assignment instead of declaration
-var i=-10;
+int i=-10;
 for(i=0; i<N; i=i+1) {
     print(i);
 }

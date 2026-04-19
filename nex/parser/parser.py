@@ -10,7 +10,7 @@ from ..lexer.tokentype import TokenType
 # -----------------------------------------------------------------------------
 # <program>           ::= <statement>* EOF
 #
-# <statement>         ::= <var-decl>
+# <statement>         ::= <typed-decl>
 #                       | <if-stmt>
 #                       | <while-stmt>
 #                       | <for-stmt>
@@ -18,7 +18,11 @@ from ..lexer.tokentype import TokenType
 #                       | <assignment-stmt>
 #                       | <expr-stmt>
 #
-# <var-decl>          ::= "var" <identifier> "=" <expression> ";"
+# <typed-decl>        ::= <typed-decl-core> ";"
+#
+# <typed-decl-core>   ::= <type> <identifier> "=" <expression>
+#
+# <type>              ::= "int" | "str" | "bool"
 #
 # <if-stmt>           ::= "if" "(" <expression> ")" <block> [ "else" <block> ]
 #
@@ -27,15 +31,17 @@ from ..lexer.tokentype import TokenType
 # <for-stmt>          ::= "for" "(" <for-init> ";" <expression> ";" <for-iter> ")" <block>
 #
 # <for-init>          ::= empty
-#                       | <var-decl>
-#                       | <assignment-stmt>
+#                       | <typed-decl-core>
+#                       | <assignment-core>
 #
 # <for-iter>          ::= empty
-#                       | <identifier> "=" <expression>
+#                       | <assignment-core>
 #
 # <block>             ::= "{" <statement>* "}"
 #
-# <assignment-stmt>   ::= <identifier> "=" <expression> ";"
+# <assignment-stmt>   ::= <assignment-core> ";"
+#
+# <assignment-core>   ::= <identifier> "=" <expression>
 #
 # <print-stmt>        ::= "print" "(" <expression> ")" ";"
 #
@@ -88,8 +94,12 @@ class Parser:
         """
         Parse a statement
         """
-        if self._match(TokenType.VAR):
-            return self._var_decl()
+        if self._match(TokenType.INT):
+            return self._int_decl()
+        elif self._match(TokenType.STR):
+            return self._str_decl()
+        elif self._match(TokenType.BOOL):
+            return self._bool_decl()
         elif self._match(TokenType.IF):
             return self._if_stmt()
         elif self._match(TokenType.WHILE):
@@ -105,15 +115,33 @@ class Parser:
             return self._assign_stmt()
         return self._expr_stmt()
 
-    def _var_decl(self):
+    def _int_decl(self):
         """
-        Parse a variable declaration
+        Parse an integer declaration.
+        """
+        return self._typed_decl("int")
+
+    def _str_decl(self):
+        """
+        Parse a string declaration.
+        """
+        return self._typed_decl("str")
+
+    def _bool_decl(self):
+        """
+        Parse a boolean declaration.
+        """
+        return self._typed_decl("bool")
+
+    def _typed_decl(self, declared_type):
+        """
+        Parse a typed variable declaration after the type keyword was consumed.
         """
         name = self._consume(TokenType.IDENTIFIER, "Expect variable name.")
         self._consume(TokenType.EQ, "Expect '=' after name.")
         initializer = self._expression()
         self._consume(TokenType.SEMICOLON, "Expect ';'.")
-        return VarDecl(name.lexeme, initializer)
+        return VarDecl(name.lexeme, initializer, declared_type)
 
     def _if_stmt(self):
         """
@@ -146,15 +174,19 @@ class Parser:
         """
         self._consume(TokenType.LPAREN, "Expect '('.")
 
-        # for the initialization clause, only allow declaration
+        # for the initialization clause, allow typed declarations, assignment,
+        # or an empty clause.
         if self._peek().type == TokenType.SEMICOLON:
             init = None
             self._advance()
         elif self._peek().type == TokenType.IDENTIFIER:
             init = self._assign_stmt()  # consumes the ';'
-        elif self._peek().type == TokenType.VAR:
-            self._match(TokenType.VAR)
-            init = self._var_decl()  # consumes the ';'
+        elif self._match(TokenType.INT):
+            init = self._int_decl()  # consumes the ';'
+        elif self._match(TokenType.STR):
+            init = self._str_decl()  # consumes the ';'
+        elif self._match(TokenType.BOOL):
+            init = self._bool_decl()  # consumes the ';'
         else:
             raise RuntimeError("Invalid initializer clause.")
 

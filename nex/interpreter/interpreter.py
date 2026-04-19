@@ -44,7 +44,14 @@ class Interpreter:
         Variable declaration
         """
         val = self.eval(node.initializer)
-        return self.env.declare(node.name, val)
+
+        if self._matches_type(node.type, val):
+            return self.env.declare(node.name, node.type, val)
+
+        raise RuntimeError(
+            f"Cannot assign expression {node.initializer} "
+            f"of type {self._runtime_type_name(val)} to type {node.type}"
+        )
 
     def exec_Assign(self, node):
         """
@@ -78,8 +85,7 @@ class Interpreter:
         """
         Execute If statement.
         """
-        val = self.eval(node.condition)
-        if val:
+        if self._checked_condition(node.condition):
             self.exec(node.then_branch)
         elif node.else_branch is not None:
             self.exec(node.else_branch)
@@ -88,7 +94,7 @@ class Interpreter:
         """
         Execute While statements.
         """
-        while self.eval(node.condition):
+        while self._checked_condition(node.condition):
             self.exec(node.body)
 
     def exec_For(self, node):
@@ -99,7 +105,7 @@ class Interpreter:
         try:
             if node.init is not None:
                 self.exec(node.init)
-            while self.eval(node.condition):
+            while self._checked_condition(node.condition):
                 self.exec(node.body)
                 if node.iter is not None:
                     self.exec(node.iter)
@@ -143,16 +149,23 @@ class Interpreter:
         applying the operator.
         """
         val = self.eval(node.expr)
+        if node.op == "!":
+            if type(val) is not bool:
+                raise RuntimeError(
+                    f"Cannot apply unary operator '{node.op}' to type "
+                    f"{self._runtime_type_name(val)}; expected bool"
+                )
+            return not val
 
-        ops = {
-            "-": lambda v: -v,
-            "!": lambda v: not v,
-        }
+        if node.op == "-":
+            if type(val) is not int:
+                raise RuntimeError(
+                    f"Cannot apply unary operator '{node.op}' to type "
+                    f"{self._runtime_type_name(val)}; expected int"
+                )
+            return -val
 
-        try:
-            return ops[node.op](val)
-        except KeyError:
-            raise NotImplementedError(f"Unsupported operator: {node.op}")
+        raise NotImplementedError(f"Unsupported operator: {node.op}")
 
     def eval_Binary(self, node):
         """
@@ -161,29 +174,106 @@ class Interpreter:
         """
         left = self.eval(node.left)
         right = self.eval(node.right)
+        if node.op == "+":
+            if self._both_of_type(left, right, int) or self._both_of_type(
+                left, right, str
+            ):
+                return left + right
+            raise RuntimeError(
+                f"Operator '+' expects int+int or str+str, got "
+                f"{self._runtime_type_name(left)} and {self._runtime_type_name(right)}"
+            )
 
-        # list binary operations
-        ops = {
-            "+": lambda left_val, right_val: left_val + right_val,
-            "-": lambda left_val, right_val: left_val - right_val,
-            "*": lambda left_val, right_val: left_val * right_val,
-            "/": lambda left_val, right_val: int(left_val / right_val),
-            "%": lambda left_val, right_val: left_val % right_val,
-            "<": lambda left_val, right_val: left_val < right_val,
-            ">": lambda left_val, right_val: left_val > right_val,
-            ">=": lambda left_val, right_val: left_val >= right_val,
-            "<=": lambda left_val, right_val: left_val <= right_val,
-            "==": lambda left_val, right_val: left_val == right_val,
-            "!=": lambda left_val, right_val: left_val != right_val,
-        }
+        if node.op in ("-", "*", "/", "%"):
+            self._require_matching_types(node.op, left, right, int, "int operands")
+            if node.op == "-":
+                return left - right
+            if node.op == "*":
+                return left * right
+            if node.op == "/":
+                return int(left / right)
+            return left % right
 
-        try:
-            return ops[node.op](left, right)
-        except KeyError:
-            raise NotImplementedError(f"Unsupported operator: {node.op}")
+        if node.op in ("<", ">", "<=", ">="):
+            if self._both_of_type(left, right, int) or self._both_of_type(
+                left, right, str
+            ):
+                if node.op == "<":
+                    return left < right
+                if node.op == ">":
+                    return left > right
+                if node.op == "<=":
+                    return left <= right
+                return left >= right
+            raise RuntimeError(
+                f"Operator '{node.op}' expects matching int or str operands, got "
+                f"{self._runtime_type_name(left)} and {self._runtime_type_name(right)}"
+            )
+
+        if node.op in ("==", "!="):
+            if type(left) is not type(right):
+                raise RuntimeError(
+                    f"Operator '{node.op}' expects operands of the same type, got "
+                    f"{self._runtime_type_name(left)} and {self._runtime_type_name(right)}"
+                )
+            return left == right if node.op == "==" else left != right
+
+        raise NotImplementedError(f"Unsupported operator: {node.op}")
 
     def eval_Variable(self, node):
         """
         Evaluates a variable and returns the value bound to it.
         """
         return self.env.lookup(node.name)
+
+    # -------------------------------------------------------------------------
+    # HELPERS
+    # -------------------------------------------------------------------------
+
+    def _matches_type(self, declared_type: str, val: object):
+        if declared_type == "int":
+            return type(val) is int
+        if declared_type == "str":
+            return type(val) is str
+        if declared_type == "bool":
+            return type(val) is bool
+
+        raise RuntimeError(f"Unknown type: {declared_type}")
+
+    def _runtime_type_name(self, val: object):
+        if type(val) is int:
+            return "int"
+        if type(val) is str:
+            return "str"
+        if type(val) is bool:
+            return "bool"
+
+        return type(val).__name__
+
+    def _checked_condition(self, expr):
+        val = self.eval(expr)
+
+        if type(val) is not bool:
+            t = self._runtime_type_name(val)
+            raise RuntimeError(f"Condition must evaluate to a bool, got {t}")
+
+        return val
+
+    def _both_of_type(self, left: object, right: object, expected_type: type) -> bool:
+        return type(left) is expected_type and type(right) is expected_type
+
+    def _require_matching_types(
+        self,
+        op: str,
+        left: object,
+        right: object,
+        expected_type: type,
+        expectation: str,
+    ) -> None:
+        if self._both_of_type(left, right, expected_type):
+            return
+
+        raise RuntimeError(
+            f"Operator '{op}' expects {expectation}, got "
+            f"{self._runtime_type_name(left)} and {self._runtime_type_name(right)}"
+        )

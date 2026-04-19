@@ -2,7 +2,10 @@ import subprocess
 import sys
 from pathlib import Path
 
+import pytest
 
+
+@pytest.mark.repo_checks
 def test_ascii_check_script_passes_for_repository():
     root = Path(__file__).resolve().parent.parent
 

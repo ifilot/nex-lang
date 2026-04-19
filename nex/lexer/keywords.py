@@ -1,7 +1,9 @@
 from .tokentype import TokenType
 
 KEYWORDS = {
-    "var": TokenType.VAR,
+    "int": TokenType.INT,
+    "bool": TokenType.BOOL,
+    "str": TokenType.STR,
     "if": TokenType.IF,
     "else": TokenType.ELSE,
     "while": TokenType.WHILE,

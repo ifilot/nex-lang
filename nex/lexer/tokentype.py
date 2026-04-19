@@ -30,7 +30,9 @@ class TokenType(Enum):
     STRING = auto()
 
     # keywords
-    VAR = auto()
+    INT = auto()
+    BOOL = auto()
+    STR = auto()
     IF = auto()
     ELSE = auto()
     WHILE = auto()

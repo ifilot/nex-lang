@@ -36,6 +36,7 @@ class VarDecl(Stmt):
 
     name: str
     initializer: Expr
+    type: str
 
 
 @dataclass(frozen=True)
