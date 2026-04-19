@@ -216,8 +216,18 @@ class Interpreter:
             if node.op == "*":
                 return left * right
             if node.op == "/":
+                if right == 0:
+                    raise NexRuntimeError(
+                        "division by zero", line=node.line, column=node.column
+                    )
                 return int(left / right)
-            return left % right
+            if node.op == "%":
+                if right == 0:
+                    raise NexRuntimeError(
+                        "division by zero", line=node.line, column=node.column
+                    )
+                return left % right
+            return NexRuntimeError("invalid operation detected.")
 
         if node.op in ("<", ">", "<=", ">="):
             if self._both_of_type(left, right, int) or self._both_of_type(

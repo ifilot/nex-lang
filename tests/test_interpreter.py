@@ -103,6 +103,24 @@ def test_executes_for_loop_accumulation(capsys):
     assert captured.out == "6\n"
 
 
+def test_rejects_division_by_zero():
+    with pytest.raises(NexRuntimeError) as excinfo:
+        run_source("print(1 / 0);")
+
+    assert excinfo.value.message == "division by zero"
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 9
+
+
+def test_rejects_modulus_by_zero():
+    with pytest.raises(NexRuntimeError) as excinfo:
+        run_source("print(1 % 0);")
+
+    assert excinfo.value.message == "division by zero"
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 9
+
+
 def test_block_scope_shadows_outer_variable(capsys):
     run_source(
         """
