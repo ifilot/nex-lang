@@ -24,3 +24,4 @@ Thumbs.db
 .env
 .env.*
 nex.egg-info/
+docs/book/

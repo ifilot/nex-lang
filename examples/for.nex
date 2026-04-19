@@ -1,20 +1,21 @@
 #
-# Basic for loops
+# A tour of the three supported `for` loop shapes.
+# Shows declaration-based, assignment-based, and manual iteration clauses.
 #
 
-# Regular for loop
+# Regular `for` loop with a declaration in the initializer.
 int N = 3;
 for(int i=0; i<N; i=i+1) {
     print(i);
 }
 
-# For loop with assignment instead of declaration
+# Reuse an existing variable in the initializer.
 int i=-10;
 for(i=0; i<N; i=i+1) {
     print(i);
 }
 
-# For loop with neither assignment/declaration nor iteration clause
+# Omit both the initializer and the iteration clause.
 i=0;
 for(; i<N;) {
     print(i);

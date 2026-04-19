@@ -1,0 +1,28 @@
+:root {
+  --nex-accent: #5b5857;
+  --nex-accent-soft: #c2c1c0;
+  --nex-ink: #2c2c2d;
+}
+
+.light {
+  --links: var(--nex-accent);
+  --fg: var(--nex-ink);
+  --sidebar-fg: var(--nex-ink);
+  --sidebar-active: var(--nex-accent);
+  --searchbar-border-color: var(--nex-accent-soft);
+  --searchbar-bg: #f7f6f5;
+}
+
+#menu-bar,
+.sidebar {
+  border-color: var(--nex-accent-soft);
+}
+
+.chapter li.part-title {
+  color: var(--nex-accent);
+}
+
+.nav-chapters:hover {
+  background: rgba(91, 88, 87, 0.08);
+}
+

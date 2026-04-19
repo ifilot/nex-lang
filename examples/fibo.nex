@@ -1,5 +1,6 @@
 #
-# Generate first 10 Fibonacci numbers
+# Generate the first 10 Fibonacci numbers.
+# Uses plain variables and a `for` loop instead of functions or arrays.
 #
 int a = 0;
 int b = 1;

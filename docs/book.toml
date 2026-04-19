@@ -1,0 +1,16 @@
+[book]
+authors = ["Ivo Filot"]
+language = "en"
+src = "src"
+title = "The NEX Book"
+description = "Language reference and implementation notes for the NEX programming language."
+
+[build]
+build-dir = "book"
+create-missing = false
+
+[output.html]
+default-theme = "light"
+git-repository-url = "https://github.com/ifilot/nex-lang"
+site-url = "/nex-lang/"
+additional-css = ["theme/nex.css"]

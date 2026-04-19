@@ -1,6 +1,7 @@
 # NEX
 
 [![Unit Tests](https://github.com/ifilot/nex-lang/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/ifilot/nex-lang/actions/workflows/unit-tests.yml)
+[![Docs](https://github.com/ifilot/nex-lang/actions/workflows/docs.yml/badge.svg)](https://github.com/ifilot/nex-lang/actions/workflows/docs.yml)
 
 `NEX` is a small experimental programming language implemented in Python.
 
@@ -12,6 +13,7 @@ The project currently includes:
 - a recursive-descent parser
 - a tree-walking interpreter
 - a small CLI runner
+- an `mdBook` documentation site under `docs/`
 
 ## Example
 
@@ -62,6 +64,23 @@ You can also run the CLI module directly:
 
 ```bash
 python -m nex.cli examples/hello.nex
+```
+
+## Documentation
+
+The language reference lives in the `mdBook` project under `docs/`.
+
+Build it locally with:
+
+```bash
+~/.cargo/bin/mdbook build docs
+```
+
+Once GitHub Pages is enabled for this repository, the published book will be
+available at:
+
+```text
+https://ifilot.github.io/nex-lang/
 ```
 
 ## Testing

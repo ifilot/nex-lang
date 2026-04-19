@@ -1,7 +1,8 @@
 #
-# Basic math example
+# Arithmetic and operator precedence.
+# Demonstrates `+`, `*`, `/`, and the effect of parentheses.
 #
 print(5 + 8);
-print(1+2*3+4);         # this yields '11', because of precedence rules
-print((1+2) * (3+4));   # parentheses can overrule predence rules ('21')
-print(5/2);             # math is integer-based, so this yields '2'
+print(1+2*3+4);         # This yields `11` because multiplication binds tighter.
+print((1+2) * (3+4));   # Parentheses override the default precedence rules.
+print(5/2);             # Arithmetic is integer-based, so this yields `2`.
