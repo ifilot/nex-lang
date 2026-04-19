@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 from .expr import Expr
 
@@ -37,6 +37,8 @@ class VarDecl(Stmt):
     name: str
     initializer: Expr
     type: str
+    line: int | None = field(default=None, compare=False)
+    column: int | None = field(default=None, compare=False)
 
 
 @dataclass(frozen=True)
@@ -48,6 +50,8 @@ class Assign(Stmt):
 
     name: str
     expr: Expr
+    line: int | None = field(default=None, compare=False)
+    column: int | None = field(default=None, compare=False)
 
 
 @dataclass(frozen=True)
@@ -57,6 +61,8 @@ class Print(Stmt):
     """
 
     expr: Expr
+    line: int | None = field(default=None, compare=False)
+    column: int | None = field(default=None, compare=False)
 
 
 @dataclass(frozen=True)
@@ -81,6 +87,8 @@ class If(Stmt):
     condition: Expr
     then_branch: Stmt
     else_branch: Stmt | None
+    line: int | None = field(default=None, compare=False)
+    column: int | None = field(default=None, compare=False)
 
 
 @dataclass(frozen=True)
@@ -94,6 +102,8 @@ class For(Stmt):
     condition: Expr
     iter: Stmt | None
     body: Stmt
+    line: int | None = field(default=None, compare=False)
+    column: int | None = field(default=None, compare=False)
 
 
 @dataclass(frozen=True)
@@ -105,6 +115,8 @@ class While(Stmt):
 
     condition: Expr
     body: Stmt
+    line: int | None = field(default=None, compare=False)
+    column: int | None = field(default=None, compare=False)
 
 
 @dataclass(frozen=True)
@@ -115,3 +127,5 @@ class ExprStmt(Stmt):
     """
 
     expr: Expr
+    line: int | None = field(default=None, compare=False)
+    column: int | None = field(default=None, compare=False)

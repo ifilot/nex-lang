@@ -1,5 +1,6 @@
 from typing import Tuple
 
+from ..common import NexParseError
 from ..interpreter.expr import Binary, Literal, Unary, Variable
 from ..interpreter.stmt import Assign, Block, ExprStmt, For, If, Print, VarDecl, While
 from ..lexer.token import Token
@@ -75,16 +76,10 @@ class Parser:
         """
         Parse a list of tokens to create a program
         """
-        try:
-            statements = []
-            while not self._is_at_end():
-                statements.append(self._statement())
-            return statements
-        except Exception as e:
-            line = self.tokens[self.pos].line
-            column = self.tokens[self.pos].column
-            print(f"Parsing error at Line {line}, Column {column}: {e}")
-            raise
+        statements = []
+        while not self._is_at_end():
+            statements.append(self._statement())
+        return statements
 
     # --------------------------------------------------------------------------
     # PARSER FUNCTIONS
@@ -141,12 +136,19 @@ class Parser:
         self._consume(TokenType.EQ, "Expect '=' after name.")
         initializer = self._expression()
         self._consume(TokenType.SEMICOLON, "Expect ';'.")
-        return VarDecl(name.lexeme, initializer, declared_type)
+        return VarDecl(
+            name.lexeme,
+            initializer,
+            declared_type,
+            line=name.line,
+            column=name.column,
+        )
 
     def _if_stmt(self):
         """
         Parse an if statement.
         """
+        if_token = self._previous()
         self._consume(TokenType.LPAREN, "Expect '('.")
         condition = self._expression()
         self._consume(TokenType.RPAREN, "Expect ')'.")
@@ -156,30 +158,39 @@ class Parser:
             else_branch = self._block_stmt()
         else:
             else_branch = None
-        return If(condition, then_branch, else_branch)
+        return If(
+            condition,
+            then_branch,
+            else_branch,
+            line=if_token.line,
+            column=if_token.column,
+        )
 
     def _while_stmt(self):
         """
         Parse a while statement
         """
+        while_token = self._previous()
         self._consume(TokenType.LPAREN, "Expect '('.")
         condition = self._expression()
         self._consume(TokenType.RPAREN, "Expect ')'.")
         body = self._block_stmt()
-        return While(condition, body)
+        return While(condition, body, line=while_token.line, column=while_token.column)
 
     def _for_stmt(self):
         """
         Parse a for statement
         """
+        for_token = self._previous()
         self._consume(TokenType.LPAREN, "Expect '('.")
 
         # for the initialization clause, allow typed declarations, assignment,
         # or an empty clause.
-        if self._peek().type == TokenType.SEMICOLON:
+        token = self._peek()
+        if token.type == TokenType.SEMICOLON:
             init = None
             self._advance()
-        elif self._peek().type == TokenType.IDENTIFIER:
+        elif token.type == TokenType.IDENTIFIER:
             init = self._assign_stmt()  # consumes the ';'
         elif self._match(TokenType.INT):
             init = self._int_decl()  # consumes the ';'
@@ -188,7 +199,11 @@ class Parser:
         elif self._match(TokenType.BOOL):
             init = self._bool_decl()  # consumes the ';'
         else:
-            raise RuntimeError("Invalid initializer clause.")
+            raise NexParseError(
+                "invalid initializer clause",
+                line=token.line,
+                column=token.column,
+            )
 
         # condition clause is mandatory
         condition = self._expression()
@@ -207,7 +222,14 @@ class Parser:
 
         # consume body
         body = self._block_stmt()
-        return For(init, condition, iterclause, body)
+        return For(
+            init,
+            condition,
+            iterclause,
+            body,
+            line=for_token.line,
+            column=for_token.column,
+        )
 
     def _block_stmt(self):
         statements = []
@@ -222,7 +244,7 @@ class Parser:
         self._consume(TokenType.EQ, "Expect '='.")
         expr = self._expression()
         self._consume(TokenType.SEMICOLON, "Expect ';'.")
-        return Assign(name.lexeme, expr)
+        return Assign(name.lexeme, expr, line=name.line, column=name.column)
 
     def _expr_stmt(self):
         """
@@ -230,17 +252,18 @@ class Parser:
         """
         expr = self._expression()
         self._consume(TokenType.SEMICOLON, "Expect ';'.")
-        return ExprStmt(expr)
+        return ExprStmt(expr, line=expr.line, column=expr.column)
 
     def _print_stmt(self):
         """
         Parse a print statement
         """
+        print_token = self._previous()
         self._consume(TokenType.LPAREN, "Expect '('.")
         value = self._expression()
         self._consume(TokenType.RPAREN, "Expect ')'.")
         self._consume(TokenType.SEMICOLON, "Expect ';'.")
-        return Print(value)
+        return Print(value, line=print_token.line, column=print_token.column)
 
     def _expression(self):
         """
@@ -262,9 +285,10 @@ class Parser:
             TokenType.EQQ,
             TokenType.NEQ,
         ):
-            op = self._previous().lexeme
+            operator = self._previous()
+            op = operator.lexeme
             right = self._term()
-            expr = Binary(expr, op, right)
+            expr = Binary(expr, op, right, line=operator.line, column=operator.column)
 
         return expr
 
@@ -275,9 +299,10 @@ class Parser:
         expr = self._factor()
 
         while self._match(TokenType.PLUS, TokenType.MINUS):
-            op = self._previous().lexeme
+            operator = self._previous()
+            op = operator.lexeme
             right = self._factor()
-            expr = Binary(expr, op, right)
+            expr = Binary(expr, op, right, line=operator.line, column=operator.column)
 
         return expr
 
@@ -288,9 +313,10 @@ class Parser:
         expr = self._unary()
 
         while self._match(TokenType.STAR, TokenType.SLASH, TokenType.PERCENT):
-            op = self._previous().lexeme
+            operator = self._previous()
+            op = operator.lexeme
             right = self._unary()
-            expr = Binary(expr, op, right)
+            expr = Binary(expr, op, right, line=operator.line, column=operator.column)
 
         return expr
 
@@ -299,9 +325,10 @@ class Parser:
         Parse unary
         """
         while self._match(TokenType.MINUS, TokenType.EXCLAMATION):
-            op = self._previous().lexeme
+            operator = self._previous()
+            op = operator.lexeme
             right = self._unary()
-            return Unary(op, right)
+            return Unary(op, right, line=operator.line, column=operator.column)
 
         return self._primary()
 
@@ -310,23 +337,35 @@ class Parser:
         Parse primary
         """
         if self._match(TokenType.NUMBER):
-            return Literal(self._previous().literal)
+            token = self._previous()
+            return Literal(token.literal, line=token.line, column=token.column)
 
         if self._match(TokenType.STRING):
-            return Literal(self._previous().literal)
+            token = self._previous()
+            return Literal(token.literal, line=token.line, column=token.column)
 
         if self._match(TokenType.TRUE, TokenType.FALSE):
-            return Literal(True if self._previous().type == TokenType.TRUE else False)
+            token = self._previous()
+            return Literal(
+                True if token.type == TokenType.TRUE else False,
+                line=token.line,
+                column=token.column,
+            )
 
         if self._match(TokenType.IDENTIFIER):
-            return Variable(self._previous().lexeme)
+            token = self._previous()
+            return Variable(token.lexeme, line=token.line, column=token.column)
 
         if self._match(TokenType.LPAREN):
             expr = self._expression()
             self._consume(TokenType.RPAREN, "Expect ')'.")
             return expr
 
-        raise RuntimeError("Expect expression.")
+        raise NexParseError(
+            "expected expression",
+            line=self._peek().line,
+            column=self._peek().column,
+        )
 
     # --------------------------------------------------------------------------
     # HELPER FUNCTIONS
@@ -367,4 +406,8 @@ class Parser:
     def _consume(self, type_, message):
         if self._check(type_):
             return self._advance()
-        raise RuntimeError(message)
+        raise NexParseError(
+            message.lower().rstrip("."),
+            line=self._peek().line,
+            column=self._peek().column,
+        )

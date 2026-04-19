@@ -1,3 +1,4 @@
+from ..common import NexLexError
 from .keywords import KEYWORDS
 from .token import Token
 from .tokentype import TokenType
@@ -12,6 +13,8 @@ class Lexer:
         self.pos = 0
         self.tokens = []
         self.line = 1
+        self.start_line = -1
+        self.start_column = -1
         self.column = 0
 
     def tokenize(self):
@@ -55,6 +58,8 @@ class Lexer:
         """
         Scan the token
         """
+        self.start_line = self.line
+        self.start_column = self.column + 1
         c = self._advance()
 
         if c == "+":
@@ -112,8 +117,10 @@ class Lexer:
         elif c.isalpha():
             self._identifier(c)
         else:
-            raise RuntimeError(
-                f"Unexpected character: '{c}' at Line {self.line}, Column {self.column}"
+            raise NexLexError(
+                f"unexpected character '{c}'",
+                line=self.line,
+                column=self.column,
             )
 
     def _add_token(self, type: TokenType, lexeme: str, literal=None):
@@ -121,7 +128,9 @@ class Lexer:
         Helper function to add a token to the tokenlist. Automatically assigns
         line and column.
         """
-        self.tokens.append(Token(type, lexeme, literal, self.line, self.column))
+        self.tokens.append(
+            Token(type, lexeme, literal, self.start_line, self.start_column)
+        )
 
     def _number(self, first):
         """
@@ -142,7 +151,11 @@ class Lexer:
             value += self._advance()
 
         if self._is_at_end():
-            raise RuntimeError("Unterminated string")
+            raise NexLexError(
+                "unterminated string",
+                line=self.line,
+                column=self.column,
+            )
 
         self._advance()  # closing quote
 

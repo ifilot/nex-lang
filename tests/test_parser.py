@@ -1,6 +1,7 @@
 import pytest
 
 from nex import Interpreter
+from nex.common import NexParseError, NexRuntimeError
 from nex.interpreter.expr import Binary, Literal, Unary, Variable
 from nex.interpreter.stmt import Assign, Block, ExprStmt, For, If, Print, VarDecl, While
 from nex.lexer import Lexer
@@ -141,8 +142,30 @@ def test_parses_for_statement_with_empty_initializer_and_iteration():
 
 
 def test_rejects_invalid_for_initializer_clause():
-    with pytest.raises(RuntimeError, match="Invalid initializer clause."):
+    with pytest.raises(NexParseError) as excinfo:
         parse("for (print(1); i < 3; i = i + 1) { print(i); }")
+
+    assert excinfo.value.message == "invalid initializer clause"
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 6
+
+
+def test_rejects_missing_semicolon_with_structured_parse_error():
+    with pytest.raises(NexParseError) as excinfo:
+        parse("int x = 1")
+
+    assert excinfo.value.message == "expect ';'"
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 9
+
+
+def test_rejects_missing_closing_paren_with_structured_parse_error():
+    with pytest.raises(NexParseError) as excinfo:
+        parse("print((1 + 2);")
+
+    assert excinfo.value.message == "expect ')'"
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 14
 
 
 def test_executes_expression_statement_without_output(capsys):
@@ -166,21 +189,29 @@ def test_executes_unary_not_expression(capsys):
 def test_rejects_unary_not_on_non_boolean():
     program = parse("!0;")
 
-    with pytest.raises(
-        RuntimeError,
-        match=r"Cannot apply unary operator '!' to type int; expected bool",
-    ):
+    with pytest.raises(NexRuntimeError) as excinfo:
         Interpreter().run(program)
+
+    assert (
+        excinfo.value.message
+        == "cannot apply unary operator '!' to type int; expected bool"
+    )
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 1
 
 
 def test_rejects_unary_minus_on_non_integer():
     program = parse("-true;")
 
-    with pytest.raises(
-        RuntimeError,
-        match=r"Cannot apply unary operator '-' to type bool; expected int",
-    ):
+    with pytest.raises(NexRuntimeError) as excinfo:
         Interpreter().run(program)
+
+    assert (
+        excinfo.value.message
+        == "cannot apply unary operator '-' to type bool; expected int"
+    )
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 1
 
 
 def test_executes_boolean_literals(capsys):
@@ -224,28 +255,40 @@ def test_executes_modulus_expression(capsys):
 def test_rejects_mixed_type_addition():
     program = parse('1 + "x";')
 
-    with pytest.raises(
-        RuntimeError,
-        match=r"Operator '\+' expects int\+int or str\+str, got int and str",
-    ):
+    with pytest.raises(NexRuntimeError) as excinfo:
         Interpreter().run(program)
+
+    assert (
+        excinfo.value.message
+        == "operator '+' expects int+int or str+str, got int and str"
+    )
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 3
 
 
 def test_rejects_mixed_type_equality():
     program = parse('1 == "1";')
 
-    with pytest.raises(
-        RuntimeError,
-        match=r"Operator '==' expects operands of the same type, got int and str",
-    ):
+    with pytest.raises(NexRuntimeError) as excinfo:
         Interpreter().run(program)
+
+    assert (
+        excinfo.value.message
+        == "operator '==' expects operands of the same type, got int and str"
+    )
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 3
 
 
 def test_rejects_mixed_type_ordering():
     program = parse('1 < "2";')
 
-    with pytest.raises(
-        RuntimeError,
-        match=r"Operator '<' expects matching int or str operands, got int and str",
-    ):
+    with pytest.raises(NexRuntimeError) as excinfo:
         Interpreter().run(program)
+
+    assert (
+        excinfo.value.message
+        == "operator '<' expects matching int or str operands, got int and str"
+    )
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 3

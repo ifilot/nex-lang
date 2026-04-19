@@ -1,6 +1,7 @@
 import pytest
 
 from nex import Interpreter, Lexer, Parser
+from nex.common import NexRuntimeError
 
 
 def run_source(source: str) -> None:
@@ -26,10 +27,7 @@ def test_executes_typed_assignment_and_print(capsys):
 
 
 def test_rejects_assignment_of_wrong_type():
-    with pytest.raises(
-        RuntimeError,
-        match=r"Cannot assign value of type str to variable 'x' of type int",
-    ):
+    with pytest.raises(NexRuntimeError) as excinfo:
         run_source(
             """
             int x = 1;
@@ -37,11 +35,16 @@ def test_rejects_assignment_of_wrong_type():
             """
         )
 
+    assert (
+        excinfo.value.message
+        == "cannot assign value of type str to variable 'x' of type int"
+    )
+    assert excinfo.value.line == 3
+    assert excinfo.value.column == 17
+
 
 def test_rejects_if_condition_that_is_not_bool():
-    with pytest.raises(
-        RuntimeError, match=r"Condition must evaluate to a bool, got int"
-    ):
+    with pytest.raises(NexRuntimeError) as excinfo:
         run_source(
             """
             if (1) {
@@ -50,11 +53,13 @@ def test_rejects_if_condition_that_is_not_bool():
             """
         )
 
+    assert excinfo.value.message == "condition must evaluate to a bool, got int"
+    assert excinfo.value.line == 2
+    assert excinfo.value.column == 17
+
 
 def test_rejects_while_condition_that_is_not_bool():
-    with pytest.raises(
-        RuntimeError, match=r"Condition must evaluate to a bool, got int"
-    ):
+    with pytest.raises(NexRuntimeError) as excinfo:
         run_source(
             """
             while (1) {
@@ -63,11 +68,13 @@ def test_rejects_while_condition_that_is_not_bool():
             """
         )
 
+    assert excinfo.value.message == "condition must evaluate to a bool, got int"
+    assert excinfo.value.line == 2
+    assert excinfo.value.column == 20
+
 
 def test_rejects_for_condition_that_is_not_bool():
-    with pytest.raises(
-        RuntimeError, match=r"Condition must evaluate to a bool, got int"
-    ):
+    with pytest.raises(NexRuntimeError) as excinfo:
         run_source(
             """
             for (int i = 0; 1; i = i + 1) {
@@ -75,6 +82,10 @@ def test_rejects_for_condition_that_is_not_bool():
             }
             """
         )
+
+    assert excinfo.value.message == "condition must evaluate to a bool, got int"
+    assert excinfo.value.line == 2
+    assert excinfo.value.column == 29
 
 
 def test_executes_for_loop_accumulation(capsys):
@@ -109,7 +120,7 @@ def test_block_scope_shadows_outer_variable(capsys):
 
 
 def test_for_initializer_scope_does_not_leak():
-    with pytest.raises(NameError, match=r"Undefined variable 'i'"):
+    with pytest.raises(NexRuntimeError) as excinfo:
         run_source(
             """
             for (int i = 0; i < 1; i = i + 1) {
@@ -118,3 +129,7 @@ def test_for_initializer_scope_does_not_leak():
             print(i);
             """
         )
+
+    assert excinfo.value.message == "undefined variable 'i'"
+    assert excinfo.value.line == 5
+    assert excinfo.value.column == 19

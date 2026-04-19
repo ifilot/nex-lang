@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 # Design choice: AST nodes (including expressions) are immutable.
 #
@@ -28,6 +28,8 @@ class Literal(Expr):
     """
 
     value: object
+    line: int | None = field(default=None, compare=False)
+    column: int | None = field(default=None, compare=False)
 
     def __repr__(self):
         return f"{self.value}"
@@ -42,6 +44,8 @@ class Unary(Expr):
 
     op: str
     expr: Expr
+    line: int | None = field(default=None, compare=False)
+    column: int | None = field(default=None, compare=False)
 
     def __repr__(self):
         return f"({self.op}{self.expr})"
@@ -57,6 +61,8 @@ class Binary(Expr):
     left: Expr
     op: str
     right: Expr
+    line: int | None = field(default=None, compare=False)
+    column: int | None = field(default=None, compare=False)
 
     def __repr__(self):
         return f"({self.left} {self.op} {self.right})"
@@ -70,6 +76,8 @@ class Variable(Expr):
     """
 
     name: str
+    line: int | None = field(default=None, compare=False)
+    column: int | None = field(default=None, compare=False)
 
     def __repr__(self):
         return self.name

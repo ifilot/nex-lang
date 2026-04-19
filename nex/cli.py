@@ -1,4 +1,7 @@
+import sys
+
 from nex import Interpreter, Lexer, Parser, __version__
+from nex.common import NexLexError, NexParseError, NexRuntimeError
 
 
 def main(argv=None):
@@ -20,24 +23,29 @@ def main(argv=None):
     try:
         lexer = Lexer(source)
         tokens = lexer.tokenize()
-    except Exception:
-        print("Error encountered at lexing, aborting...")
-        return
+    except NexLexError as exc:
+        print(f"lex error: {exc}", file=sys.stderr)
+        return 1
 
     try:
         parser_ = Parser(tokens)
         program = parser_.parse()
-    except Exception:
-        print("Error encountered at parsing, aborting...")
-        return
+    except NexParseError as exc:
+        print(f"parse error: {exc}", file=sys.stderr)
+        return 1
 
     try:
         interpreter = Interpreter()
         interpreter.run(program)
-    except Exception:
-        print("Error encountered at interpreting, aborting...")
-        return
+    except NexRuntimeError as exc:
+        print(f"runtime error: {exc}", file=sys.stderr)
+        return 1
+    except Exception as exc:
+        print(f"error: {exc}", file=sys.stderr)
+        return 1
+
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

@@ -1,3 +1,5 @@
+from nex.common import NexRuntimeError
+
 from .environment import Environment
 
 
@@ -46,11 +48,19 @@ class Interpreter:
         val = self.eval(node.initializer)
 
         if self._matches_type(node.type, val):
-            return self.env.declare(node.name, node.type, val)
+            return self.env.declare(
+                node.name,
+                node.type,
+                val,
+                line=node.line,
+                column=node.column,
+            )
 
-        raise RuntimeError(
-            f"Cannot assign expression {node.initializer} "
-            f"of type {self._runtime_type_name(val)} to type {node.type}"
+        raise NexRuntimeError(
+            f"cannot assign expression {node.initializer} "
+            f"of type {self._runtime_type_name(val)} to type {node.type}",
+            line=node.initializer.line,
+            column=node.initializer.column,
         )
 
     def exec_Assign(self, node):
@@ -58,7 +68,14 @@ class Interpreter:
         Assigns a value to variable or declares and initializes a new variable
         """
         val = self.eval(node.expr)
-        self.env.assign(node.name, val)
+        self.env.assign(
+            node.name,
+            val,
+            line=node.line,
+            column=node.column,
+            value_line=node.expr.line,
+            value_column=node.expr.column,
+        )
 
     def exec_Print(self, node):
         """
@@ -151,17 +168,21 @@ class Interpreter:
         val = self.eval(node.expr)
         if node.op == "!":
             if type(val) is not bool:
-                raise RuntimeError(
-                    f"Cannot apply unary operator '{node.op}' to type "
-                    f"{self._runtime_type_name(val)}; expected bool"
+                raise NexRuntimeError(
+                    f"cannot apply unary operator '{node.op}' to type "
+                    f"{self._runtime_type_name(val)}; expected bool",
+                    line=node.line,
+                    column=node.column,
                 )
             return not val
 
         if node.op == "-":
             if type(val) is not int:
-                raise RuntimeError(
-                    f"Cannot apply unary operator '{node.op}' to type "
-                    f"{self._runtime_type_name(val)}; expected int"
+                raise NexRuntimeError(
+                    f"cannot apply unary operator '{node.op}' to type "
+                    f"{self._runtime_type_name(val)}; expected int",
+                    line=node.line,
+                    column=node.column,
                 )
             return -val
 
@@ -179,13 +200,17 @@ class Interpreter:
                 left, right, str
             ):
                 return left + right
-            raise RuntimeError(
-                f"Operator '+' expects int+int or str+str, got "
-                f"{self._runtime_type_name(left)} and {self._runtime_type_name(right)}"
+            raise NexRuntimeError(
+                f"operator '+' expects int+int or str+str, got "
+                f"{self._runtime_type_name(left)} and {self._runtime_type_name(right)}",
+                line=node.line,
+                column=node.column,
             )
 
         if node.op in ("-", "*", "/", "%"):
-            self._require_matching_types(node.op, left, right, int, "int operands")
+            self._require_matching_types(
+                node, node.op, left, right, int, "int operands"
+            )
             if node.op == "-":
                 return left - right
             if node.op == "*":
@@ -205,16 +230,20 @@ class Interpreter:
                 if node.op == "<=":
                     return left <= right
                 return left >= right
-            raise RuntimeError(
-                f"Operator '{node.op}' expects matching int or str operands, got "
-                f"{self._runtime_type_name(left)} and {self._runtime_type_name(right)}"
+            raise NexRuntimeError(
+                f"operator '{node.op}' expects matching int or str operands, got "
+                f"{self._runtime_type_name(left)} and {self._runtime_type_name(right)}",
+                line=node.line,
+                column=node.column,
             )
 
         if node.op in ("==", "!="):
             if type(left) is not type(right):
-                raise RuntimeError(
-                    f"Operator '{node.op}' expects operands of the same type, got "
-                    f"{self._runtime_type_name(left)} and {self._runtime_type_name(right)}"
+                raise NexRuntimeError(
+                    f"operator '{node.op}' expects operands of the same type, got "
+                    f"{self._runtime_type_name(left)} and {self._runtime_type_name(right)}",
+                    line=node.line,
+                    column=node.column,
                 )
             return left == right if node.op == "==" else left != right
 
@@ -224,7 +253,7 @@ class Interpreter:
         """
         Evaluates a variable and returns the value bound to it.
         """
-        return self.env.lookup(node.name)
+        return self.env.lookup(node.name, line=node.line, column=node.column)
 
     # -------------------------------------------------------------------------
     # HELPERS
@@ -255,7 +284,11 @@ class Interpreter:
 
         if type(val) is not bool:
             t = self._runtime_type_name(val)
-            raise RuntimeError(f"Condition must evaluate to a bool, got {t}")
+            raise NexRuntimeError(
+                f"condition must evaluate to a bool, got {t}",
+                line=expr.line,
+                column=expr.column,
+            )
 
         return val
 
@@ -264,6 +297,7 @@ class Interpreter:
 
     def _require_matching_types(
         self,
+        node,
         op: str,
         left: object,
         right: object,
@@ -273,7 +307,9 @@ class Interpreter:
         if self._both_of_type(left, right, expected_type):
             return
 
-        raise RuntimeError(
-            f"Operator '{op}' expects {expectation}, got "
-            f"{self._runtime_type_name(left)} and {self._runtime_type_name(right)}"
+        raise NexRuntimeError(
+            f"operator '{op}' expects {expectation}, got "
+            f"{self._runtime_type_name(left)} and {self._runtime_type_name(right)}",
+            line=node.line,
+            column=node.column,
         )

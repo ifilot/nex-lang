@@ -1,5 +1,6 @@
 import pytest
 
+from nex.common import NexLexError
 from nex.lexer import Lexer
 from nex.lexer.tokentype import TokenType
 
@@ -126,19 +127,19 @@ def test_tracks_line_and_column_numbers():
     tokens = lex('int x = 1;\nprint("hi");\nfoo = 42;')
 
     assert [(token.type, token.line, token.column) for token in tokens] == [
-        (TokenType.INT, 1, 3),
+        (TokenType.INT, 1, 1),
         (TokenType.IDENTIFIER, 1, 5),
         (TokenType.EQ, 1, 7),
         (TokenType.NUMBER, 1, 9),
         (TokenType.SEMICOLON, 1, 10),
-        (TokenType.PRINT, 2, 5),
+        (TokenType.PRINT, 2, 1),
         (TokenType.LPAREN, 2, 6),
-        (TokenType.STRING, 2, 10),
+        (TokenType.STRING, 2, 7),
         (TokenType.RPAREN, 2, 11),
         (TokenType.SEMICOLON, 2, 12),
-        (TokenType.IDENTIFIER, 3, 3),
+        (TokenType.IDENTIFIER, 3, 1),
         (TokenType.EQ, 3, 5),
-        (TokenType.NUMBER, 3, 8),
+        (TokenType.NUMBER, 3, 7),
         (TokenType.SEMICOLON, 3, 9),
         (TokenType.EOF, 3, 9),
     ]
@@ -195,12 +196,28 @@ def test_raises_on_unexpected_character():
     """
     Test that the lexer throws an error when finding unexpected characters.
     """
-    with pytest.raises(
-        RuntimeError, match="Unexpected character: '@' at Line 1, Column 1"
-    ):
+    with pytest.raises(NexLexError) as excinfo:
         lex("@")
 
-    with pytest.raises(
-        RuntimeError, match="Unexpected character: '@' at Line 2, Column 1"
-    ):
+    assert excinfo.value.message == "unexpected character '@'"
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 1
+
+    with pytest.raises(NexLexError) as excinfo:
         lex("int x = 5;\n@")
+
+    assert excinfo.value.message == "unexpected character '@'"
+    assert excinfo.value.line == 2
+    assert excinfo.value.column == 1
+
+
+def test_raises_on_unterminated_string():
+    """
+    Test that the lexer throws a structured error for unterminated strings.
+    """
+    with pytest.raises(NexLexError) as excinfo:
+        lex('print("hello)')
+
+    assert excinfo.value.message == "unterminated string"
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 13
