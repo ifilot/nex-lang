@@ -1,0 +1,22 @@
+#
+# Basic for loops
+#
+
+# Regular for loop
+var N = 3;
+for(var i=0; i<N; i=i+1) {
+    print(i);
+}
+
+# For loop with assignment instead of declaration
+var i=-10;
+for(i=0; i<N; i=i+1) {
+    print(i);
+}
+
+# For loop with neither assignment/declaration nor iteration clause
+i=0;
+for(; i<N;) {
+    print(i);
+    i=i+1;
+}

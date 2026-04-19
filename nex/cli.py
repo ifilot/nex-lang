@@ -16,15 +16,26 @@ def main(argv=None):
     with open(args.file) as f:
         source = f.read()
 
-    lexer = Lexer(source)
-    tokens = lexer.tokenize()
+    try:
+        lexer = Lexer(source)
+        tokens = lexer.tokenize()
+    except Exception as e:
+        print('Error encountered at lexing, aborting...')
+        return
 
-    parser_ = Parser(tokens)
-    program = parser_.parse()
+    try:
+        parser_ = Parser(tokens)
+        program = parser_.parse()
+    except Exception as e:
+        print('Error encountered at parsing, aborting...')
+        return
 
-    interpreter = Interpreter()
-    interpreter.run(program)
-
+    try:
+        interpreter = Interpreter()
+        interpreter.run(program)
+    except Exception as e:
+        print('Error encountered at interpreting, aborting...')
+        return
 
 if __name__ == "__main__":
     main()

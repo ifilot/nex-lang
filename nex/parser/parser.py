@@ -12,6 +12,7 @@ from ..interpreter.stmt import *
 # <statement>         ::= <var-decl>
 #                       | <if-stmt>
 #                       | <while-stmt>
+#                       | <for-stmt>
 #                       | <print-stmt>
 #                       | <assignment-stmt>
 #                       | <expr-stmt>
@@ -21,6 +22,15 @@ from ..interpreter.stmt import *
 # <if-stmt>           ::= "if" "(" <expression> ")" <block> [ "else" <block> ]
 #
 # <while-stmt>        ::= "while" "(" <expression> ")" <block>
+#
+# <for-stmt>          ::= "for" "(" <for-init> ";" <expression> ";" <for-iter> ")" <block>
+#
+# <for-init>          ::= empty
+#                       | <var-decl>
+#                       | <assignment-stmt>
+#
+# <for-iter>          ::= empty
+#                       | <identifier> "=" <expression>
 #
 # <block>             ::= "{" <statement>* "}"
 #
@@ -56,10 +66,16 @@ class Parser:
         """
         Parse a list of tokens to create a program
         """
-        statements = []
-        while not self._is_at_end():
-            statements.append(self._statement())
-        return statements
+        try:
+            statements = []
+            while not self._is_at_end():
+                statements.append(self._statement())
+            return statements
+        except Exception as e:
+            line = self.tokens[self.pos].line
+            column = self.tokens[self.pos].column
+            print(f'Parsing error at Line {line}, Column {column}: {e}')
+            raise
     
     # --------------------------------------------------------------------------
     # PARSER FUNCTIONS
@@ -75,10 +91,12 @@ class Parser:
             return self._if_stmt()
         elif self._match(TokenType.WHILE):
             return self._while_stmt()
+        elif self._match(TokenType.FOR):
+            return self._for_stmt()
         elif self._match(TokenType.PRINT):
             return self._print_stmt()
         elif self._check(TokenType.IDENTIFIER) and self.tokens[self.pos + 1].type == TokenType.EQ:
-            return self._assignment_stmt()
+            return self._assign_stmt()
         return self._expr_stmt()
     
     def _var_decl(self):
@@ -116,6 +134,43 @@ class Parser:
         body = self._block_stmt()
         return While(condition, body)
     
+    def _for_stmt(self):
+        """
+        Parse a for statement
+        """
+        self._consume(TokenType.LPAREN, "Expect '('.")
+
+        # for the initialization clause, only allow declaration
+        if self._peek().type == TokenType.SEMICOLON:
+            init = None
+            self._advance()
+        elif self._peek().type == TokenType.IDENTIFIER:
+            init = self._assign_stmt() # consumes the ';'
+        elif self._peek().type == TokenType.VAR:
+            self._match(TokenType.VAR)
+            init = self._var_decl() # consumes the ';'
+        else:
+            raise RuntimeError("Invalid initializer clause.")
+
+        # condition clause is mandatory
+        condition = self._expression()
+        self._consume(TokenType.SEMICOLON, "Expect ';'.")
+
+        # for the iteration clause, allow only an assignment or nothing
+        if self._peek().type == TokenType.RPAREN:
+            iterclause = None
+        else:
+            name = self._consume(TokenType.IDENTIFIER, "Expect variable name.")
+            self._consume(TokenType.EQ, "Expect '='.")
+            expr = self._expression()
+            iterclause = Assign(name.lexeme, expr)
+        
+        self._consume(TokenType.RPAREN, "Expect ')'.")
+
+        # consume body
+        body = self._block_stmt()
+        return For(init, condition, iterclause, body)
+    
     def _block_stmt(self):
         statements = []
         self._consume(TokenType.LBRACE, "Expect '{'.")
@@ -124,7 +179,7 @@ class Parser:
         self._consume(TokenType.RBRACE, "Expect '}'.")
         return Block(tuple(statements))
 
-    def _assignment_stmt(self):
+    def _assign_stmt(self):
         name = self._consume(TokenType.IDENTIFIER, "Expect variable name.")
         self._consume(TokenType.EQ, "Expect '='.")
         expr = self._expression()

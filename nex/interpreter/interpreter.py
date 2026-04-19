@@ -62,7 +62,7 @@ class Interpreter:
 
     def exec_Block(self, node):
         """
-        Evaluate a block statement. Blocks result in scoping and variables
+        Execute a block statement. Blocks result in scoping and variables
         declared inside a block statement shadow variables defined in a higher
         scope.
         """
@@ -75,7 +75,7 @@ class Interpreter:
 
     def exec_If(self, node):
         """
-        Evaluate If statement.
+        Execute If statement.
         """
         val = self.eval(node.condition)
         if val:
@@ -85,10 +85,31 @@ class Interpreter:
     
     def exec_While(self, node):
         """
-        Evaluate While statements.
+        Execute While statements.
         """
         while self.eval(node.condition):
             self.exec(node.body)
+    
+    def exec_For(self, node):
+        """
+        Execute For statements.
+        """
+        self.env.push()
+        try:
+            if node.init is not None:
+                self.exec(node.init)
+            while self.eval(node.condition):
+                self.exec(node.body)
+                if node.iter is not None:
+                    self.exec(node.iter)
+        finally:
+            self.env.pop()
+    
+    def exec_ExprStmt(self, node):
+        """
+        Execute expression; effectively does nothing.
+        """
+        self.eval(node.expr)
 
     # -------------------------------------------------------------------------
     # EXPRESSION EVALUATION
@@ -145,7 +166,7 @@ class Interpreter:
             '+': lambda l, r: l + r,
             '-': lambda l, r: l - r,
             '*': lambda l, r: l * r,
-            '/': lambda l, r: l / r,
+            '/': lambda l, r: int(l / r),
             '<': lambda l, r: l < r,
             '>': lambda l, r: l > r,
             '>=': lambda l, r: l >= r,

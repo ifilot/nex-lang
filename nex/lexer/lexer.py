@@ -35,6 +35,11 @@ class Lexer:
         ch = self.source[self.pos]
         self.pos += 1
         self.column += 1
+
+        if ch == '\n':
+            self.line += 1
+            self.column = 0
+
         return ch
 
     def _peek(self):
@@ -80,9 +85,7 @@ class Lexer:
         elif c == '#':
             self._comment()
         elif c.isspace():
-            if c == '\n':
-                self.line += 1
-                self.column = 0
+            pass
         elif c.isdigit():
             self._number(c)
         elif c.isalpha():

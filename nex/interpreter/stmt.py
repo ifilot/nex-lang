@@ -69,6 +69,17 @@ class If(Stmt):
     else_branch: Stmt | None
 
 @dataclass(frozen=True)
+class For(Stmt):
+    """
+    For statement, keep looping over the body while condition is valid. Allow
+    for initialization and iteration instructions.
+    """
+    init: Stmt | None
+    condition: Expr
+    iter: Stmt | None
+    body: Stmt
+
+@dataclass(frozen=True)
 class While(Stmt):
     """
     While statement. While the condition evaluates to true, keep on executing
@@ -76,3 +87,11 @@ class While(Stmt):
     """
     condition: Expr
     body: Stmt
+
+@dataclass(frozen=True)
+class ExprStmt(Stmt):
+    """
+    Expression Statement. Evaluates the expression as if it is a statement.
+    Effectively does nothing except consuming CPU cycles.
+    """
+    expr: Expr

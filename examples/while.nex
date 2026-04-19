@@ -1,3 +1,6 @@
+#
+# Simple while loop acting as a for loop
+#
 var x = 0;
 while(x < 10) {
     print(x);
