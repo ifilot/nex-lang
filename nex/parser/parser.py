@@ -277,7 +277,7 @@ class Parser:
         """
         expr = self._term()
 
-        if self._match(
+        while self._match(
             TokenType.LT,
             TokenType.GT,
             TokenType.LTE,

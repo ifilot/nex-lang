@@ -72,6 +72,7 @@ invalid at execution time, such as:
 - assigning a value of the wrong type
 - using a non-boolean condition in `if`, `while`, or `for`
 - applying an operator to unsupported operand types
+- writing a chained comparison such as `1 < 2 < 3`, which becomes `(1 < 2) < 3`
 
 These are errors in the *meaning* of the program as it runs. They are
 especially valuable in a small interpreter because they show how a language can

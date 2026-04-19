@@ -16,11 +16,17 @@ EXPECTED_OUTPUTS = {
     "strings.nex": "Hello, NEX!\nordered\nexact match\ncustom target\n",
     "while.nex": "0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n",
 }
+EXPECTED_ERRORS = {
+    "comparison.nex": (
+        "6\n",
+        "runtime error: line 7, column 13: operator '<' expects matching int or str operands, got bool and int\n",
+    ),
+}
 
 
 def test_all_examples_are_covered():
     example_filenames = {path.name for path in EXAMPLES_DIR.glob("*.nex")}
-    assert example_filenames == set(EXPECTED_OUTPUTS)
+    assert example_filenames == set(EXPECTED_OUTPUTS) | set(EXPECTED_ERRORS)
 
 
 @pytest.mark.parametrize(
@@ -33,3 +39,18 @@ def test_examples_produce_expected_output(filename, expected_output, capsys):
     captured = capsys.readouterr()
     assert captured.out == expected_output
     assert captured.err == ""
+
+
+@pytest.mark.parametrize(
+    ("filename", "expected_output", "expected_error"),
+    sorted((name, out, err) for name, (out, err) in EXPECTED_ERRORS.items()),
+)
+def test_examples_produce_expected_error(
+    filename, expected_output, expected_error, capsys
+):
+    exit_code = main([str(EXAMPLES_DIR / filename)])
+
+    captured = capsys.readouterr()
+    assert exit_code == 1
+    assert captured.out == expected_output
+    assert captured.err == expected_error

@@ -31,6 +31,11 @@ Binary operators at the same precedence level associate from left to right.
 This precedence structure is a compact way of saying which expression trees the
 parser is supposed to build when several operators appear together.
 
+For comparison and equality operators, this left-to-right rule also applies to
+chains. For example, `1 < 2 < 3` is parsed as `(1 < 2) < 3`, not as a special
+"between" form. Since `1 < 2` produces a `bool`, the second `<` then attempts
+to compare `bool` with `int`, which is a runtime error.
+
 ## Unary operators
 
 ### Numeric negation
@@ -83,6 +88,17 @@ The operators `<`, `>`, `<=`, and `>=` support:
 - `str` compared with `str`
 
 Mixed-type ordering comparisons are runtime errors.
+
+Because comparisons associate from left to right, chained comparisons do not
+have a special combined meaning.
+
+```nex
+print(1 < 2 < 3);
+```
+
+The example above is parsed as `(1 < 2) < 3`. The first comparison evaluates
+to `true`, and the second comparison then fails because ordering comparisons do
+not support `bool` operands.
 
 ## Equality
 

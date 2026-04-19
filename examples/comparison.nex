@@ -1,0 +1,7 @@
+#
+# Chained comparisons parse left-to-right.
+# This means `1 < 2 < 3` becomes `(1 < 2) < 3`,
+# which then fails because it compares `bool` with `int`.
+#
+print(1 * 2 * 3);
+print(1 < 2 < 3);
