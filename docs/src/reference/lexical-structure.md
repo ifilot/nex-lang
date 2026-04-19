@@ -32,11 +32,20 @@ Identifiers are used for variable names. In the current core, they are the
 names by which values are introduced into the environment and later looked up
 again in expressions and assignments.
 
+An identifier may start with a letter or `_`. After the first character, it
+may contain letters, digits, and `_`.
+
+Identifiers and keywords are case-sensitive. For example, `count`, `Count`,
+and `COUNT` are different names, and only lowercase `print` is the `print`
+keyword.
+
 Examples:
 
 - `x`
 - `counter`
 - `message`
+- `_name`
+- `with_internal_underscore`
 
 Keywords such as `int`, `bool`, `str`, `if`, `else`, `while`, `for`, `print`,
 `true`, and `false` are reserved. They have fixed meaning in the grammar and

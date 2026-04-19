@@ -120,6 +120,18 @@ def test_lexes_two_character_comparison_operators():
     ]
 
 
+def test_lexes_identifiers_with_leading_and_internal_underscores():
+    """
+    Test that identifiers may start with '_' and may contain '_' internally.
+    """
+    tokens = lex("int _name = 1; int with_internal_underscore = 2;")
+
+    assert tokens[1].type == TokenType.IDENTIFIER
+    assert tokens[1].lexeme == "_name"
+    assert tokens[6].type == TokenType.IDENTIFIER
+    assert tokens[6].lexeme == "with_internal_underscore"
+
+
 def test_tracks_line_and_column_numbers():
     """
     Test that the lexer correctly keeps track of line and column numbers.

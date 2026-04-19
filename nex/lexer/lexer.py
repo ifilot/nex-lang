@@ -114,7 +114,7 @@ class Lexer:
             pass
         elif c.isdigit():
             self._number(c)
-        elif c.isalpha():
+        elif c.isalpha() or c == "_":
             self._identifier(c)
         else:
             raise NexLexError(
@@ -166,7 +166,7 @@ class Lexer:
         Capture identifier / keyword
         """
         ident = first
-        while self._peek().isalnum():
+        while self._peek().isalnum() or self._peek() == "_":
             ident += self._advance()
 
         token_type = KEYWORDS.get(ident, TokenType.IDENTIFIER)
