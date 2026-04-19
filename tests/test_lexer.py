@@ -63,6 +63,31 @@ def test_lexes_arithmetic_operators():
     ]
 
 
+def test_tracks_line_and_column_numbers():
+    tokens = lex('var x = 1;\nprint("hi");\nfoo = 42;')
+
+    assert [(token.type, token.line, token.column) for token in tokens] == [
+        (TokenType.VAR, 1, 3),
+        (TokenType.IDENTIFIER, 1, 5),
+        (TokenType.EQ, 1, 7),
+        (TokenType.NUMBER, 1, 9),
+        (TokenType.SEMICOLON, 1, 10),
+        (TokenType.PRINT, 2, 5),
+        (TokenType.LPAREN, 2, 6),
+        (TokenType.STRING, 2, 10),
+        (TokenType.RPAREN, 2, 11),
+        (TokenType.SEMICOLON, 2, 12),
+        (TokenType.IDENTIFIER, 3, 3),
+        (TokenType.EQ, 3, 5),
+        (TokenType.NUMBER, 3, 8),
+        (TokenType.SEMICOLON, 3, 9),
+        (TokenType.EOF, 3, 9),
+    ]
+
+
 def test_raises_on_unexpected_character():
-    with pytest.raises(RuntimeError, match="Unexpected character"):
+    with pytest.raises(RuntimeError, match="Unexpected character: '@' at Line 1, Column 1"):
         lex("@")
+
+    with pytest.raises(RuntimeError, match="Unexpected character: '@' at Line 2, Column 1"):
+        lex("var x = 5;\n@")

@@ -11,7 +11,7 @@ class Lexer:
         self.pos = 0
         self.tokens = []
         self.line = 1
-        self.column = 1
+        self.column = 0
 
     def tokenize(self):
         """
@@ -80,13 +80,13 @@ class Lexer:
         elif c.isspace():
             if c == '\n':
                 self.line += 1
-                self.column = 1
+                self.column = 0
         elif c.isdigit():
             self._number(c)
         elif c.isalpha():
             self._identifier(c)
         else:
-            raise RuntimeError(f"Unexpected character: {c}")
+            raise RuntimeError(f"Unexpected character: '{c}' at Line {self.line}, Column {self.column}")
     
     def _add_token(self, type: TokenType, lexeme:str, literal = None):
         """
