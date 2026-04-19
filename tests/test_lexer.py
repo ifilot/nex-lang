@@ -5,14 +5,23 @@ from nex.lexer.tokentype import TokenType
 
 
 def lex(source: str):
+    """
+    Helper function to read string and tokenize it
+    """
     return Lexer(source).tokenize()
 
 
 def token_types(source: str):
+    """
+    Helper function to extract the token types from a list of tokens
+    """
     return [token.type for token in lex(source)]
 
 
 def test_lexes_keywords_and_punctuation():
+    """
+    Test that the lexer correctly identifies keywords and punctuation symbols.
+    """
     source = 'var x = 1; if (x < 10) { print("ok"); }'
 
     assert token_types(source) == [
@@ -39,6 +48,10 @@ def test_lexes_keywords_and_punctuation():
 
 
 def test_lexes_number_and_string_literals():
+    """
+    Test that the lexer correctly identifies numbers (non-negative integers) and
+    strings.
+    """
     tokens = lex('print("hello"); var n = 42;')
 
     assert tokens[2].literal == "hello"
@@ -46,6 +59,9 @@ def test_lexes_number_and_string_literals():
 
 
 def test_lexes_arithmetic_operators():
+    """
+    Test that the lexer correctly identifies arithmetic operators.
+    """
     assert token_types("x = 1 + 2 * 3 / 4 - 5;") == [
         TokenType.IDENTIFIER,
         TokenType.EQ,
@@ -64,6 +80,9 @@ def test_lexes_arithmetic_operators():
 
 
 def test_tracks_line_and_column_numbers():
+    """
+    Test that the lexer correctly keeps track of line and column numbers.
+    """
     tokens = lex('var x = 1;\nprint("hi");\nfoo = 42;')
 
     assert [(token.type, token.line, token.column) for token in tokens] == [
@@ -85,7 +104,57 @@ def test_tracks_line_and_column_numbers():
     ]
 
 
+def test_skips_full_line_comments():
+    """
+    Test that the lexer ignores lines that start with '#'.
+    """
+    assert token_types('# full line comment\nprint("ok");') == [
+        TokenType.PRINT,
+        TokenType.LPAREN,
+        TokenType.STRING,
+        TokenType.RPAREN,
+        TokenType.SEMICOLON,
+        TokenType.EOF,
+    ]
+
+
+def test_skips_trailing_comments():
+    """
+    Test that the lexer ignores comments after valid code on the same line.
+    """
+    assert token_types("var x = 1; # trailing comment\nprint(x);") == [
+        TokenType.VAR,
+        TokenType.IDENTIFIER,
+        TokenType.EQ,
+        TokenType.NUMBER,
+        TokenType.SEMICOLON,
+        TokenType.PRINT,
+        TokenType.LPAREN,
+        TokenType.IDENTIFIER,
+        TokenType.RPAREN,
+        TokenType.SEMICOLON,
+        TokenType.EOF,
+    ]
+
+
+def test_skips_comment_at_end_of_file():
+    """
+    Test that a final '#'-style comment without a trailing newline is ignored.
+    """
+    assert token_types("var x = 1; # trailing comment") == [
+        TokenType.VAR,
+        TokenType.IDENTIFIER,
+        TokenType.EQ,
+        TokenType.NUMBER,
+        TokenType.SEMICOLON,
+        TokenType.EOF,
+    ]
+
+
 def test_raises_on_unexpected_character():
+    """
+    Test that the lexer throws an error when finding unexpected characters.
+    """
     with pytest.raises(RuntimeError, match="Unexpected character: '@' at Line 1, Column 1"):
         lex("@")
 

@@ -77,6 +77,8 @@ class Lexer:
             self._add_token(TokenType.RBRACE, c)
         elif c == '"':
             self._string()
+        elif c == '#':
+            self._comment()
         elif c.isspace():
             if c == '\n':
                 self.line += 1
@@ -130,3 +132,10 @@ class Lexer:
 
         token_type = KEYWORDS.get(ident, TokenType.IDENTIFIER)
         self._add_token(token_type, ident)
+    
+    def _comment(self):
+        while self._peek() != '\n' and not self._is_at_end():
+            self._advance()
+
+        if not self._is_at_end():
+            self._advance()  # newline character
