@@ -168,9 +168,13 @@ class Interpreter:
             "-": lambda left_val, right_val: left_val - right_val,
             "*": lambda left_val, right_val: left_val * right_val,
             "/": lambda left_val, right_val: int(left_val / right_val),
+            "%": lambda left_val, right_val: left_val % right_val,
             "<": lambda left_val, right_val: left_val < right_val,
             ">": lambda left_val, right_val: left_val > right_val,
             ">=": lambda left_val, right_val: left_val >= right_val,
+            "<=": lambda left_val, right_val: left_val <= right_val,
+            "==": lambda left_val, right_val: left_val == right_val,
+            "!=": lambda left_val, right_val: left_val != right_val,
         }
 
         try:

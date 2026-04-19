@@ -1,7 +1,7 @@
 import pytest
 
 from nex import Interpreter
-from nex.interpreter.expr import Binary, Literal, Variable
+from nex.interpreter.expr import Binary, Literal, Unary, Variable
 from nex.interpreter.stmt import Assign, Block, ExprStmt, For, If, Print, VarDecl, While
 from nex.lexer import Lexer
 from nex.parser import Parser
@@ -35,6 +35,34 @@ def test_parses_expression_statement():
     stmt = program[0]
     assert isinstance(stmt, ExprStmt)
     assert stmt.expr == Binary(Literal(1), "+", Literal(2))
+
+
+def test_parses_unary_not_expression_statement():
+    program = parse("!0;")
+
+    assert len(program) == 1
+    stmt = program[0]
+    assert isinstance(stmt, ExprStmt)
+    assert stmt.expr == Unary("!", Literal(0))
+
+
+def test_parses_modulus_expression_statement():
+    program = parse("5 % 2;")
+
+    assert len(program) == 1
+    stmt = program[0]
+    assert isinstance(stmt, ExprStmt)
+    assert stmt.expr == Binary(Literal(5), "%", Literal(2))
+
+
+def test_parses_two_character_comparison_expression_statements():
+    program = parse("x <= 3; y >= 4; z == 5; w != 6;")
+
+    assert len(program) == 4
+    assert program[0] == ExprStmt(Binary(Variable("x"), "<=", Literal(3)))
+    assert program[1] == ExprStmt(Binary(Variable("y"), ">=", Literal(4)))
+    assert program[2] == ExprStmt(Binary(Variable("z"), "==", Literal(5)))
+    assert program[3] == ExprStmt(Binary(Variable("w"), "!=", Literal(6)))
 
 
 def test_parses_if_else_statement():
@@ -121,3 +149,32 @@ def test_executes_expression_statement_without_output(capsys):
 
     captured = capsys.readouterr()
     assert captured.out == ""
+
+
+def test_executes_unary_not_expression(capsys):
+    program = parse("print(!0); print(!1);")
+
+    Interpreter().run(program)
+
+    captured = capsys.readouterr()
+    assert captured.out == "True\nFalse\n"
+
+
+def test_executes_two_character_comparisons(capsys):
+    program = parse(
+        "print(2 <= 2); print(5 >= 3); print(1 >= 4); print(4 == 4); print(4 != 5);"
+    )
+
+    Interpreter().run(program)
+
+    captured = capsys.readouterr()
+    assert captured.out == "True\nTrue\nFalse\nTrue\nTrue\n"
+
+
+def test_executes_modulus_expression(capsys):
+    program = parse("print(5 % 2); print(8 % 3);")
+
+    Interpreter().run(program)
+
+    captured = capsys.readouterr()
+    assert captured.out == "1\n2\n"

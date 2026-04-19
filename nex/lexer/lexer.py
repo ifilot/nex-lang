@@ -65,12 +65,32 @@ class Lexer:
             self._add_token(TokenType.STAR, c)
         elif c == "/":
             self._add_token(TokenType.SLASH, c)
+        elif c == "%":
+            self._add_token(TokenType.PERCENT, c)
         elif c == "<":
-            self._add_token(TokenType.LT, c)
+            if self._peek() == "=":
+                self._advance()
+                self._add_token(TokenType.LTE, "<=")
+            else:
+                self._add_token(TokenType.LT, c)
         elif c == ">":
-            self._add_token(TokenType.GT, c)
+            if self._peek() == "=":
+                self._advance()
+                self._add_token(TokenType.GTE, ">=")
+            else:
+                self._add_token(TokenType.GT, c)
+        elif c == "!":
+            if self._peek() == "=":
+                self._advance()
+                self._add_token(TokenType.NEQ, "!=")
+            else:
+                self._add_token(TokenType.EXCLAMATION, c)
         elif c == "=":
-            self._add_token(TokenType.EQ, c)
+            if self._peek() == "=":
+                self._advance()
+                self._add_token(TokenType.EQQ, "==")
+            else:
+                self._add_token(TokenType.EQ, c)
         elif c == ";":
             self._add_token(TokenType.SEMICOLON, c)
         elif c == "(":

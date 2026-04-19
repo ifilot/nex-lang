@@ -43,13 +43,13 @@ from ..lexer.tokentype import TokenType
 #
 # <expression>        ::= <comparison>
 #
-# <comparison>        ::= <term> [ "<" <term> ]
+# <comparison>        ::= <term> [( "<" | ">" | "<=" | ">=" | "==" | "!=" ) <term>]
 #
 # <term>              ::= <factor> (("+" | "-") <factor>)*
 #
-# <factor>            ::= <unary> (("*" | "/") <unary>)*
+# <factor>            ::= <unary> (("*" | "/" | "%") <unary>)*
 #
-# <unary>             ::= "-" <unary>
+# <unary>             ::= ("-" | "!") <unary>
 #                       | <primary>
 #
 # <primary>           ::= <number>
@@ -220,7 +220,14 @@ class Parser:
         """
         expr = self._term()
 
-        if self._match(TokenType.LT):
+        if self._match(
+            TokenType.LT,
+            TokenType.GT,
+            TokenType.LTE,
+            TokenType.GTE,
+            TokenType.EQQ,
+            TokenType.NEQ,
+        ):
             op = self._previous().lexeme
             right = self._term()
             expr = Binary(expr, op, right)
@@ -246,7 +253,7 @@ class Parser:
         """
         expr = self._unary()
 
-        while self._match(TokenType.STAR, TokenType.SLASH):
+        while self._match(TokenType.STAR, TokenType.SLASH, TokenType.PERCENT):
             op = self._previous().lexeme
             right = self._unary()
             expr = Binary(expr, op, right)
@@ -257,7 +264,7 @@ class Parser:
         """
         Parse unary
         """
-        if self._match(TokenType.MINUS):
+        while self._match(TokenType.MINUS, TokenType.EXCLAMATION):
             op = self._previous().lexeme
             right = self._unary()
             return Unary(op, right)

@@ -62,7 +62,7 @@ def test_lexes_arithmetic_operators():
     """
     Test that the lexer correctly identifies arithmetic operators.
     """
-    assert token_types("x = 1 + 2 * 3 / 4 - 5;") == [
+    assert token_types("x = 1 + 2 * 3 / 4 % 5 - 6;") == [
         TokenType.IDENTIFIER,
         TokenType.EQ,
         TokenType.NUMBER,
@@ -72,8 +72,35 @@ def test_lexes_arithmetic_operators():
         TokenType.NUMBER,
         TokenType.SLASH,
         TokenType.NUMBER,
+        TokenType.PERCENT,
+        TokenType.NUMBER,
         TokenType.MINUS,
         TokenType.NUMBER,
+        TokenType.SEMICOLON,
+        TokenType.EOF,
+    ]
+
+
+def test_lexes_two_character_comparison_operators():
+    """
+    Test that the lexer correctly identifies two-character comparison operators.
+    """
+    assert token_types("a <= b; c >= d; e == f; g != h;") == [
+        TokenType.IDENTIFIER,
+        TokenType.LTE,
+        TokenType.IDENTIFIER,
+        TokenType.SEMICOLON,
+        TokenType.IDENTIFIER,
+        TokenType.GTE,
+        TokenType.IDENTIFIER,
+        TokenType.SEMICOLON,
+        TokenType.IDENTIFIER,
+        TokenType.EQQ,
+        TokenType.IDENTIFIER,
+        TokenType.SEMICOLON,
+        TokenType.IDENTIFIER,
+        TokenType.NEQ,
+        TokenType.IDENTIFIER,
         TokenType.SEMICOLON,
         TokenType.EOF,
     ]

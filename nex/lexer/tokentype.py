@@ -13,7 +13,13 @@ class TokenType(Enum):
     SLASH = auto()
     LT = auto()
     GT = auto()
+    LTE = auto()
+    GTE = auto()
     EQ = auto()
+    EQQ = auto()
+    NEQ = auto()
+    PERCENT = auto()
+    EXCLAMATION = auto()
 
     # punctuation
     SEMICOLON = auto()
