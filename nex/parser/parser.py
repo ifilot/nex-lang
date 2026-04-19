@@ -34,9 +34,11 @@ from ..lexer.tokentype import TokenType
 # <for-init>          ::= empty
 #                       | <typed-decl-core>
 #                       | <assignment-core>
+#                       | <expression>
 #
 # <for-iter>          ::= empty
 #                       | <assignment-core>
+#                       | <expression>
 #
 # <block>             ::= "{" <statement>* "}"
 #
@@ -128,14 +130,15 @@ class Parser:
         """
         return self._typed_decl("bool")
 
-    def _typed_decl(self, declared_type):
+    def _typed_decl(self, declared_type, require_semicolon=True):
         """
         Parse a typed variable declaration after the type keyword was consumed.
         """
         name = self._consume(TokenType.IDENTIFIER, "Expect variable name.")
         self._consume(TokenType.EQ, "Expect '=' after name.")
         initializer = self._expression()
-        self._consume(TokenType.SEMICOLON, "Expect ';'.")
+        if require_semicolon:
+            self._consume(TokenType.SEMICOLON, "Expect ';'.")
         return VarDecl(
             name.lexeme,
             initializer,
@@ -184,39 +187,14 @@ class Parser:
         for_token = self._previous()
         self._consume(TokenType.LPAREN, "Expect '('.")
 
-        # for the initialization clause, allow typed declarations, assignment,
-        # or an empty clause.
-        token = self._peek()
-        if token.type == TokenType.SEMICOLON:
-            init = None
-            self._advance()
-        elif token.type == TokenType.IDENTIFIER:
-            init = self._assign_stmt()  # consumes the ';'
-        elif self._match(TokenType.INT):
-            init = self._int_decl()  # consumes the ';'
-        elif self._match(TokenType.STR):
-            init = self._str_decl()  # consumes the ';'
-        elif self._match(TokenType.BOOL):
-            init = self._bool_decl()  # consumes the ';'
-        else:
-            raise NexParseError(
-                "invalid initializer clause",
-                line=token.line,
-                column=token.column,
-            )
+        init = self._for_init_clause()
+        self._consume(TokenType.SEMICOLON, "Expect ';'.")
 
         # condition clause is mandatory
         condition = self._expression()
         self._consume(TokenType.SEMICOLON, "Expect ';'.")
 
-        # for the iteration clause, allow only an assignment or nothing
-        if self._peek().type == TokenType.RPAREN:
-            iterclause = None
-        else:
-            name = self._consume(TokenType.IDENTIFIER, "Expect variable name.")
-            self._consume(TokenType.EQ, "Expect '='.")
-            expr = self._expression()
-            iterclause = Assign(name.lexeme, expr)
+        iterclause = self._for_iter_clause()
 
         self._consume(TokenType.RPAREN, "Expect ')'.")
 
@@ -231,6 +209,40 @@ class Parser:
             column=for_token.column,
         )
 
+    def _for_init_clause(self):
+        """
+        Parse the initializer clause of a for statement.
+        """
+        if self._peek().type == TokenType.SEMICOLON:
+            return None
+
+        if self._match(TokenType.INT):
+            return self._typed_decl("int", require_semicolon=False)
+        if self._match(TokenType.STR):
+            return self._typed_decl("str", require_semicolon=False)
+        if self._match(TokenType.BOOL):
+            return self._typed_decl("bool", require_semicolon=False)
+        if (
+            self._check(TokenType.IDENTIFIER)
+            and self.tokens[self.pos + 1].type == TokenType.EQ
+        ):
+            return self._assign_stmt(require_semicolon=False)
+        return self._expr_stmt(require_semicolon=False)
+
+    def _for_iter_clause(self):
+        """
+        Parse the iteration clause of a for statement.
+        """
+        if self._peek().type == TokenType.RPAREN:
+            return None
+
+        if (
+            self._check(TokenType.IDENTIFIER)
+            and self.tokens[self.pos + 1].type == TokenType.EQ
+        ):
+            return self._assign_stmt(require_semicolon=False)
+        return self._expr_stmt(require_semicolon=False)
+
     def _block_stmt(self):
         statements = []
         self._consume(TokenType.LBRACE, "Expect '{'.")
@@ -239,19 +251,21 @@ class Parser:
         self._consume(TokenType.RBRACE, "Expect '}'.")
         return Block(tuple(statements))
 
-    def _assign_stmt(self):
+    def _assign_stmt(self, require_semicolon=True):
         name = self._consume(TokenType.IDENTIFIER, "Expect variable name.")
         self._consume(TokenType.EQ, "Expect '='.")
         expr = self._expression()
-        self._consume(TokenType.SEMICOLON, "Expect ';'.")
+        if require_semicolon:
+            self._consume(TokenType.SEMICOLON, "Expect ';'.")
         return Assign(name.lexeme, expr, line=name.line, column=name.column)
 
-    def _expr_stmt(self):
+    def _expr_stmt(self, require_semicolon=True):
         """
         Parse an expression statement, check that it ends with a semicolon
         """
         expr = self._expression()
-        self._consume(TokenType.SEMICOLON, "Expect ';'.")
+        if require_semicolon:
+            self._consume(TokenType.SEMICOLON, "Expect ';'.")
         return ExprStmt(expr, line=expr.line, column=expr.column)
 
     def _print_stmt(self):

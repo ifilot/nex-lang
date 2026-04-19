@@ -95,11 +95,13 @@ The initializer may be:
 - empty
 - a typed variable declaration
 - an assignment
+- an expression statement form such as `1 + 2`
 
 The iteration clause may be:
 
 - empty
 - an assignment
+- an expression statement form such as `i + 1`
 
 The condition is mandatory and must evaluate to `bool`.
 
@@ -108,6 +110,19 @@ Example:
 ```nex
 for (int i = 0; i < 3; i = i + 1) {
     print(i);
+}
+```
+
+The initializer and iteration clauses reuse statement-like forms, but they do
+not carry their own trailing semicolons. The semicolons inside the `for (...)`
+header already separate the three clauses.
+
+For example:
+
+```nex
+for (1 + 2; i < 3; i + 1) {
+    print(i);
+    i = i + 1;
 }
 ```
 

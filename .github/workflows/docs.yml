@@ -36,7 +36,7 @@ jobs:
           key: ${{ runner.os }}-cargo-mdbook-${{ hashFiles('docs/book.toml') }}
 
       - name: Install mdBook
-        run: cargo install mdbook --locked
+        run: command -v mdbook >/dev/null 2>&1 || cargo install mdbook --locked
 
       - name: Build documentation
         run: ~/.cargo/bin/mdbook build docs

@@ -141,11 +141,29 @@ def test_parses_for_statement_with_empty_initializer_and_iteration():
     assert stmt.iter is None
 
 
-def test_rejects_invalid_for_initializer_clause():
+def test_parses_for_statement_with_expression_initializer():
+    program = parse("for (1 + 2; i < 3; i = i + 1) { print(i); }")
+
+    stmt = program[0]
+    assert isinstance(stmt, For)
+    assert stmt.init == ExprStmt(Binary(Literal(1), "+", Literal(2)))
+    assert stmt.iter == Assign("i", Binary(Variable("i"), "+", Literal(1)))
+
+
+def test_parses_for_statement_with_expression_iteration():
+    program = parse("for (int i = 0; i < 3; i + 1) { print(i); }")
+
+    stmt = program[0]
+    assert isinstance(stmt, For)
+    assert stmt.init == VarDecl("i", Literal(0), "int")
+    assert stmt.iter == ExprStmt(Binary(Variable("i"), "+", Literal(1)))
+
+
+def test_rejects_print_statement_in_for_initializer_clause():
     with pytest.raises(NexParseError) as excinfo:
         parse("for (print(1); i < 3; i = i + 1) { print(i); }")
 
-    assert excinfo.value.message == "invalid initializer clause"
+    assert excinfo.value.message == "expected expression"
     assert excinfo.value.line == 1
     assert excinfo.value.column == 6
 
@@ -250,6 +268,39 @@ def test_executes_modulus_expression(capsys):
 
     captured = capsys.readouterr()
     assert captured.out == "1\n2\n"
+
+
+def test_executes_for_loop_with_expression_initializer(capsys):
+    program = parse(
+        """
+        int i = 0;
+        for (1 + 2; i < 3; i = i + 1) {
+            print(i);
+        }
+        """
+    )
+
+    Interpreter().run(program)
+
+    captured = capsys.readouterr()
+    assert captured.out == "0\n1\n2\n"
+
+
+def test_executes_for_loop_with_expression_iteration(capsys):
+    program = parse(
+        """
+        int i = 0;
+        for (; i < 3; i + 1) {
+            print(i);
+            i = i + 1;
+        }
+        """
+    )
+
+    Interpreter().run(program)
+
+    captured = capsys.readouterr()
+    assert captured.out == "0\n1\n2\n"
 
 
 def test_rejects_mixed_type_addition():
