@@ -45,6 +45,12 @@ The package exposes a `nex` command:
 nex examples/hello.nex
 ```
 
+You can check the installed CLI version with:
+
+```bash
+nex --version
+```
+
 You can also run the CLI module directly:
 
 ```bash

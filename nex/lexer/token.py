@@ -5,4 +5,6 @@ from .tokentype import TokenType
 class Token:
     type: TokenType
     lexeme: str
-    literal: object = None
+    literal: object
+    line: int
+    column: int

@@ -1,12 +1,17 @@
-from nex import Lexer, Parser, Interpreter
+from nex import __version__, Interpreter, Lexer, Parser
 
-def main():
+def main(argv=None):
     import argparse
 
-    parser = argparse.ArgumentParser(description="Run my language")
+    parser = argparse.ArgumentParser(prog="nex", description="Run my language")
+    parser.add_argument(
+        "--version",
+        action="version",
+        version=f"%(prog)s {__version__}",
+    )
     parser.add_argument("file", help="Source file")
 
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     with open(args.file) as f:
         source = f.read()
@@ -19,3 +24,7 @@ def main():
 
     interpreter = Interpreter()
     interpreter.run(program)
+
+
+if __name__ == "__main__":
+    main()
