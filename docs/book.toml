@@ -14,3 +14,4 @@ default-theme = "light"
 git-repository-url = "https://github.com/ifilot/nex-lang"
 site-url = "/nex-lang/"
 additional-css = ["theme/nex.css"]
+additional-js = ["theme/nex-highlight.js"]

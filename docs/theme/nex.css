@@ -26,3 +26,57 @@
   background: rgba(91, 88, 87, 0.08);
 }
 
+code.language-nex,
+pre code.language-nex {
+  font-variant-ligatures: none;
+}
+
+pre code.language-nex .hljs-comment,
+code.language-nex .hljs-comment {
+  color: #7b8a8b;
+  font-style: italic;
+}
+
+pre code.language-nex .hljs-keyword,
+code.language-nex .hljs-keyword {
+  color: #8f2d56;
+  font-weight: 600;
+}
+
+pre code.language-nex .hljs-type,
+code.language-nex .hljs-type {
+  color: #b85c38;
+  font-weight: 700;
+}
+
+pre code.language-nex .hljs-built_in,
+code.language-nex .hljs-built_in {
+  color: #0f766e;
+  font-weight: 700;
+}
+
+pre code.language-nex .hljs-literal,
+code.language-nex .hljs-literal {
+  color: #7c3aed;
+  font-weight: 600;
+}
+
+pre code.language-nex .hljs-string,
+code.language-nex .hljs-string {
+  color: #2f855a;
+}
+
+pre code.language-nex .hljs-number,
+code.language-nex .hljs-number {
+  color: #1d4ed8;
+}
+
+pre code.language-nex .hljs-operator,
+code.language-nex .hljs-operator {
+  color: #4b5563;
+}
+
+pre code.language-nex .hljs-punctuation,
+code.language-nex .hljs-punctuation {
+  color: #6b7280;
+}

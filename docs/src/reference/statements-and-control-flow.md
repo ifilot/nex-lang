@@ -13,7 +13,10 @@ The current NEX core supports these statement forms:
 - `while`
 - `for`
 
-Every simple statement ends with a semicolon.
+Statements are the parts of a NEX program that do work at the top level of a
+block. While expressions compute values, statements use those values to declare
+variables, update state, print results, or choose which block of code to
+execute next. Every simple statement ends with a semicolon.
 
 ## Print
 
@@ -23,6 +26,10 @@ Every simple statement ends with a semicolon.
 print("hello");
 print(1 + 2);
 ```
+
+At the moment, `print` is the only built-in operation exposed directly at the
+statement level. It is useful both practically and pedagogically: it lets small
+programs show their results without needing a larger standard library.
 
 ## Blocks
 
@@ -35,7 +42,9 @@ A block is a sequence of statements enclosed in braces.
 }
 ```
 
-Blocks introduce a new lexical scope.
+Blocks introduce a new lexical scope. This means they are not just a way to
+group statements visually; they also define where local variable bindings begin
+and end.
 
 ## If statements
 
@@ -48,6 +57,10 @@ if (x < 10) {
     print("large");
 }
 ```
+
+Using a non-boolean condition is a runtime error. NEX treats control-flow
+conditions strictly, which keeps the language behavior explicit and easy to
+reason about.
 
 ## While loops
 
@@ -62,6 +75,10 @@ while (i < 3) {
     i = i + 1;
 }
 ```
+
+Using a non-boolean condition is a runtime error. A `while` loop therefore
+combines two important ideas at once: repeated execution and repeated
+evaluation of a boolean expression.
 
 ## For loops
 
@@ -94,3 +111,6 @@ for (int i = 0; i < 3; i = i + 1) {
 }
 ```
 
+Using a non-boolean `for` condition is a runtime error. The current `for`
+design is intentionally narrow, but it already shows the classic three-part
+loop structure: setup, test, and update.

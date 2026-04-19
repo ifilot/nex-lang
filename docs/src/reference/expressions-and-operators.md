@@ -10,6 +10,13 @@ Expressions produce values. The current core includes:
 - unary expressions
 - binary expressions
 
+Expressions are the computational side of the language. They are the parts of a
+program that answer questions such as "what value does this literal have?",
+"what value is stored in this variable?", or "what is the result of combining
+these two operands with an operator?" In the interpreter, expressions are
+evaluated recursively, which is why precedence and grouping rules matter so
+much.
+
 ## Operator precedence
 
 From highest precedence to lowest:
@@ -21,6 +28,8 @@ From highest precedence to lowest:
 5. comparison and equality operators: `<`, `>`, `<=`, `>=`, `==`, `!=`
 
 Binary operators at the same precedence level associate from left to right.
+This precedence structure is a compact way of saying which expression trees the
+parser is supposed to build when several operators appear together.
 
 ## Unary operators
 
@@ -53,6 +62,7 @@ print(8 % 3);
 ```
 
 The current interpreter performs integer division for `/`.
+More precisely, division truncates the result toward zero.
 
 ## Addition
 
@@ -62,6 +72,8 @@ Binary `+` supports:
 - `str + str`
 
 Mixed-type addition is not allowed.
+The interpreter does not try to guess what you meant by combining unrelated
+types. Instead, it reports a runtime error.
 
 ## Comparisons
 
@@ -85,3 +97,6 @@ print("a" != "b");
 print(true == false);
 ```
 
+Mixed-type equality is a runtime error rather than automatically evaluating to
+`false`. This keeps equality semantically strict and avoids surprising implicit
+conversions.

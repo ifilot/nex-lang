@@ -8,4 +8,4 @@
   - [Expressions And Operators](reference/expressions-and-operators.md)
   - [Statements And Control Flow](reference/statements-and-control-flow.md)
   - [Scopes And Bindings](reference/scopes-and-bindings.md)
-
+  - [Diagnostics And Errors](reference/diagnostics-and-errors.md)
