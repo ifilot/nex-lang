@@ -1,8 +1,9 @@
 from typing import Tuple
+
+from ..interpreter.expr import Binary, Literal, Unary, Variable
+from ..interpreter.stmt import Assign, Block, ExprStmt, For, If, Print, VarDecl, While
 from ..lexer.token import Token
 from ..lexer.tokentype import TokenType
-from ..interpreter.expr import *
-from ..interpreter.stmt import *
 
 # -----------------------------------------------------------------------------
 # Grammar (BNF)
@@ -61,7 +62,7 @@ class Parser:
     def __init__(self, tokens: Tuple[Token, ...]):
         self.tokens = tokens
         self.pos = 0
-    
+
     def parse(self):
         """
         Parse a list of tokens to create a program
@@ -74,9 +75,9 @@ class Parser:
         except Exception as e:
             line = self.tokens[self.pos].line
             column = self.tokens[self.pos].column
-            print(f'Parsing error at Line {line}, Column {column}: {e}')
+            print(f"Parsing error at Line {line}, Column {column}: {e}")
             raise
-    
+
     # --------------------------------------------------------------------------
     # PARSER FUNCTIONS
     # --------------------------------------------------------------------------
@@ -95,10 +96,13 @@ class Parser:
             return self._for_stmt()
         elif self._match(TokenType.PRINT):
             return self._print_stmt()
-        elif self._check(TokenType.IDENTIFIER) and self.tokens[self.pos + 1].type == TokenType.EQ:
+        elif (
+            self._check(TokenType.IDENTIFIER)
+            and self.tokens[self.pos + 1].type == TokenType.EQ
+        ):
             return self._assign_stmt()
         return self._expr_stmt()
-    
+
     def _var_decl(self):
         """
         Parse a variable declaration
@@ -123,7 +127,7 @@ class Parser:
         else:
             else_branch = None
         return If(condition, then_branch, else_branch)
-    
+
     def _while_stmt(self):
         """
         Parse a while statement
@@ -133,7 +137,7 @@ class Parser:
         self._consume(TokenType.RPAREN, "Expect ')'.")
         body = self._block_stmt()
         return While(condition, body)
-    
+
     def _for_stmt(self):
         """
         Parse a for statement
@@ -145,10 +149,10 @@ class Parser:
             init = None
             self._advance()
         elif self._peek().type == TokenType.IDENTIFIER:
-            init = self._assign_stmt() # consumes the ';'
+            init = self._assign_stmt()  # consumes the ';'
         elif self._peek().type == TokenType.VAR:
             self._match(TokenType.VAR)
-            init = self._var_decl() # consumes the ';'
+            init = self._var_decl()  # consumes the ';'
         else:
             raise RuntimeError("Invalid initializer clause.")
 
@@ -164,13 +168,13 @@ class Parser:
             self._consume(TokenType.EQ, "Expect '='.")
             expr = self._expression()
             iterclause = Assign(name.lexeme, expr)
-        
+
         self._consume(TokenType.RPAREN, "Expect ')'.")
 
         # consume body
         body = self._block_stmt()
         return For(init, condition, iterclause, body)
-    
+
     def _block_stmt(self):
         statements = []
         self._consume(TokenType.LBRACE, "Expect '{'.")
@@ -193,7 +197,7 @@ class Parser:
         expr = self._expression()
         self._consume(TokenType.SEMICOLON, "Expect ';'.")
         return ExprStmt(expr)
-    
+
     def _print_stmt(self):
         """
         Parse a print statement
@@ -235,7 +239,7 @@ class Parser:
             expr = Binary(expr, op, right)
 
         return expr
-    
+
     def _factor(self):
         """
         Parse factors
@@ -248,7 +252,7 @@ class Parser:
             expr = Binary(expr, op, right)
 
         return expr
-    
+
     def _unary(self):
         """
         Parse unary
@@ -259,7 +263,7 @@ class Parser:
             return Unary(op, right)
 
         return self._primary()
-    
+
     def _primary(self):
         """
         Parse primary
@@ -279,7 +283,7 @@ class Parser:
             return expr
 
         raise RuntimeError("Expect expression.")
-    
+
     # --------------------------------------------------------------------------
     # HELPER FUNCTIONS
     # --------------------------------------------------------------------------

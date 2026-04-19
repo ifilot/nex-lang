@@ -1,5 +1,6 @@
 from .environment import Environment
 
+
 class Interpreter:
     """
     Tree-walking interpreter that evaluates AST nodes and produces values.
@@ -37,14 +38,14 @@ class Interpreter:
         the user that there is no support (yet) for this type of node.
         """
         raise NotImplementedError(f"No exec for {type(node).__name__}")
-    
+
     def exec_VarDecl(self, node):
         """
         Variable declaration
         """
         val = self.eval(node.initializer)
         return self.env.declare(node.name, val)
-    
+
     def exec_Assign(self, node):
         """
         Assigns a value to variable or declares and initializes a new variable
@@ -82,14 +83,14 @@ class Interpreter:
             self.exec(node.then_branch)
         elif node.else_branch is not None:
             self.exec(node.else_branch)
-    
+
     def exec_While(self, node):
         """
         Execute While statements.
         """
         while self.eval(node.condition):
             self.exec(node.body)
-    
+
     def exec_For(self, node):
         """
         Execute For statements.
@@ -104,7 +105,7 @@ class Interpreter:
                     self.exec(node.iter)
         finally:
             self.env.pop()
-    
+
     def exec_ExprStmt(self, node):
         """
         Execute expression; effectively does nothing.
@@ -122,20 +123,20 @@ class Interpreter:
         """
         method = getattr(self, f"eval_{type(node).__name__}", self._eval_default)
         return method(node)
-    
+
     def _eval_default(self, node):
         """
         Default evaluation; automatically raises a NotImplementedError to inform
         the user that there is no support (yet) for this type of node.
         """
         raise NotImplementedError(f"No eval for {type(node).__name__}")
-    
+
     def eval_Literal(self, node):
         """
         Return the literal value directly.
         """
         return node.value
-    
+
     def eval_Unary(self, node):
         """
         Evaluate a unary expression by first evaluating its operand, then
@@ -144,15 +145,15 @@ class Interpreter:
         val = self.eval(node.expr)
 
         ops = {
-            '-': lambda v: -v,
-            '!': lambda v: not v,
+            "-": lambda v: -v,
+            "!": lambda v: not v,
         }
 
         try:
             return ops[node.op](val)
         except KeyError:
             raise NotImplementedError(f"Unsupported operator: {node.op}")
-    
+
     def eval_Binary(self, node):
         """
         Evaluate a binary expression by evaluating both operands and applying
@@ -163,20 +164,20 @@ class Interpreter:
 
         # list binary operations
         ops = {
-            '+': lambda l, r: l + r,
-            '-': lambda l, r: l - r,
-            '*': lambda l, r: l * r,
-            '/': lambda l, r: int(l / r),
-            '<': lambda l, r: l < r,
-            '>': lambda l, r: l > r,
-            '>=': lambda l, r: l >= r,
+            "+": lambda left_val, right_val: left_val + right_val,
+            "-": lambda left_val, right_val: left_val - right_val,
+            "*": lambda left_val, right_val: left_val * right_val,
+            "/": lambda left_val, right_val: int(left_val / right_val),
+            "<": lambda left_val, right_val: left_val < right_val,
+            ">": lambda left_val, right_val: left_val > right_val,
+            ">=": lambda left_val, right_val: left_val >= right_val,
         }
 
         try:
             return ops[node.op](left, right)
         except KeyError:
             raise NotImplementedError(f"Unsupported operator: {node.op}")
-        
+
     def eval_Variable(self, node):
         """
         Evaluates a variable and returns the value bound to it.

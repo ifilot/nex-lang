@@ -1,5 +1,7 @@
 __version__ = "0.1.0"
 
-from .interpreter import Interpreter
-from .lexer import Lexer
-from .parser import Parser
+from .interpreter import Interpreter as Interpreter
+from .lexer import Lexer as Lexer
+from .parser import Parser as Parser
+
+__all__ = ["__version__", "Interpreter", "Lexer", "Parser"]

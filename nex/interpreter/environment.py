@@ -2,6 +2,7 @@ class Environment:
     """
     Stores the environment of the interpreter
     """
+
     def __init__(self):
         """
         Default initializer (empty dictionary)

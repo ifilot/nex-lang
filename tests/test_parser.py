@@ -1,10 +1,10 @@
 import pytest
 
 from nex import Interpreter
-from nex.lexer import Lexer
-from nex.parser import Parser
 from nex.interpreter.expr import Binary, Literal, Variable
 from nex.interpreter.stmt import Assign, Block, ExprStmt, For, If, Print, VarDecl, While
+from nex.lexer import Lexer
+from nex.parser import Parser
 
 
 def parse(source: str):

@@ -103,6 +103,8 @@ class PrettyPrinter:
     def print_While(self, node, prefix="", is_last=True):
         lines = [self._branch(prefix, is_last, "While")]
         child_prefix = self._child_prefix(prefix, is_last)
-        lines.extend(self._render_labeled_child("Condition", node.condition, child_prefix, False))
+        lines.extend(
+            self._render_labeled_child("Condition", node.condition, child_prefix, False)
+        )
         lines.extend(self._render_labeled_child("Body", node.body, child_prefix, True))
         return lines

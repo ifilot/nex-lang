@@ -37,6 +37,13 @@ Install development dependencies as well:
 python -m pip install -e ".[dev]"
 ```
 
+Enable the local pre-commit hook to block commits when formatting, linting, or
+ASCII-only checks fail:
+
+```bash
+pre-commit install
+```
+
 ## Running Programs
 
 The package exposes a `nex` command:
@@ -66,6 +73,16 @@ python -m pytest -q tests
 ```
 
 Using `python -m pytest` is the most reliable form across environments and editors.
+
+## Linting
+
+Check linting, formatting, and ASCII-only text files with:
+
+```bash
+python -m ruff check .
+python -m ruff format --check .
+python scripts/check_ascii.py
+```
 
 ## Project Structure
 

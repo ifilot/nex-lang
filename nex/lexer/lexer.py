@@ -1,6 +1,7 @@
-from .tokentype import TokenType
-from .token import Token
 from .keywords import KEYWORDS
+from .token import Token
+from .tokentype import TokenType
+
 
 class Lexer:
     def __init__(self, source: str):
@@ -21,7 +22,7 @@ class Lexer:
             self._scan_token()
         self._add_token(TokenType.EOF, "")
         return self.tokens
-    
+
     def _is_at_end(self):
         """
         Assess whether we are at the end of string
@@ -36,7 +37,7 @@ class Lexer:
         self.pos += 1
         self.column += 1
 
-        if ch == '\n':
+        if ch == "\n":
             self.line += 1
             self.column = 0
 
@@ -47,42 +48,42 @@ class Lexer:
         Peek ahead
         """
         if self._is_at_end():
-            return '\0'
+            return "\0"
         return self.source[self.pos]
-    
+
     def _scan_token(self):
         """
         Scan the token
         """
         c = self._advance()
 
-        if c == '+':
+        if c == "+":
             self._add_token(TokenType.PLUS, c)
-        elif c == '-':
+        elif c == "-":
             self._add_token(TokenType.MINUS, c)
-        elif c == '*':
+        elif c == "*":
             self._add_token(TokenType.STAR, c)
-        elif c == '/':
+        elif c == "/":
             self._add_token(TokenType.SLASH, c)
-        elif c == '<':
+        elif c == "<":
             self._add_token(TokenType.LT, c)
-        elif c == '>':
+        elif c == ">":
             self._add_token(TokenType.GT, c)
-        elif c == '=':
+        elif c == "=":
             self._add_token(TokenType.EQ, c)
-        elif c == ';':
+        elif c == ";":
             self._add_token(TokenType.SEMICOLON, c)
-        elif c == '(':
+        elif c == "(":
             self._add_token(TokenType.LPAREN, c)
-        elif c == ')':
+        elif c == ")":
             self._add_token(TokenType.RPAREN, c)
-        elif c == '{':
+        elif c == "{":
             self._add_token(TokenType.LBRACE, c)
-        elif c == '}':
+        elif c == "}":
             self._add_token(TokenType.RBRACE, c)
         elif c == '"':
             self._string()
-        elif c == '#':
+        elif c == "#":
             self._comment()
         elif c.isspace():
             pass
@@ -91,9 +92,11 @@ class Lexer:
         elif c.isalpha():
             self._identifier(c)
         else:
-            raise RuntimeError(f"Unexpected character: '{c}' at Line {self.line}, Column {self.column}")
-    
-    def _add_token(self, type: TokenType, lexeme:str, literal = None):
+            raise RuntimeError(
+                f"Unexpected character: '{c}' at Line {self.line}, Column {self.column}"
+            )
+
+    def _add_token(self, type: TokenType, lexeme: str, literal=None):
         """
         Helper function to add a token to the tokenlist. Automatically assigns
         line and column.
@@ -109,7 +112,7 @@ class Lexer:
             num += self._advance()
 
         self._add_token(TokenType.NUMBER, num, int(num))
-    
+
     def _string(self):
         """
         Capture string literal
@@ -120,7 +123,7 @@ class Lexer:
 
         if self._is_at_end():
             raise RuntimeError("Unterminated string")
-        
+
         self._advance()  # closing quote
 
         self._add_token(TokenType.STRING, value, value)
@@ -135,9 +138,9 @@ class Lexer:
 
         token_type = KEYWORDS.get(ident, TokenType.IDENTIFIER)
         self._add_token(token_type, ident)
-    
+
     def _comment(self):
-        while self._peek() != '\n' and not self._is_at_end():
+        while self._peek() != "\n" and not self._is_at_end():
             self._advance()
 
         if not self._is_at_end():

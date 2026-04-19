@@ -155,8 +155,12 @@ def test_raises_on_unexpected_character():
     """
     Test that the lexer throws an error when finding unexpected characters.
     """
-    with pytest.raises(RuntimeError, match="Unexpected character: '@' at Line 1, Column 1"):
+    with pytest.raises(
+        RuntimeError, match="Unexpected character: '@' at Line 1, Column 1"
+    ):
         lex("@")
 
-    with pytest.raises(RuntimeError, match="Unexpected character: '@' at Line 2, Column 1"):
+    with pytest.raises(
+        RuntimeError, match="Unexpected character: '@' at Line 2, Column 1"
+    ):
         lex("var x = 5;\n@")

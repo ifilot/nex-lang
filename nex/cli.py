@@ -1,4 +1,5 @@
-from nex import __version__, Interpreter, Lexer, Parser
+from nex import Interpreter, Lexer, Parser, __version__
+
 
 def main(argv=None):
     import argparse
@@ -19,23 +20,24 @@ def main(argv=None):
     try:
         lexer = Lexer(source)
         tokens = lexer.tokenize()
-    except Exception as e:
-        print('Error encountered at lexing, aborting...')
+    except Exception:
+        print("Error encountered at lexing, aborting...")
         return
 
     try:
         parser_ = Parser(tokens)
         program = parser_.parse()
-    except Exception as e:
-        print('Error encountered at parsing, aborting...')
+    except Exception:
+        print("Error encountered at parsing, aborting...")
         return
 
     try:
         interpreter = Interpreter()
         interpreter.run(program)
-    except Exception as e:
-        print('Error encountered at interpreting, aborting...')
+    except Exception:
+        print("Error encountered at interpreting, aborting...")
         return
+
 
 if __name__ == "__main__":
     main()
