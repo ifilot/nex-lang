@@ -54,6 +54,8 @@ from ..lexer.tokentype import TokenType
 #
 # <primary>           ::= <number>
 #                       | <string>
+#                       | "true"
+#                       | "false"
 #                       | <identifier>
 #                       | "(" <expression> ")"
 
@@ -280,6 +282,9 @@ class Parser:
 
         if self._match(TokenType.STRING):
             return Literal(self._previous().literal)
+
+        if self._match(TokenType.TRUE, TokenType.FALSE):
+            return Literal(True if self._previous().type == TokenType.TRUE else False)
 
         if self._match(TokenType.IDENTIFIER):
             return Variable(self._previous().lexeme)

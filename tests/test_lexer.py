@@ -22,7 +22,7 @@ def test_lexes_keywords_and_punctuation():
     """
     Test that the lexer correctly identifies keywords and punctuation symbols.
     """
-    source = 'var x = 1; if (x < 10) { print("ok"); }'
+    source = 'var x = 1; if (x < 10) { print("ok"); } true false'
 
     assert token_types(source) == [
         TokenType.VAR,
@@ -43,6 +43,8 @@ def test_lexes_keywords_and_punctuation():
         TokenType.RPAREN,
         TokenType.SEMICOLON,
         TokenType.RBRACE,
+        TokenType.TRUE,
+        TokenType.FALSE,
         TokenType.EOF,
     ]
 

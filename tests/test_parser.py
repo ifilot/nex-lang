@@ -46,6 +46,14 @@ def test_parses_unary_not_expression_statement():
     assert stmt.expr == Unary("!", Literal(0))
 
 
+def test_parses_boolean_literal_expression_statements():
+    program = parse("true; false;")
+
+    assert len(program) == 2
+    assert program[0] == ExprStmt(Literal(True))
+    assert program[1] == ExprStmt(Literal(False))
+
+
 def test_parses_modulus_expression_statement():
     program = parse("5 % 2;")
 
@@ -153,6 +161,15 @@ def test_executes_expression_statement_without_output(capsys):
 
 def test_executes_unary_not_expression(capsys):
     program = parse("print(!0); print(!1);")
+
+    Interpreter().run(program)
+
+    captured = capsys.readouterr()
+    assert captured.out == "True\nFalse\n"
+
+
+def test_executes_boolean_literals(capsys):
+    program = parse("print(true); print(false);")
 
     Interpreter().run(program)
 
