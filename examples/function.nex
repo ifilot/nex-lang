@@ -1,0 +1,9 @@
+#
+# Example of a simple function
+#
+
+fn hello_world() -> void {
+    print("Hello World!");
+}
+
+hello_world();

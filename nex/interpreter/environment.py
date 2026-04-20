@@ -28,7 +28,7 @@ class Environment:
 
     def declare(self, name, declared_type, value, *, line=None, column=None):
         """
-        Declare a new variable
+        Declare a new variable, prevents redeclaration.
         """
         if name in self.values[-1]:
             raise NexRuntimeError(
@@ -40,13 +40,13 @@ class Environment:
 
     def assign(
         self,
-        name,
-        value,
+        name,  # name of the variable
+        value,  # value of the variable
         *,
-        line=None,
-        column=None,
-        value_line=None,
-        value_column=None,
+        line=None,  # line number of the statement
+        column=None,  # column number of the statement
+        value_line=None,  # line number of the variable
+        value_column=None,  # column number of the variable
     ):
         """
         Assign a value to a variable
@@ -75,6 +75,9 @@ class Environment:
         raise NexRuntimeError(f"undefined variable '{name}'", line=line, column=column)
 
     def _matches_type(self, declared_type, value):
+        """
+        Check whether the internal value matches the declared type.
+        """
         if declared_type == "int":
             return type(value) is int
         if declared_type == "str":
@@ -85,6 +88,9 @@ class Environment:
         raise RuntimeError(f"Unknown type: {declared_type}")
 
     def _runtime_type_name(self, value):
+        """
+        Get the runtime type of a variable.
+        """
         if type(value) is int:
             return "int"
         if type(value) is str:

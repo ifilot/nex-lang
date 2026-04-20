@@ -1,0 +1,5 @@
+#
+# Smallest possible program.
+# Prints a single string literal to standard output.
+#
+print("Hello World");

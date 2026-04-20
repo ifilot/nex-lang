@@ -4,7 +4,7 @@ import pytest
 
 from nex.cli import main
 
-EXAMPLES_DIR = Path(__file__).resolve().parents[1] / "examples"
+INPUT_DIR = Path(__file__).resolve().parent / "input"
 EXPECTED_OUTPUTS = {
     "fibo.nex": "1\n2\n3\n5\n8\n13\n21\n34\n55\n89\n",
     "fizzbuzz.nex": "1\n2\nFizz\n4\nBuzz\nFizz\n7\n8\nFizz\nBuzz\n11\nFizz\n13\n14\nFizzBuzz\n",
@@ -24,17 +24,17 @@ EXPECTED_ERRORS = {
 }
 
 
-def test_all_examples_are_covered():
-    example_filenames = {path.name for path in EXAMPLES_DIR.glob("*.nex")}
-    assert example_filenames == set(EXPECTED_OUTPUTS) | set(EXPECTED_ERRORS)
+def test_all_inputs_are_covered():
+    input_filenames = {path.name for path in INPUT_DIR.glob("*.nex")}
+    assert input_filenames == set(EXPECTED_OUTPUTS) | set(EXPECTED_ERRORS)
 
 
 @pytest.mark.parametrize(
     ("filename", "expected_output"),
     sorted(EXPECTED_OUTPUTS.items()),
 )
-def test_examples_produce_expected_output(filename, expected_output, capsys):
-    main([str(EXAMPLES_DIR / filename)])
+def test_inputs_produce_expected_output(filename, expected_output, capsys):
+    main([str(INPUT_DIR / filename)])
 
     captured = capsys.readouterr()
     assert captured.out == expected_output
@@ -45,10 +45,10 @@ def test_examples_produce_expected_output(filename, expected_output, capsys):
     ("filename", "expected_output", "expected_error"),
     sorted((name, out, err) for name, (out, err) in EXPECTED_ERRORS.items()),
 )
-def test_examples_produce_expected_error(
+def test_inputs_produce_expected_error(
     filename, expected_output, expected_error, capsys
 ):
-    exit_code = main([str(EXAMPLES_DIR / filename)])
+    exit_code = main([str(INPUT_DIR / filename)])
 
     captured = capsys.readouterr()
     assert exit_code == 1

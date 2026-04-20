@@ -9,6 +9,7 @@ class TokenType(Enum):
     # literals
     NUMBER = auto()
     IDENTIFIER = auto()
+    STRING = auto()
 
     # operators
     PLUS = auto()
@@ -31,7 +32,6 @@ class TokenType(Enum):
     RPAREN = auto()
     LBRACE = auto()
     RBRACE = auto()
-    STRING = auto()
 
     # keywords
     INT = auto()
@@ -44,5 +44,7 @@ class TokenType(Enum):
     PRINT = auto()
     TRUE = auto()
     FALSE = auto()
+    VOID = auto()
+    FUNCTION = auto()
 
     EOF = auto()

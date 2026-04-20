@@ -1,12 +1,9 @@
-from .program import Program
-
-
 class PrettyPrinter:
     """
     Printer class that outputs the AST as a visual tree.
     """
 
-    def print_program(self, program: Program):
+    def print_program(self, program):
         lines = ["Program"]
         statements = list(program)
         for index, stmt in enumerate(statements):
@@ -40,7 +37,7 @@ class PrettyPrinter:
         return lines
 
     def print_Literal(self, node, prefix="", is_last=True):
-        return [self._branch(prefix, is_last, f"Literal({node!r})")]
+        return [self._branch(prefix, is_last, f"Literal({node.value!r})")]
 
     def print_Unary(self, node, prefix="", is_last=True):
         lines = [self._branch(prefix, is_last, f"Unary({node.op})")]
@@ -58,7 +55,7 @@ class PrettyPrinter:
         return [self._branch(prefix, is_last, f"Variable({node!r})")]
 
     def print_VarDecl(self, node, prefix="", is_last=True):
-        lines = [self._branch(prefix, is_last, f"VarDecl({node.name})")]
+        lines = [self._branch(prefix, is_last, f"VarDecl({node.type} {node.name})")]
         child_prefix = self._child_prefix(prefix, is_last)
         lines.extend(self.print(node.initializer, child_prefix, True))
         return lines
@@ -107,4 +104,30 @@ class PrettyPrinter:
             self._render_labeled_child("Condition", node.condition, child_prefix, False)
         )
         lines.extend(self._render_labeled_child("Body", node.body, child_prefix, True))
+        return lines
+
+    def print_For(self, node, prefix="", is_last=True):
+        lines = [self._branch(prefix, is_last, "For")]
+        child_prefix = self._child_prefix(prefix, is_last)
+        children = []
+
+        if node.init is not None:
+            children.append(("Init", node.init))
+        children.append(("Condition", node.condition))
+        if node.iter is not None:
+            children.append(("Iter", node.iter))
+        children.append(("Body", node.body))
+
+        for index, (label, child) in enumerate(children):
+            lines.extend(
+                self._render_labeled_child(
+                    label, child, child_prefix, index == len(children) - 1
+                )
+            )
+        return lines
+
+    def print_ExprStmt(self, node, prefix="", is_last=True):
+        lines = [self._branch(prefix, is_last, "ExprStmt")]
+        child_prefix = self._child_prefix(prefix, is_last)
+        lines.extend(self.print(node.expr, child_prefix, True))
         return lines
