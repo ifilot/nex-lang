@@ -2,6 +2,10 @@ from enum import Enum, auto
 
 
 class TokenType(Enum):
+    """
+    Defines the role of the Token
+    """
+
     # literals
     NUMBER = auto()
     IDENTIFIER = auto()

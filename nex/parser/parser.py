@@ -70,6 +70,11 @@ from ..lexer.tokentype import TokenType
 
 
 class Parser:
+    """
+    Converts the list of Tokens into an Abstract Syntax Tree (AST), the latter
+    being represented by a list of statements.
+    """
+
     def __init__(self, tokens: Tuple[Token, ...]):
         self.tokens = tokens
         self.pos = 0
@@ -244,6 +249,9 @@ class Parser:
         return self._expr_stmt(require_semicolon=False)
 
     def _block_stmt(self):
+        """
+        Parse a block statement
+        """
         statements = []
         self._consume(TokenType.LBRACE, "Expect '{'.")
         while self._peek().type != TokenType.RBRACE:
@@ -252,6 +260,10 @@ class Parser:
         return Block(tuple(statements))
 
     def _assign_stmt(self, require_semicolon=True):
+        """
+        Parse an assignment statement (set a value to variable), optionally
+        check that it ends with a semicolon.
+        """
         name = self._consume(TokenType.IDENTIFIER, "Expect variable name.")
         self._consume(TokenType.EQ, "Expect '='.")
         expr = self._expression()
@@ -261,7 +273,8 @@ class Parser:
 
     def _expr_stmt(self, require_semicolon=True):
         """
-        Parse an expression statement, check that it ends with a semicolon
+        Parse an expression statement, optionally check that it ends with a
+        semicolon.
         """
         expr = self._expression()
         if require_semicolon:
@@ -387,30 +400,43 @@ class Parser:
 
     def _peek(self):
         """
-        Look ahead at next token without consuming it
+        Look ahead at next token without consuming it.
         """
         return self.tokens[self.pos]
 
     def _previous(self):
         """
-        Look at previous token
+        Look at previous token.
         """
         return self.tokens[self.pos - 1]
 
     def _is_at_end(self):
+        """
+        Check whether we are at the end of the list of Tokens.
+        """
         return self._peek().type.name == "EOF"
 
     def _advance(self):
+        """
+        Consume the next Token and move the position forward.
+        """
         if not self._is_at_end():
             self.pos += 1
         return self._previous()
 
     def _check(self, type_):
+        """
+        Compare the current Token to the expected type and return the result.
+        """
         if self._is_at_end():
             return False
         return self._peek().type == type_
 
     def _match(self, *types):
+        """
+        Check if the upcoming Token matches one of the types given by *types. If
+        so, consume it and return True.
+        """
         for t in types:
             if self._check(t):
                 self._advance()
@@ -418,6 +444,10 @@ class Parser:
         return False
 
     def _consume(self, type_, message):
+        """
+        Consume a Token of the given type. If the Token is not of that type,
+        raise a NexParseError.
+        """
         if self._check(type_):
             return self._advance()
         raise NexParseError(

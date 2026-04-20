@@ -5,6 +5,11 @@ from .tokentype import TokenType
 
 
 class Lexer:
+    """
+    Reads source code as a stream of characters and converts it into a sequence
+    of tokens.
+    """
+
     def __init__(self, source: str):
         """
         Assign a string to the object for tokenization
@@ -163,7 +168,13 @@ class Lexer:
 
     def _identifier(self, first):
         """
-        Capture identifier / keyword
+        Capture identifier (sequence of characters used to name a variable,
+        function, or other entity in a program) / keyword (reserved word in a
+        programming language that has a predefined meaning and cannot be used as
+        an identifier)
+
+        Because true / false are reserved keywords, these are captured here as
+        well and eventually become literals in the parser.
         """
         ident = first
         while self._peek().isalnum() or self._peek() == "_":
@@ -173,6 +184,9 @@ class Lexer:
         self._add_token(token_type, ident)
 
     def _comment(self):
+        """
+        Capture a comment
+        """
         while self._peek() != "\n" and not self._is_at_end():
             self._advance()
 
