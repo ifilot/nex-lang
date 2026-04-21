@@ -111,7 +111,7 @@ class Lexer:
             self._add_token(TokenType.LBRACE, c)
         elif c == "}":
             self._add_token(TokenType.RBRACE, c)
-        elif c == ',':
+        elif c == ",":
             self._add_token(TokenType.COMMA, c)
         elif c == '"':
             self._string()
