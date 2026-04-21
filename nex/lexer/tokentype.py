@@ -24,6 +24,7 @@ class TokenType(Enum):
     EQQ = auto()
     NEQ = auto()
     PERCENT = auto()
+    COMMA = auto()
     EXCLAMATION = auto()
 
     # punctuation

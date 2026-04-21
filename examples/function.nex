@@ -7,3 +7,7 @@ fn hello_world() -> void {
 }
 
 hello_world();
+
+fn add(int a, int b) -> int {
+    return a+b;
+}
