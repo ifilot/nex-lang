@@ -36,6 +36,9 @@ class PrettyPrinter:
         lines.extend(self.print(child, child_prefix, True))
         return lines
 
+    def _render_value_child(self, label, value, prefix, is_last):
+        return [self._branch(prefix, is_last, f"{label}: {value}")]
+
     def print_Literal(self, node, prefix="", is_last=True):
         return [self._branch(prefix, is_last, f"Literal({node.value!r})")]
 
@@ -133,28 +136,39 @@ class PrettyPrinter:
         return lines
 
     def print_FuncDecl(self, node, prefix="", is_last=True):
-        args = []
-        for arg in node.arguments:
-            args.append(f"{arg[0]} {arg[1]}")
-        paramstring = ", ".join(args)
-        lines = [
-            self._branch(prefix, is_last, f"FuncDecl [{node.name}({paramstring})]")
-        ]
+        params = ", ".join(f"{param_type} {name}" for param_type, name in node.arguments)
+        signature = f"{node.name}({params}) -> {node.return_type}"
+        lines = [self._branch(prefix, is_last, f"FuncDecl [{signature}]")]
         child_prefix = self._child_prefix(prefix, is_last)
+        lines.extend(self._render_value_child("Arity", node.arity, child_prefix, False))
         lines.extend(self._render_labeled_child("Body", node.body, child_prefix, True))
         return lines
 
     def print_FuncCall(self, node, prefix="", is_last=True):
         lines = [self._branch(prefix, is_last, f"FuncCall [{node.callee}]")]
         child_prefix = self._child_prefix(prefix, is_last)
-        for arg in node.arguments:
+        if not node.arguments:
+            lines.extend(self._render_value_child("Arguments", 0, child_prefix, True))
+            return lines
+
+        for index, arg in enumerate(node.arguments):
             lines.extend(
-                self._render_labeled_child("Argument: ", arg, child_prefix, True)
+                self._render_labeled_child(
+                    f"Argument {index + 1}",
+                    arg,
+                    child_prefix,
+                    index == len(node.arguments) - 1,
+                )
             )
         return lines
 
     def print_Return(self, node, prefix="", is_last=True):
         lines = [self._branch(prefix, is_last, "Return")]
+        if node.expr is None:
+            child_prefix = self._child_prefix(prefix, is_last)
+            lines.extend(self._render_value_child("Expr", "None", child_prefix, True))
+            return lines
+
         child_prefix = self._child_prefix(prefix, is_last)
         lines.extend(self._render_labeled_child("Expr", node.expr, child_prefix, True))
         return lines
