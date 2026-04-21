@@ -119,7 +119,7 @@ def test_parses_function_declaration_without_parameters():
     assert len(program) == 1
     stmt = program[0]
     assert isinstance(stmt, FuncDecl)
-    assert stmt.name == "hello"
+    assert stmt.callee == "hello"
     assert stmt.arity == 0
     assert stmt.arguments == ()
     assert stmt.return_type == "void"
@@ -134,15 +134,13 @@ def test_parses_function_declaration_with_parameters_and_return():
     assert len(program) == 1
     stmt = program[0]
     assert isinstance(stmt, FuncDecl)
-    assert stmt.name == "add"
+    assert stmt.callee == "add"
     assert stmt.arity == 2
     assert stmt.arguments == (("int", "a"), ("int", "b"))
     assert stmt.return_type == "int"
     assert isinstance(stmt.body, Block)
     assert len(stmt.body.statements) == 1
-    assert stmt.body.statements[0] == Return(
-        Binary(Variable("a"), "+", Variable("b"))
-    )
+    assert stmt.body.statements[0] == Return(Binary(Variable("a"), "+", Variable("b")))
 
 
 def test_parses_return_without_expression():

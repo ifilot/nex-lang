@@ -151,3 +151,31 @@ def test_for_initializer_scope_does_not_leak():
     assert excinfo.value.message == "undefined variable 'i'"
     assert excinfo.value.line == 5
     assert excinfo.value.column == 19
+
+
+def test_rejects_call_to_undefined_function():
+    with pytest.raises(NexRuntimeError) as excinfo:
+        run_source("missing();")
+
+    assert excinfo.value.message == "Undefined function missing"
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 1
+
+
+def test_rejects_duplicate_function_declaration():
+    with pytest.raises(NexRuntimeError) as excinfo:
+        run_source(
+            """
+            fn ping() -> void {
+                return;
+            }
+
+            fn ping() -> void {
+                return;
+            }
+            """
+        )
+
+    assert excinfo.value.message == "function ping is already defined"
+    assert excinfo.value.line == 6
+    assert excinfo.value.column == 13

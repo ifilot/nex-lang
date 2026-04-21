@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import List, Tuple
+from typing import Tuple
 
 from .expr import Expr
 
@@ -71,7 +71,7 @@ class FuncDecl(Stmt):
     A statement that declares a new function in the current scope.
     """
 
-    name: str
+    callee: str
     arity: int
     arguments: Tuple[Tuple[str, str], ...]
     body: Block

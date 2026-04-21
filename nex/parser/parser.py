@@ -1,7 +1,7 @@
 from typing import Tuple
 
 from ..common import NexParseError
-from ..interpreter.expr import Binary, Literal, Unary, Variable, FuncCall
+from ..interpreter.expr import Binary, FuncCall, Literal, Unary, Variable
 from ..interpreter.stmt import (
     Assign,
     Block,

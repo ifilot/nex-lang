@@ -1,6 +1,16 @@
 from nex.common import NexRuntimeError
 
 from .environment import Environment
+from .function_store import Function, FunctionStore, NexFunctionStoreError
+
+
+class NexReturnSignal(Exception):
+    """
+    Custom return signal to unroll to the call site
+    """
+
+    def __init__(self, value):
+        self.value = value
 
 
 class Interpreter:
@@ -14,6 +24,7 @@ class Interpreter:
         interpeter.
         """
         self.env = Environment()
+        self.function_store = FunctionStore()
 
     def run(self, program):
         """
@@ -97,6 +108,24 @@ class Interpreter:
                 self.exec(stmt)
         finally:
             self.env.pop()
+
+    def exec_Return(self, node):
+        """
+        Raise a NexReturnSignal with the result of the expression evaluation
+        """
+        raise NexReturnSignal(self.eval(node.expr) if node.expr is not None else None)
+
+    def exec_FuncDecl(self, node):
+        """
+        Declare a new function
+        """
+        func = Function(
+            node.callee, node.arity, node.arguments, node.body, node.return_type
+        )
+        try:
+            self.function_store.declare_function(func)
+        except NexFunctionStoreError as e:
+            raise NexRuntimeError(e.message, line=node.line, column=node.column)
 
     def exec_If(self, node):
         """
@@ -264,6 +293,49 @@ class Interpreter:
         Evaluates a variable and returns the value bound to it.
         """
         return self.env.lookup(node.name, line=node.line, column=node.column)
+
+    def eval_FuncCall(self, node):
+        """
+        Evaluates a function call
+        """
+        # try to grab the function definition from the function store
+        try:
+            func = self.function_store.lookup_function(node.callee)
+        except NexFunctionStoreError as e:
+            raise NexRuntimeError(e.message, line=node.line, column=node.column)
+
+        # check whether all variables match
+        if node.arity != func.arity:
+            raise NexRuntimeError(
+                f"incorrect number of arguments provided {node.arity} != {func.arity}"
+            )
+
+        # evaluate all argument expressions
+        argvalues = []
+        for arg in node.arguments:
+            argvalues.append(self.eval(arg))
+
+        # check all parameter types
+        for param, arg in zip(func.arguments, argvalues):
+            if not self._matches_type(param[0], arg):
+                raise NexRuntimeError(
+                    f"param {param[0]} has the wrong type {param[0]} != {arg}"
+                )
+
+        # push new environment
+        self.env.push()
+
+        # allocate all variables
+        for param, arg in zip(func.arguments, argvalues):
+            self.env.declare(param[1], param[0], arg)
+
+        try:
+            for stmt in func.body:
+                self.exec(stmt)
+        except NexReturnSignal as ret:
+            return ret.value
+        finally:
+            self.env.pop()
 
     # -------------------------------------------------------------------------
     # HELPERS

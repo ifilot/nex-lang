@@ -15,7 +15,11 @@ fn add(int a, int b) -> int {
 print(add(1,2));
 
 fn fact(int n) -> int {
-    return fact(n - 1);
+    if(n == 1) {
+        return 1;
+    }
+
+    return n * fact(n - 1);
 }
 
-print(fact(5));
+print(fact(6));

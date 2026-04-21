@@ -136,8 +136,10 @@ class PrettyPrinter:
         return lines
 
     def print_FuncDecl(self, node, prefix="", is_last=True):
-        params = ", ".join(f"{param_type} {name}" for param_type, name in node.arguments)
-        signature = f"{node.name}({params}) -> {node.return_type}"
+        params = ", ".join(
+            f"{param_type} {name}" for param_type, name in node.arguments
+        )
+        signature = f"{node.callee}({params}) -> {node.return_type}"
         lines = [self._branch(prefix, is_last, f"FuncDecl [{signature}]")]
         child_prefix = self._child_prefix(prefix, is_last)
         lines.extend(self._render_value_child("Arity", node.arity, child_prefix, False))
