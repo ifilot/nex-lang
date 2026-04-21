@@ -73,22 +73,9 @@ class FuncDecl(Stmt):
 
     name: str
     arity: int
-    arguments: List[Tuple[str, str]]
+    arguments: Tuple[Tuple[str, str], ...]
     body: Block
     return_type: str = "void"
-    line: int | None = field(default=None, compare=False)
-    column: int | None = field(default=None, compare=False)
-
-
-@dataclass(frozen=True)
-class FuncCall(Stmt):
-    """
-    A call to a function
-    """
-
-    callee: str
-    arity: int
-    arguments: List[Tuple[str, str]]
     line: int | None = field(default=None, compare=False)
     column: int | None = field(default=None, compare=False)
 

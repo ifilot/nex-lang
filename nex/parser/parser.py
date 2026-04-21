@@ -1,13 +1,12 @@
 from typing import Tuple
 
 from ..common import NexParseError
-from ..interpreter.expr import Binary, Literal, Unary, Variable
+from ..interpreter.expr import Binary, Literal, Unary, Variable, FuncCall
 from ..interpreter.stmt import (
     Assign,
     Block,
     ExprStmt,
     For,
-    FuncCall,
     FuncDecl,
     If,
     Print,
@@ -24,6 +23,8 @@ from ..lexer.tokentype import TokenType
 # <program>           ::= <statement>* EOF
 #
 # <statement>         ::= <typed-decl>
+#                       | <function-decl>
+#                       | <return-stmt>
 #                       | <if-stmt>
 #                       | <while-stmt>
 #                       | <for-stmt>
@@ -36,6 +37,16 @@ from ..lexer.tokentype import TokenType
 # <typed-decl-core>   ::= <type> <identifier> "=" <expression>
 #
 # <type>              ::= "int" | "str" | "bool"
+#
+# <function-decl>     ::= "fn" <identifier> "(" [ <parameters> ] ")" "->" <return-type> <block>
+#
+# <parameters>        ::= <parameter> ("," <parameter>)*
+#
+# <parameter>         ::= <type> <identifier>
+#
+# <return-type>       ::= <type> | "void"
+#
+# <return-stmt>       ::= "return" [ <expression> ] ";"
 #
 # <if-stmt>           ::= "if" "(" <expression> ")" <block> [ "else" <block> ]
 #
@@ -77,8 +88,13 @@ from ..lexer.tokentype import TokenType
 #                       | <string>
 #                       | "true"
 #                       | "false"
+#                       | <function-call>
 #                       | <identifier>
 #                       | "(" <expression> ")"
+#
+# <function-call>     ::= <identifier> "(" [ <arguments> ] ")"
+#
+# <arguments>         ::= <expression> ("," <expression>)*
 
 
 class Parser:
@@ -207,7 +223,7 @@ class Parser:
             return_type = self._previous()
         else:
             raise NexParseError(
-                "Expected return type",
+                "Unexpected return type",
                 line=self._peek().line,
                 column=self._peek().column,
             )
@@ -218,9 +234,9 @@ class Parser:
         return FuncDecl(
             name.lexeme,
             len(params),
-            params,
+            tuple(params),
             body,
-            return_type,
+            return_type.lexeme,
             line=fn_token.line,
             column=fn_token.column,
         )
@@ -241,7 +257,7 @@ class Parser:
         return FuncCall(
             callee.lexeme,  # callee name
             len(arguments),  # arity
-            arguments,  # argument expressions
+            tuple(arguments),  # argument expressions
             line=callee.line,
             column=callee.column,
         )

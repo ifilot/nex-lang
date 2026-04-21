@@ -2,8 +2,19 @@ import pytest
 
 from nex import Interpreter
 from nex.common import NexParseError, NexRuntimeError
-from nex.interpreter.expr import Binary, Literal, Unary, Variable
-from nex.interpreter.stmt import Assign, Block, ExprStmt, For, If, Print, VarDecl, While
+from nex.interpreter.expr import Binary, FuncCall, Literal, Unary, Variable
+from nex.interpreter.stmt import (
+    Assign,
+    Block,
+    ExprStmt,
+    For,
+    FuncDecl,
+    If,
+    Print,
+    Return,
+    VarDecl,
+    While,
+)
 from nex.lexer import Lexer
 from nex.parser import Parser
 
@@ -100,6 +111,79 @@ def test_parses_while_statement():
     assert isinstance(stmt.body, Block)
     assert len(stmt.body.statements) == 1
     assert isinstance(stmt.body.statements[0], Print)
+
+
+def test_parses_function_declaration_without_parameters():
+    program = parse('fn hello() -> void { print("hi"); }')
+
+    assert len(program) == 1
+    stmt = program[0]
+    assert isinstance(stmt, FuncDecl)
+    assert stmt.name == "hello"
+    assert stmt.arity == 0
+    assert stmt.arguments == ()
+    assert stmt.return_type == "void"
+    assert isinstance(stmt.body, Block)
+    assert len(stmt.body.statements) == 1
+    assert stmt.body.statements[0] == Print(Literal("hi"))
+
+
+def test_parses_function_declaration_with_parameters_and_return():
+    program = parse("fn add(int a, int b) -> int { return a + b; }")
+
+    assert len(program) == 1
+    stmt = program[0]
+    assert isinstance(stmt, FuncDecl)
+    assert stmt.name == "add"
+    assert stmt.arity == 2
+    assert stmt.arguments == (("int", "a"), ("int", "b"))
+    assert stmt.return_type == "int"
+    assert isinstance(stmt.body, Block)
+    assert len(stmt.body.statements) == 1
+    assert stmt.body.statements[0] == Return(
+        Binary(Variable("a"), "+", Variable("b"))
+    )
+
+
+def test_parses_return_without_expression():
+    program = parse("fn noop() -> void { return; }")
+
+    stmt = program[0]
+    assert isinstance(stmt, FuncDecl)
+    assert stmt.body.statements == (Return(None),)
+
+
+def test_parses_function_call_as_expression_statement():
+    program = parse("hello();")
+
+    assert len(program) == 1
+    stmt = program[0]
+    assert isinstance(stmt, ExprStmt)
+    assert stmt.expr == FuncCall("hello", 0, ())
+
+
+def test_parses_function_call_inside_print_expression():
+    program = parse("print(add(1, 2));")
+
+    assert len(program) == 1
+    stmt = program[0]
+    assert isinstance(stmt, Print)
+    assert stmt.expr == FuncCall("add", 2, (Literal(1), Literal(2)))
+
+
+def test_parses_nested_function_call_arguments():
+    program = parse("outer(inner(1), 2 + 3);")
+
+    stmt = program[0]
+    assert isinstance(stmt, ExprStmt)
+    assert stmt.expr == FuncCall(
+        "outer",
+        2,
+        (
+            FuncCall("inner", 1, (Literal(1),)),
+            Binary(Literal(2), "+", Literal(3)),
+        ),
+    )
 
 
 def test_parses_for_statement_with_typed_initializer():
