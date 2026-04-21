@@ -2,7 +2,19 @@ from typing import Tuple
 
 from ..common import NexParseError
 from ..interpreter.expr import Binary, Literal, Unary, Variable
-from ..interpreter.stmt import Assign, Block, ExprStmt, For, If, Print, VarDecl, While
+from ..interpreter.stmt import (
+    Assign,
+    Block,
+    ExprStmt,
+    For,
+    FuncCall,
+    FuncDecl,
+    If,
+    Print,
+    Return,
+    VarDecl,
+    While,
+)
 from ..lexer.token import Token
 from ..lexer.tokentype import TokenType
 
@@ -102,19 +114,21 @@ class Parser:
             return self._str_decl()
         elif self._match(TokenType.BOOL):
             return self._bool_decl()
+        elif self._match(TokenType.RETURN):
+            return self._return_stmt()
         elif self._match(TokenType.IF):
             return self._if_stmt()
         elif self._match(TokenType.WHILE):
             return self._while_stmt()
         elif self._match(TokenType.FOR):
             return self._for_stmt()
+        elif self._match(TokenType.FUNCTION):
+            return self._function_decl()
         elif self._match(TokenType.PRINT):
             return self._print_stmt()
-        elif (
-            self._check(TokenType.IDENTIFIER)
-            and self.tokens[self.pos + 1].type == TokenType.EQ
-        ):
-            return self._assign_stmt()
+        elif self._check(TokenType.IDENTIFIER):
+            if self.tokens[self.pos + 1].type == TokenType.EQ:
+                return self._assign_stmt()
         return self._expr_stmt()
 
     def _int_decl(self):
@@ -135,6 +149,21 @@ class Parser:
         """
         return self._typed_decl("bool")
 
+    def _return_stmt(self):
+        """
+        Parse a return statement
+        """
+        ret = self._previous()
+        expr = None
+        if not self._check(TokenType.SEMICOLON):
+            expr = self._expression()
+        self._consume(TokenType.SEMICOLON, "Expect ';'.")
+        return Return(
+            expr,
+            line=ret.line,
+            column=ret.column,
+        )
+
     def _typed_decl(self, declared_type, require_semicolon=True):
         """
         Parse a typed variable declaration after the type keyword was consumed.
@@ -152,6 +181,71 @@ class Parser:
             column=name.column,
         )
 
+    def _function_decl(self):
+        fn_token = self._previous()
+        name = self._consume(TokenType.IDENTIFIER, "Expect variable name.")
+        self._consume(TokenType.LPAREN, "Expect '(")
+
+        # consume parameters
+        params = []
+        while self._match(TokenType.INT, TokenType.STR, TokenType.BOOL):
+            params.append(
+                (
+                    self._previous().lexeme,
+                    self._consume(TokenType.IDENTIFIER, "Expect variable name").lexeme,
+                )
+            )
+            if not self._check(TokenType.COMMA):
+                break
+            self._advance()
+
+        self._consume(TokenType.RPAREN, "Expect ')'")
+        self._consume(TokenType.RETTYPE, "Expect '->'")
+
+        # grab return type
+        if self._match(TokenType.INT, TokenType.STR, TokenType.BOOL, TokenType.VOID):
+            return_type = self._previous()
+        else:
+            raise NexParseError(
+                "Expected return type",
+                line=self._peek().line,
+                column=self._peek().column,
+            )
+
+        # grab function body
+        body = self._block_stmt()
+
+        return FuncDecl(
+            name.lexeme,
+            len(params),
+            params,
+            body,
+            return_type,
+            line=fn_token.line,
+            column=fn_token.column,
+        )
+
+    def _function_call(self):
+        callee = self._consume(TokenType.IDENTIFIER, "Expect function name.")
+        self._consume(TokenType.LPAREN, "Expect '('")
+
+        # consume function values
+        arguments = []
+        while not self._check(TokenType.RPAREN):
+            arguments.append(self._expression())
+            if self._check(TokenType.COMMA):
+                self._advance()
+
+        self._consume(TokenType.RPAREN, "Expect ')'")
+
+        return FuncCall(
+            callee.lexeme,  # callee name
+            len(arguments),  # arity
+            arguments,  # argument expressions
+            line=callee.line,
+            column=callee.column,
+        )
+
     def _if_stmt(self):
         """
         Parse an if statement.
@@ -161,7 +255,7 @@ class Parser:
         condition = self._expression()
         self._consume(TokenType.RPAREN, "Expect ')'.")
         then_branch = self._block_stmt()
-        if self._peek().type == TokenType.ELSE:
+        if self._check(TokenType.ELSE):
             self._advance()
             else_branch = self._block_stmt()
         else:
@@ -218,7 +312,7 @@ class Parser:
         """
         Parse the initializer clause of a for statement.
         """
-        if self._peek().type == TokenType.SEMICOLON:
+        if self._check(TokenType.SEMICOLON):
             return None
 
         if self._match(TokenType.INT):
@@ -238,7 +332,7 @@ class Parser:
         """
         Parse the iteration clause of a for statement.
         """
-        if self._peek().type == TokenType.RPAREN:
+        if self._check(TokenType.RPAREN):
             return None
 
         if (
@@ -254,7 +348,7 @@ class Parser:
         """
         statements = []
         self._consume(TokenType.LBRACE, "Expect '{'.")
-        while self._peek().type != TokenType.RBRACE:
+        while not self._check(TokenType.RBRACE):
             statements.append(self._statement())
         self._consume(TokenType.RBRACE, "Expect '}'.")
         return Block(tuple(statements))
@@ -351,6 +445,12 @@ class Parser:
         """
         Parse unary
         """
+        if (
+            self._check(TokenType.IDENTIFIER)
+            and self.tokens[self.pos + 1].type == TokenType.LPAREN
+        ):
+            return self._function_call()
+
         while self._match(TokenType.MINUS, TokenType.EXCLAMATION):
             operator = self._previous()
             op = operator.lexeme

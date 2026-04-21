@@ -26,6 +26,7 @@ class TokenType(Enum):
     PERCENT = auto()
     COMMA = auto()
     EXCLAMATION = auto()
+    RETTYPE = auto()
 
     # punctuation
     SEMICOLON = auto()
@@ -47,5 +48,6 @@ class TokenType(Enum):
     FALSE = auto()
     VOID = auto()
     FUNCTION = auto()
+    RETURN = auto()
 
     EOF = auto()

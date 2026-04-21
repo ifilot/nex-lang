@@ -70,7 +70,11 @@ class Lexer:
         if c == "+":
             self._add_token(TokenType.PLUS, c)
         elif c == "-":
-            self._add_token(TokenType.MINUS, c)
+            if self._peek() == ">":
+                self._advance()
+                self._add_token(TokenType.RETTYPE, "->")
+            else:
+                self._add_token(TokenType.MINUS, c)
         elif c == "*":
             self._add_token(TokenType.STAR, c)
         elif c == "/":

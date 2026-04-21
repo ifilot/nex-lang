@@ -131,3 +131,30 @@ class PrettyPrinter:
         child_prefix = self._child_prefix(prefix, is_last)
         lines.extend(self.print(node.expr, child_prefix, True))
         return lines
+
+    def print_FuncDecl(self, node, prefix="", is_last=True):
+        args = []
+        for arg in node.arguments:
+            args.append(f"{arg[0]} {arg[1]}")
+        paramstring = ", ".join(args)
+        lines = [
+            self._branch(prefix, is_last, f"FuncDecl [{node.name}({paramstring})]")
+        ]
+        child_prefix = self._child_prefix(prefix, is_last)
+        lines.extend(self._render_labeled_child("Body", node.body, child_prefix, True))
+        return lines
+
+    def print_FuncCall(self, node, prefix="", is_last=True):
+        lines = [self._branch(prefix, is_last, f"FuncCall [{node.callee}]")]
+        child_prefix = self._child_prefix(prefix, is_last)
+        for arg in node.arguments:
+            lines.extend(
+                self._render_labeled_child("Argument: ", arg, child_prefix, True)
+            )
+        return lines
+
+    def print_Return(self, node, prefix="", is_last=True):
+        lines = [self._branch(prefix, is_last, "Return")]
+        child_prefix = self._child_prefix(prefix, is_last)
+        lines.extend(self._render_labeled_child("Expr", node.expr, child_prefix, True))
+        return lines

@@ -11,3 +11,5 @@ hello_world();
 fn add(int a, int b) -> int {
     return a+b;
 }
+
+print(add(1,2));

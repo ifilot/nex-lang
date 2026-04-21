@@ -13,4 +13,5 @@ KEYWORDS = {
     "false": TokenType.FALSE,
     "void": TokenType.VOID,
     "fn": TokenType.FUNCTION,
+    "return": TokenType.RETURN,
 }
