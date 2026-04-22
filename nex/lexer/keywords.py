@@ -11,4 +11,7 @@ KEYWORDS = {
     "print": TokenType.PRINT,
     "true": TokenType.TRUE,
     "false": TokenType.FALSE,
+    "void": TokenType.VOID,
+    "fn": TokenType.FUNCTION,
+    "return": TokenType.RETURN,
 }

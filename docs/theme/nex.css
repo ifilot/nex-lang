@@ -55,6 +55,12 @@ code.language-nex .hljs-built_in {
   font-weight: 700;
 }
 
+pre code.language-nex .hljs-title,
+code.language-nex .hljs-title {
+  color: #9a3412;
+  font-weight: 700;
+}
+
 pre code.language-nex .hljs-literal,
 code.language-nex .hljs-literal {
   color: #7c3aed;

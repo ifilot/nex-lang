@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import Tuple
 
 # Design choice: AST nodes (including expressions) are immutable.
 #
@@ -81,3 +82,16 @@ class Variable(Expr):
 
     def __repr__(self):
         return self.name
+
+
+@dataclass(frozen=True)
+class FuncCall(Expr):
+    """
+    A call to a function
+    """
+
+    callee: str
+    arity: int
+    arguments: Tuple[Expr, ...]
+    line: int | None = field(default=None, compare=False)
+    column: int | None = field(default=None, compare=False)

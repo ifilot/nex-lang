@@ -1,17 +1,35 @@
 from typing import Tuple
 
 from ..common import NexParseError
-from ..interpreter.expr import Binary, Literal, Unary, Variable
-from ..interpreter.stmt import Assign, Block, ExprStmt, For, If, Print, VarDecl, While
+from ..interpreter.expr import Binary, FuncCall, Literal, Unary, Variable
+from ..interpreter.stmt import (
+    Assign,
+    Block,
+    ExprStmt,
+    For,
+    FuncDecl,
+    If,
+    Print,
+    Return,
+    VarDecl,
+    While,
+)
 from ..lexer.token import Token
 from ..lexer.tokentype import TokenType
 
 # -----------------------------------------------------------------------------
-# Grammar (BNF)
+# Grammar (BNF-like)
 # -----------------------------------------------------------------------------
+# This grammar describes the parser's surface syntax. Some language rules are
+# enforced separately as context-sensitive checks, such as:
+# - `return` is only allowed inside function bodies
+# - nested function declarations are rejected
+#
 # <program>           ::= <statement>* EOF
 #
 # <statement>         ::= <typed-decl>
+#                       | <function-decl>
+#                       | <return-stmt>
 #                       | <if-stmt>
 #                       | <while-stmt>
 #                       | <for-stmt>
@@ -24,6 +42,16 @@ from ..lexer.tokentype import TokenType
 # <typed-decl-core>   ::= <type> <identifier> "=" <expression>
 #
 # <type>              ::= "int" | "str" | "bool"
+#
+# <function-decl>     ::= "fn" <identifier> "(" [ <parameters> ] ")" "->" <return-type> <block>
+#
+# <parameters>        ::= <parameter> ("," <parameter>)*
+#
+# <parameter>         ::= <type> <identifier>
+#
+# <return-type>       ::= <type> | "void"
+#
+# <return-stmt>       ::= "return" [ <expression> ] ";"
 #
 # <if-stmt>           ::= "if" "(" <expression> ")" <block> [ "else" <block> ]
 #
@@ -50,9 +78,13 @@ from ..lexer.tokentype import TokenType
 #
 # <expr-stmt>         ::= <expression> ";"
 #
-# <expression>        ::= <comparison>
+# <expression>        ::= <logical-or>
 #
-# <comparison>        ::= <term> [( "<" | ">" | "<=" | ">=" | "==" | "!=" ) <term>]
+# <logical-or>        ::= <logical-and> ( "||" <logical-and> )*
+#
+# <logical-and>       ::= <comparison> ( "&&" <comparison> )*
+#
+# <comparison>        ::= <term> (( "<" | ">" | "<=" | ">=" | "==" | "!=" ) <term>)*
 #
 # <term>              ::= <factor> (("+" | "-") <factor>)*
 #
@@ -65,8 +97,13 @@ from ..lexer.tokentype import TokenType
 #                       | <string>
 #                       | "true"
 #                       | "false"
+#                       | <function-call>
 #                       | <identifier>
 #                       | "(" <expression> ")"
+#
+# <function-call>     ::= <identifier> "(" [ <arguments> ] ")"
+#
+# <arguments>         ::= <expression> ("," <expression>)*
 
 
 class Parser:
@@ -78,6 +115,7 @@ class Parser:
     def __init__(self, tokens: Tuple[Token, ...]):
         self.tokens = tokens
         self.pos = 0
+        self.function_depth = 0  # keep track whether we are parsing a function
 
     def parse(self):
         """
@@ -102,19 +140,21 @@ class Parser:
             return self._str_decl()
         elif self._match(TokenType.BOOL):
             return self._bool_decl()
+        elif self._match(TokenType.RETURN):
+            return self._return_stmt()
         elif self._match(TokenType.IF):
             return self._if_stmt()
         elif self._match(TokenType.WHILE):
             return self._while_stmt()
         elif self._match(TokenType.FOR):
             return self._for_stmt()
+        elif self._match(TokenType.FUNCTION):
+            return self._function_decl()
         elif self._match(TokenType.PRINT):
             return self._print_stmt()
-        elif (
-            self._check(TokenType.IDENTIFIER)
-            and self.tokens[self.pos + 1].type == TokenType.EQ
-        ):
-            return self._assign_stmt()
+        elif self._check(TokenType.IDENTIFIER):
+            if self.tokens[self.pos + 1].type == TokenType.EQ:
+                return self._assign_stmt()
         return self._expr_stmt()
 
     def _int_decl(self):
@@ -135,6 +175,29 @@ class Parser:
         """
         return self._typed_decl("bool")
 
+    def _return_stmt(self):
+        """
+        Parse a return statement
+        """
+        # return statements are not allowed at the global level
+        if self.function_depth < 1:
+            raise NexParseError(
+                "return statement are not allowed outside of function declarations",
+                line=self._previous().line,
+                column=self._previous().column,
+            )
+
+        ret = self._previous()
+        expr = None
+        if not self._check(TokenType.SEMICOLON):
+            expr = self._expression()
+        self._consume(TokenType.SEMICOLON, "Expect ';'.")
+        return Return(
+            expr,
+            line=ret.line,
+            column=ret.column,
+        )
+
     def _typed_decl(self, declared_type, require_semicolon=True):
         """
         Parse a typed variable declaration after the type keyword was consumed.
@@ -152,6 +215,100 @@ class Parser:
             column=name.column,
         )
 
+    def _function_decl(self):
+        # increment function depth (can in principle never exceed 1, because
+        # nested functions are not allowed)
+        self.function_depth += 1
+
+        if self.function_depth > 1:
+            raise NexParseError(
+                "nested functions are not allowed",
+                line=self._peek().line,
+                column=self._peek().column,
+            )
+
+        fn_token = self._previous()
+        name = self._consume(TokenType.IDENTIFIER, "Expect variable name.")
+        self._consume(TokenType.LPAREN, "Expect '(")
+
+        # consume parameters, check for duplicates
+        param_types = []
+        param_names = []
+        while self._match(TokenType.INT, TokenType.STR, TokenType.BOOL):
+            paramtype = self._previous().lexeme
+            paramname = self._consume(
+                TokenType.IDENTIFIER, "Expect variable name"
+            ).lexeme
+            if paramname in param_names:
+                raise NexParseError(
+                    f"duplicate parameter `{paramname}` encountered",
+                    line=self._previous().line,
+                    column=self._previous().column,
+                )
+
+            param_types.append(paramtype)
+            param_names.append(paramname)
+
+            if not self._check(TokenType.COMMA):
+                break
+            self._advance()
+
+        self._consume(TokenType.RPAREN, "Expect ')'")
+        self._consume(TokenType.RETTYPE, "Expect '->'")
+
+        # grab return type
+        if self._match(TokenType.INT, TokenType.STR, TokenType.BOOL, TokenType.VOID):
+            return_type = self._previous()
+        else:
+            raise NexParseError(
+                "unexpected return type",
+                line=self._peek().line,
+                column=self._peek().column,
+            )
+
+        # grab function body
+        body = self._block_stmt()
+
+        # decrement function depth
+        self.function_depth -= 1
+
+        # assemble parameters
+        params = [
+            (paramtype, paramname)
+            for paramtype, paramname in zip(param_types, param_names)
+        ]
+
+        return FuncDecl(
+            name.lexeme,
+            len(params),
+            tuple(params),
+            body,
+            return_type.lexeme,
+            line=fn_token.line,
+            column=fn_token.column,
+        )
+
+    def _function_call(self):
+        callee = self._consume(TokenType.IDENTIFIER, "Expect function name.")
+        self._consume(TokenType.LPAREN, "Expect '('")
+
+        # consume function values
+        arguments = []
+        while not self._check(TokenType.RPAREN):
+            arguments.append(self._expression())
+            if self._check(TokenType.COMMA):
+                self._advance()
+
+        self._consume(TokenType.RPAREN, "Expect ')'")
+
+        return FuncCall(
+            callee.lexeme,  # callee name
+            len(arguments),  # arity
+            tuple(arguments),  # argument expressions
+            line=callee.line,
+            column=callee.column,
+        )
+
     def _if_stmt(self):
         """
         Parse an if statement.
@@ -161,7 +318,7 @@ class Parser:
         condition = self._expression()
         self._consume(TokenType.RPAREN, "Expect ')'.")
         then_branch = self._block_stmt()
-        if self._peek().type == TokenType.ELSE:
+        if self._check(TokenType.ELSE):
             self._advance()
             else_branch = self._block_stmt()
         else:
@@ -218,7 +375,7 @@ class Parser:
         """
         Parse the initializer clause of a for statement.
         """
-        if self._peek().type == TokenType.SEMICOLON:
+        if self._check(TokenType.SEMICOLON):
             return None
 
         if self._match(TokenType.INT):
@@ -238,7 +395,7 @@ class Parser:
         """
         Parse the iteration clause of a for statement.
         """
-        if self._peek().type == TokenType.RPAREN:
+        if self._check(TokenType.RPAREN):
             return None
 
         if (
@@ -254,7 +411,7 @@ class Parser:
         """
         statements = []
         self._consume(TokenType.LBRACE, "Expect '{'.")
-        while self._peek().type != TokenType.RBRACE:
+        while not self._check(TokenType.RBRACE):
             statements.append(self._statement())
         self._consume(TokenType.RBRACE, "Expect '}'.")
         return Block(tuple(statements))
@@ -296,7 +453,35 @@ class Parser:
         """
         Parse an expression
         """
-        return self._comparison()
+        return self._logical_or()
+
+    def _logical_or(self):
+        """
+        Parse logical OR expressions.
+        """
+        expr = self._logical_and()
+
+        while self._match(TokenType.OR):
+            operator = self._previous()
+            op = operator.lexeme
+            right = self._logical_and()
+            expr = Binary(expr, op, right, line=operator.line, column=operator.column)
+
+        return expr
+
+    def _logical_and(self):
+        """
+        Parse logical AND expressions.
+        """
+        expr = self._comparison()
+
+        while self._match(TokenType.AND):
+            operator = self._previous()
+            op = operator.lexeme
+            right = self._comparison()
+            expr = Binary(expr, op, right, line=operator.line, column=operator.column)
+
+        return expr
 
     def _comparison(self):
         """
@@ -351,6 +536,12 @@ class Parser:
         """
         Parse unary
         """
+        if (
+            self._check(TokenType.IDENTIFIER)
+            and self.tokens[self.pos + 1].type == TokenType.LPAREN
+        ):
+            return self._function_call()
+
         while self._match(TokenType.MINUS, TokenType.EXCLAMATION):
             operator = self._previous()
             op = operator.lexeme

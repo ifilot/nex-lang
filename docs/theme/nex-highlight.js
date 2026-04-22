@@ -1,7 +1,7 @@
 (function () {
   function registerNex(hljs) {
     const KEYWORDS = {
-      keyword: "if else while for",
+      keyword: "fn return if else while for",
       literal: "true false",
     };
     const STRING = {
@@ -25,6 +25,10 @@
         {
           className: "built_in",
           begin: /\bprint(?=\s*\()/,
+        },
+        {
+          className: "title",
+          begin: /\b[a-zA-Z_][a-zA-Z0-9_]*(?=\s*\()/,
         },
         STRING,
         {

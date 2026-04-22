@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from typing import Tuple
 
 from .expr import Expr
 
@@ -28,6 +29,17 @@ class Stmt:
 
 
 @dataclass(frozen=True)
+class Return(Stmt):
+    """
+    A return statement
+    """
+
+    expr: Expr | None
+    line: int | None = field(default=None, compare=False)
+    column: int | None = field(default=None, compare=False)
+
+
+@dataclass(frozen=True)
 class VarDecl(Stmt):
     """
     A statement that declares a new variable in the current scope and
@@ -37,6 +49,33 @@ class VarDecl(Stmt):
     name: str
     initializer: Expr
     type: str
+    line: int | None = field(default=None, compare=False)
+    column: int | None = field(default=None, compare=False)
+
+
+@dataclass(frozen=True)
+class Block(Stmt):
+    """
+    Block statement, contains a set of statements.
+    """
+
+    statements: tuple[Stmt, ...]
+
+    def __iter__(self):
+        return iter(self.statements)
+
+
+@dataclass(frozen=True)
+class FuncDecl(Stmt):
+    """
+    A statement that declares a new function in the current scope.
+    """
+
+    callee: str
+    arity: int
+    arguments: Tuple[Tuple[str, str], ...]
+    body: Block
+    return_type: str = "void"
     line: int | None = field(default=None, compare=False)
     column: int | None = field(default=None, compare=False)
 
@@ -66,18 +105,6 @@ class Print(Stmt):
 
 
 @dataclass(frozen=True)
-class Block(Stmt):
-    """
-    Block statement, contains a set of statements.
-    """
-
-    statements: tuple[Stmt, ...]
-
-    def __iter__(self):
-        return iter(self.statements)
-
-
-@dataclass(frozen=True)
 class If(Stmt):
     """
     If statement. If the condition is true, execute then_branch, else execute
@@ -101,7 +128,7 @@ class For(Stmt):
     init: Stmt | None
     condition: Expr
     iter: Stmt | None
-    body: Stmt
+    body: Block
     line: int | None = field(default=None, compare=False)
     column: int | None = field(default=None, compare=False)
 
@@ -114,7 +141,7 @@ class While(Stmt):
     """
 
     condition: Expr
-    body: Stmt
+    body: Block
     line: int | None = field(default=None, compare=False)
     column: int | None = field(default=None, compare=False)
 

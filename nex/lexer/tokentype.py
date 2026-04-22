@@ -9,12 +9,15 @@ class TokenType(Enum):
     # literals
     NUMBER = auto()
     IDENTIFIER = auto()
+    STRING = auto()
 
     # operators
     PLUS = auto()
     MINUS = auto()
     STAR = auto()
     SLASH = auto()
+    OR = auto()
+    AND = auto()
     LT = auto()
     GT = auto()
     LTE = auto()
@@ -23,7 +26,9 @@ class TokenType(Enum):
     EQQ = auto()
     NEQ = auto()
     PERCENT = auto()
+    COMMA = auto()
     EXCLAMATION = auto()
+    RETTYPE = auto()
 
     # punctuation
     SEMICOLON = auto()
@@ -31,7 +36,6 @@ class TokenType(Enum):
     RPAREN = auto()
     LBRACE = auto()
     RBRACE = auto()
-    STRING = auto()
 
     # keywords
     INT = auto()
@@ -44,5 +48,8 @@ class TokenType(Enum):
     PRINT = auto()
     TRUE = auto()
     FALSE = auto()
+    VOID = auto()
+    FUNCTION = auto()
+    RETURN = auto()
 
     EOF = auto()

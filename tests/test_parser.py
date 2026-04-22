@@ -2,8 +2,19 @@ import pytest
 
 from nex import Interpreter
 from nex.common import NexParseError, NexRuntimeError
-from nex.interpreter.expr import Binary, Literal, Unary, Variable
-from nex.interpreter.stmt import Assign, Block, ExprStmt, For, If, Print, VarDecl, While
+from nex.interpreter.expr import Binary, FuncCall, Literal, Unary, Variable
+from nex.interpreter.stmt import (
+    Assign,
+    Block,
+    ExprStmt,
+    For,
+    FuncDecl,
+    If,
+    Print,
+    Return,
+    VarDecl,
+    While,
+)
 from nex.lexer import Lexer
 from nex.parser import Parser
 
@@ -69,6 +80,23 @@ def test_parses_two_character_comparison_expression_statements():
     assert program[3] == ExprStmt(Binary(Variable("w"), "!=", Literal(6)))
 
 
+def test_parses_logical_operator_expression_statements_with_precedence():
+    program = parse("a || b && c == d;")
+
+    assert len(program) == 1
+    assert program[0] == ExprStmt(
+        Binary(
+            Variable("a"),
+            "||",
+            Binary(
+                Variable("b"),
+                "&&",
+                Binary(Variable("c"), "==", Variable("d")),
+            ),
+        )
+    )
+
+
 def test_parses_if_else_statement():
     program = parse('if (x < 10) { print("ok"); } else { print("no"); }')
 
@@ -100,6 +128,117 @@ def test_parses_while_statement():
     assert isinstance(stmt.body, Block)
     assert len(stmt.body.statements) == 1
     assert isinstance(stmt.body.statements[0], Print)
+
+
+def test_parses_function_declaration_without_parameters():
+    program = parse('fn hello() -> void { print("hi"); }')
+
+    assert len(program) == 1
+    stmt = program[0]
+    assert isinstance(stmt, FuncDecl)
+    assert stmt.callee == "hello"
+    assert stmt.arity == 0
+    assert stmt.arguments == ()
+    assert stmt.return_type == "void"
+    assert isinstance(stmt.body, Block)
+    assert len(stmt.body.statements) == 1
+    assert stmt.body.statements[0] == Print(Literal("hi"))
+
+
+def test_parses_function_declaration_with_parameters_and_return():
+    program = parse("fn add(int a, int b) -> int { return a + b; }")
+
+    assert len(program) == 1
+    stmt = program[0]
+    assert isinstance(stmt, FuncDecl)
+    assert stmt.callee == "add"
+    assert stmt.arity == 2
+    assert stmt.arguments == (("int", "a"), ("int", "b"))
+    assert stmt.return_type == "int"
+    assert isinstance(stmt.body, Block)
+    assert len(stmt.body.statements) == 1
+    assert stmt.body.statements[0] == Return(Binary(Variable("a"), "+", Variable("b")))
+
+
+def test_parses_return_without_expression():
+    program = parse("fn noop() -> void { return; }")
+
+    stmt = program[0]
+    assert isinstance(stmt, FuncDecl)
+    assert stmt.body.statements == (Return(None),)
+
+
+def test_parses_return_inside_nested_block_within_function():
+    program = parse(
+        """
+        fn classify(int x) -> int {
+            if (x == 0) {
+                return 1;
+            }
+            return 2;
+        }
+        """
+    )
+
+    stmt = program[0]
+    assert isinstance(stmt, FuncDecl)
+    assert isinstance(stmt.body.statements[0], If)
+    assert stmt.body.statements[0].then_branch.statements == (Return(Literal(1)),)
+    assert stmt.body.statements[1] == Return(Literal(2))
+
+
+def test_rejects_duplicate_parameter_names_with_structured_parse_error():
+    with pytest.raises(NexParseError) as excinfo:
+        parse("fn f(int a, int a) -> int { return a; }")
+
+    assert excinfo.value.message == "duplicate parameter `a` encountered"
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 17
+
+
+def test_rejects_return_outside_function_with_structured_parse_error():
+    with pytest.raises(NexParseError) as excinfo:
+        parse("return 1;")
+
+    assert (
+        excinfo.value.message
+        == "return statement are not allowed outside of function declarations"
+    )
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 1
+
+
+def test_parses_function_call_as_expression_statement():
+    program = parse("hello();")
+
+    assert len(program) == 1
+    stmt = program[0]
+    assert isinstance(stmt, ExprStmt)
+    assert stmt.expr == FuncCall("hello", 0, ())
+
+
+def test_parses_function_call_inside_print_expression():
+    program = parse("print(add(1, 2));")
+
+    assert len(program) == 1
+    stmt = program[0]
+    assert isinstance(stmt, Print)
+    assert stmt.expr == FuncCall("add", 2, (Literal(1), Literal(2)))
+
+
+def test_parses_nested_function_call_arguments():
+    program = parse("outer(inner(1), 2 + 3);")
+
+    stmt = program[0]
+    assert isinstance(stmt, ExprStmt)
+    assert stmt.expr == FuncCall(
+        "outer",
+        2,
+        (
+            FuncCall("inner", 1, (Literal(1),)),
+            Binary(Literal(2), "+", Literal(3)),
+        ),
+    )
 
 
 def test_parses_for_statement_with_typed_initializer():
@@ -212,7 +351,7 @@ def test_rejects_unary_not_on_non_boolean():
 
     assert (
         excinfo.value.message
-        == "cannot apply unary operator '!' to type int; expected bool"
+        == "cannot apply unary operator `!` to type int; expected bool"
     )
     assert excinfo.value.line == 1
     assert excinfo.value.column == 1
@@ -226,7 +365,7 @@ def test_rejects_unary_minus_on_non_integer():
 
     assert (
         excinfo.value.message
-        == "cannot apply unary operator '-' to type bool; expected int"
+        == "cannot apply unary operator `-` to type bool; expected int"
     )
     assert excinfo.value.line == 1
     assert excinfo.value.column == 1
@@ -259,6 +398,50 @@ def test_executes_two_character_comparisons(capsys):
 
     captured = capsys.readouterr()
     assert captured.out == "True\nTrue\nFalse\nTrue\nTrue\n"
+
+
+def test_executes_logical_operators(capsys):
+    program = parse(
+        "print(true && true); print(true && false); print(false || true); print(false || false);"
+    )
+
+    Interpreter().run(program)
+
+    captured = capsys.readouterr()
+    assert captured.out == "True\nFalse\nTrue\nFalse\n"
+
+
+def test_short_circuits_logical_operators():
+    program = parse("false && missing(); true || missing();")
+
+    Interpreter().run(program)
+
+
+def test_rejects_non_boolean_logical_and_operand():
+    program = parse("1 && true;")
+
+    with pytest.raises(NexRuntimeError) as excinfo:
+        Interpreter().run(program)
+
+    assert (
+        excinfo.value.message
+        == "operator `&&` expects bool operands, got int and <unevaluated>"
+    )
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 3
+
+
+def test_rejects_non_boolean_logical_or_rhs_operand():
+    program = parse("false || 1;")
+
+    with pytest.raises(NexRuntimeError) as excinfo:
+        Interpreter().run(program)
+
+    assert (
+        excinfo.value.message == "operator `||` expects bool operands, got bool and int"
+    )
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 7
 
 
 def test_executes_modulus_expression(capsys):
@@ -325,7 +508,7 @@ def test_rejects_mixed_type_equality():
 
     assert (
         excinfo.value.message
-        == "operator '==' expects operands of the same type, got int and str"
+        == "operator `==` expects operands of the same type, got int and str"
     )
     assert excinfo.value.line == 1
     assert excinfo.value.column == 3
@@ -339,7 +522,7 @@ def test_rejects_mixed_type_ordering():
 
     assert (
         excinfo.value.message
-        == "operator '<' expects matching int or str operands, got int and str"
+        == "operator `<` expects matching int or str operands, got int and str"
     )
     assert excinfo.value.line == 1
     assert excinfo.value.column == 3
