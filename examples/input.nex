@@ -1,0 +1,6 @@
+#
+# Print string from user
+#
+print_inline("What is your name? > ");
+str in = input();
+print("User response is: " + in);

@@ -10,7 +10,6 @@ from nex.interpreter.stmt import (
     For,
     FuncDecl,
     If,
-    Print,
     Return,
     VarDecl,
     While,
@@ -111,8 +110,12 @@ def test_parses_if_else_statement():
     assert isinstance(stmt.else_branch, Block)
     assert len(stmt.then_branch.statements) == 1
     assert len(stmt.else_branch.statements) == 1
-    assert isinstance(stmt.then_branch.statements[0], Print)
-    assert isinstance(stmt.else_branch.statements[0], Print)
+    assert stmt.then_branch.statements[0] == ExprStmt(
+        FuncCall("print", 1, (Literal("ok"),))
+    )
+    assert stmt.else_branch.statements[0] == ExprStmt(
+        FuncCall("print", 1, (Literal("no"),))
+    )
 
 
 def test_parses_while_statement():
@@ -127,7 +130,7 @@ def test_parses_while_statement():
     assert stmt.condition.right == Literal(3)
     assert isinstance(stmt.body, Block)
     assert len(stmt.body.statements) == 1
-    assert isinstance(stmt.body.statements[0], Print)
+    assert stmt.body.statements[0] == ExprStmt(FuncCall("print", 1, (Variable("x"),)))
 
 
 def test_parses_function_declaration_without_parameters():
@@ -142,7 +145,7 @@ def test_parses_function_declaration_without_parameters():
     assert stmt.return_type == "void"
     assert isinstance(stmt.body, Block)
     assert len(stmt.body.statements) == 1
-    assert stmt.body.statements[0] == Print(Literal("hi"))
+    assert stmt.body.statements[0] == ExprStmt(FuncCall("print", 1, (Literal("hi"),)))
 
 
 def test_parses_function_declaration_with_parameters_and_return():
@@ -222,8 +225,10 @@ def test_parses_function_call_inside_print_expression():
 
     assert len(program) == 1
     stmt = program[0]
-    assert isinstance(stmt, Print)
-    assert stmt.expr == FuncCall("add", 2, (Literal(1), Literal(2)))
+    assert isinstance(stmt, ExprStmt)
+    assert stmt.expr == FuncCall(
+        "print", 1, (FuncCall("add", 2, (Literal(1), Literal(2))),)
+    )
 
 
 def test_parses_nested_function_call_arguments():
@@ -255,7 +260,7 @@ def test_parses_for_statement_with_typed_initializer():
     assert stmt.iter == Assign("i", Binary(Variable("i"), "+", Literal(1)))
     assert isinstance(stmt.body, Block)
     assert len(stmt.body.statements) == 1
-    assert isinstance(stmt.body.statements[0], Print)
+    assert stmt.body.statements[0] == ExprStmt(FuncCall("print", 1, (Variable("i"),)))
 
 
 def test_parses_for_statement_with_assignment_initializer():
@@ -298,13 +303,14 @@ def test_parses_for_statement_with_expression_iteration():
     assert stmt.iter == ExprStmt(Binary(Variable("i"), "+", Literal(1)))
 
 
-def test_rejects_print_statement_in_for_initializer_clause():
-    with pytest.raises(NexParseError) as excinfo:
-        parse("for (print(1); i < 3; i = i + 1) { print(i); }")
+def test_parses_function_call_in_for_initializer_clause():
+    program = parse("for (print(1); i < 3; i = i + 1) { print(i); }")
 
-    assert excinfo.value.message == "expected expression"
-    assert excinfo.value.line == 1
-    assert excinfo.value.column == 6
+    assert len(program) == 1
+    stmt = program[0]
+    assert isinstance(stmt, For)
+    assert stmt.init == ExprStmt(FuncCall("print", 1, (Literal(1),)))
+    assert stmt.body.statements[0] == ExprStmt(FuncCall("print", 1, (Variable("i"),)))
 
 
 def test_rejects_missing_semicolon_with_structured_parse_error():
@@ -320,7 +326,7 @@ def test_rejects_missing_closing_paren_with_structured_parse_error():
     with pytest.raises(NexParseError) as excinfo:
         parse("print((1 + 2);")
 
-    assert excinfo.value.message == "expect ')'"
+    assert excinfo.value.message == "expected expression"
     assert excinfo.value.line == 1
     assert excinfo.value.column == 14
 

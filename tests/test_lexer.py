@@ -50,7 +50,7 @@ def test_lexes_keywords_and_punctuation():
         TokenType.NUMBER,
         TokenType.RPAREN,
         TokenType.LBRACE,
-        TokenType.PRINT,
+        TokenType.IDENTIFIER,
         TokenType.LPAREN,
         TokenType.IDENTIFIER,
         TokenType.RPAREN,
@@ -161,7 +161,7 @@ def test_tracks_line_and_column_numbers():
         (TokenType.EQ, 1, 7),
         (TokenType.NUMBER, 1, 9),
         (TokenType.SEMICOLON, 1, 10),
-        (TokenType.PRINT, 2, 1),
+        (TokenType.IDENTIFIER, 2, 1),
         (TokenType.LPAREN, 2, 6),
         (TokenType.STRING, 2, 7),
         (TokenType.RPAREN, 2, 11),
@@ -179,7 +179,7 @@ def test_skips_full_line_comments():
     Test that the lexer ignores lines that start with '#'.
     """
     assert token_types('# full line comment\nprint("ok");') == [
-        TokenType.PRINT,
+        TokenType.IDENTIFIER,
         TokenType.LPAREN,
         TokenType.STRING,
         TokenType.RPAREN,
@@ -198,7 +198,7 @@ def test_skips_trailing_comments():
         TokenType.EQ,
         TokenType.NUMBER,
         TokenType.SEMICOLON,
-        TokenType.PRINT,
+        TokenType.IDENTIFIER,
         TokenType.LPAREN,
         TokenType.IDENTIFIER,
         TokenType.RPAREN,

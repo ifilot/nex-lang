@@ -20,7 +20,6 @@ forms in the general grammar.
                       | <if-stmt>
                       | <while-stmt>
                       | <for-stmt>
-                      | <print-stmt>
                       | <assignment-stmt>
                       | <expr-stmt>
 
@@ -61,8 +60,6 @@ forms in the general grammar.
 
 <assignment-core>   ::= <identifier> "=" <expression>
 
-<print-stmt>        ::= "print" "(" <expression> ")" ";"
-
 <expr-stmt>         ::= <expression> ";"
 
 <expression>        ::= <logical-or>
@@ -96,8 +93,8 @@ forms in the general grammar.
 ## Notes
 
 - Function calls are expressions, not statements in their own right. That is
-  why a call can appear inside `print(...)`, in an initializer, or as a plain
-  expression statement.
+  why built-in functions such as `print(...)` and `input()` can appear in an
+  initializer, inside another call, or as a plain expression statement.
 - `for` reuses declaration, assignment, and expression forms in its header, but
   without extra trailing semicolons inside those clauses.
 - The grammar allows repeated comparison operators syntactically. Runtime type

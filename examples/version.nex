@@ -1,0 +1,4 @@
+#
+# Print interpreter version of NEX
+#
+print(version());

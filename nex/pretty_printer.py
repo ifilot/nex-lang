@@ -69,12 +69,6 @@ class PrettyPrinter:
         lines.extend(self.print(node.expr, child_prefix, True))
         return lines
 
-    def print_Print(self, node, prefix="", is_last=True):
-        lines = [self._branch(prefix, is_last, "Print")]
-        child_prefix = self._child_prefix(prefix, is_last)
-        lines.extend(self.print(node.expr, child_prefix, True))
-        return lines
-
     def print_Block(self, node, prefix="", is_last=True):
         lines = [self._branch(prefix, is_last, "Block")]
         child_prefix = self._child_prefix(prefix, is_last)

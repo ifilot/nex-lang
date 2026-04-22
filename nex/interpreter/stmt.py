@@ -94,17 +94,6 @@ class Assign(Stmt):
 
 
 @dataclass(frozen=True)
-class Print(Stmt):
-    """
-    Built-in function for printing expressions
-    """
-
-    expr: Expr
-    line: int | None = field(default=None, compare=False)
-    column: int | None = field(default=None, compare=False)
-
-
-@dataclass(frozen=True)
 class If(Stmt):
     """
     If statement. If the condition is true, execute then_branch, else execute

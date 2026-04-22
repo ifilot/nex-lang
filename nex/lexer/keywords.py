@@ -8,7 +8,6 @@ KEYWORDS = {
     "else": TokenType.ELSE,
     "while": TokenType.WHILE,
     "for": TokenType.FOR,
-    "print": TokenType.PRINT,
     "true": TokenType.TRUE,
     "false": TokenType.FALSE,
     "void": TokenType.VOID,

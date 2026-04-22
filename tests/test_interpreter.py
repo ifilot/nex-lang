@@ -1,6 +1,6 @@
 import pytest
 
-from nex import Interpreter, Lexer, Parser
+from nex import Interpreter, Lexer, Parser, __version__
 from nex.common import NexParseError, NexRuntimeError
 
 
@@ -164,6 +164,56 @@ def test_for_initializer_scope_does_not_leak():
     assert excinfo.value.message == "undefined variable `i`"
     assert excinfo.value.line == 5
     assert excinfo.value.column == 19
+
+
+def test_builtin_version_returns_interpreter_version(capsys):
+    run_source("print(version());")
+
+    captured = capsys.readouterr()
+    assert captured.out == f"{__version__}\n"
+
+
+def test_builtin_print_inline_omits_trailing_newline(capsys):
+    run_source(
+        """
+        print_inline("Hello");
+        print(" World");
+        """
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out == "Hello World\n"
+
+
+def test_builtin_input_reads_string(monkeypatch, capsys):
+    monkeypatch.setattr("builtins.input", lambda: "Ada")
+
+    run_source(
+        """
+        str name = input();
+        print(name);
+        """
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out == "Ada\n"
+
+
+def test_builtin_input_wraps_host_errors_as_runtime_errors(monkeypatch):
+    def raise_eof():
+        raise EOFError("EOF when reading a line")
+
+    monkeypatch.setattr("builtins.input", raise_eof)
+
+    with pytest.raises(NexRuntimeError) as excinfo:
+        run_source("input();")
+
+    assert (
+        excinfo.value.message
+        == "builtin function `input` failed: EOF when reading a line"
+    )
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 1
 
 
 def test_rejects_call_to_undefined_function():

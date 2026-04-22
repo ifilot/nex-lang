@@ -9,7 +9,6 @@ from ..interpreter.stmt import (
     For,
     FuncDecl,
     If,
-    Print,
     Return,
     VarDecl,
     While,
@@ -33,7 +32,6 @@ from ..lexer.tokentype import TokenType
 #                       | <if-stmt>
 #                       | <while-stmt>
 #                       | <for-stmt>
-#                       | <print-stmt>
 #                       | <assignment-stmt>
 #                       | <expr-stmt>
 #
@@ -73,8 +71,6 @@ from ..lexer.tokentype import TokenType
 # <assignment-stmt>   ::= <assignment-core> ";"
 #
 # <assignment-core>   ::= <identifier> "=" <expression>
-#
-# <print-stmt>        ::= "print" "(" <expression> ")" ";"
 #
 # <expr-stmt>         ::= <expression> ";"
 #
@@ -140,6 +136,8 @@ class Parser:
             return self._str_decl()
         elif self._match(TokenType.BOOL):
             return self._bool_decl()
+        elif self._match(TokenType.FUNCTION):
+            return self._function_decl()
         elif self._match(TokenType.RETURN):
             return self._return_stmt()
         elif self._match(TokenType.IF):
@@ -148,10 +146,6 @@ class Parser:
             return self._while_stmt()
         elif self._match(TokenType.FOR):
             return self._for_stmt()
-        elif self._match(TokenType.FUNCTION):
-            return self._function_decl()
-        elif self._match(TokenType.PRINT):
-            return self._print_stmt()
         elif self._check(TokenType.IDENTIFIER):
             if self.tokens[self.pos + 1].type == TokenType.EQ:
                 return self._assign_stmt()
@@ -175,29 +169,6 @@ class Parser:
         """
         return self._typed_decl("bool")
 
-    def _return_stmt(self):
-        """
-        Parse a return statement
-        """
-        # return statements are not allowed at the global level
-        if self.function_depth < 1:
-            raise NexParseError(
-                "return statement are not allowed outside of function declarations",
-                line=self._previous().line,
-                column=self._previous().column,
-            )
-
-        ret = self._previous()
-        expr = None
-        if not self._check(TokenType.SEMICOLON):
-            expr = self._expression()
-        self._consume(TokenType.SEMICOLON, "Expect ';'.")
-        return Return(
-            expr,
-            line=ret.line,
-            column=ret.column,
-        )
-
     def _typed_decl(self, declared_type, require_semicolon=True):
         """
         Parse a typed variable declaration after the type keyword was consumed.
@@ -216,6 +187,9 @@ class Parser:
         )
 
     def _function_decl(self):
+        """
+        Parse a function declaration.
+        """
         # increment function depth (can in principle never exceed 1, because
         # nested functions are not allowed)
         self.function_depth += 1
@@ -288,25 +262,27 @@ class Parser:
             column=fn_token.column,
         )
 
-    def _function_call(self):
-        callee = self._consume(TokenType.IDENTIFIER, "Expect function name.")
-        self._consume(TokenType.LPAREN, "Expect '('")
+    def _return_stmt(self):
+        """
+        Parse a return statement
+        """
+        # return statements are not allowed at the global level
+        if self.function_depth < 1:
+            raise NexParseError(
+                "return statement are not allowed outside of function declarations",
+                line=self._previous().line,
+                column=self._previous().column,
+            )
 
-        # consume function values
-        arguments = []
-        while not self._check(TokenType.RPAREN):
-            arguments.append(self._expression())
-            if self._check(TokenType.COMMA):
-                self._advance()
-
-        self._consume(TokenType.RPAREN, "Expect ')'")
-
-        return FuncCall(
-            callee.lexeme,  # callee name
-            len(arguments),  # arity
-            tuple(arguments),  # argument expressions
-            line=callee.line,
-            column=callee.column,
+        ret = self._previous()
+        expr = None
+        if not self._check(TokenType.SEMICOLON):
+            expr = self._expression()
+        self._consume(TokenType.SEMICOLON, "Expect ';'.")
+        return Return(
+            expr,
+            line=ret.line,
+            column=ret.column,
         )
 
     def _if_stmt(self):
@@ -437,17 +413,6 @@ class Parser:
         if require_semicolon:
             self._consume(TokenType.SEMICOLON, "Expect ';'.")
         return ExprStmt(expr, line=expr.line, column=expr.column)
-
-    def _print_stmt(self):
-        """
-        Parse a print statement
-        """
-        print_token = self._previous()
-        self._consume(TokenType.LPAREN, "Expect '('.")
-        value = self._expression()
-        self._consume(TokenType.RPAREN, "Expect ')'.")
-        self._consume(TokenType.SEMICOLON, "Expect ';'.")
-        return Print(value, line=print_token.line, column=print_token.column)
 
     def _expression(self):
         """
@@ -583,6 +548,30 @@ class Parser:
             "expected expression",
             line=self._peek().line,
             column=self._peek().column,
+        )
+
+    def _function_call(self):
+        """
+        Parse a function call expression.
+        """
+        callee = self._consume(TokenType.IDENTIFIER, "Expect function name.")
+        self._consume(TokenType.LPAREN, "Expect '('")
+
+        # consume function values
+        arguments = []
+        while not self._check(TokenType.RPAREN):
+            arguments.append(self._expression())
+            if self._check(TokenType.COMMA):
+                self._advance()
+
+        self._consume(TokenType.RPAREN, "Expect ')'")
+
+        return FuncCall(
+            callee.lexeme,  # callee name
+            len(arguments),  # arity
+            tuple(arguments),  # argument expressions
+            line=callee.line,
+            column=callee.column,
         )
 
     # --------------------------------------------------------------------------

@@ -1,7 +1,8 @@
 from nex.common import NexRuntimeError
 
 from .environment import Environment
-from .function_store import Function, FunctionStore, NexFunctionStoreError
+from .function import BuiltinFunction, UserFunction
+from .function_store import FunctionStore, NexFunctionStoreError
 
 
 class NexReturnSignal(Exception):
@@ -88,23 +89,6 @@ class Interpreter:
             value_column=node.expr.column,
         )
 
-    def exec_Print(self, node):
-        """
-        Built-in print function that outputs the result of an expression to the
-        screen
-        """
-        val = self.eval(node.expr)
-        valtype = self._runtime_type_name(val)
-        if valtype in ["str", "bool", "int"]:
-            print(val)
-        else:
-            valtype
-            raise NexRuntimeError(
-                f"print function is undefined for type `{valtype}`",
-                line=node.line,
-                column=node.column,
-            )
-
     def exec_Block(self, node):
         """
         Execute a block statement. Blocks result in scoping and variables
@@ -129,9 +113,7 @@ class Interpreter:
         """
         Declare a new function
         """
-        func = Function(
-            node.callee, node.arity, node.arguments, node.body, node.return_type
-        )
+        func = UserFunction(node.callee, node.arguments, node.return_type, node.body)
         try:
             self.function_store.declare_function(func)
         except NexFunctionStoreError as e:
@@ -358,9 +340,11 @@ class Interpreter:
             raise NexRuntimeError(e.message, line=node.line, column=node.column)
 
         # check whether all variables match
-        if node.arity != func.arity:
+        nrargs = len(node.arguments)
+        nrparams = len(func.params)
+        if nrargs != nrparams:
             raise NexRuntimeError(
-                f"incorrect number of arguments provided {node.arity} != {func.arity}",
+                f"incorrect number of arguments provided {nrargs} != {nrparams}",
                 line=node.line,
                 column=node.column,
             )
@@ -371,8 +355,8 @@ class Interpreter:
             argvalues.append(self.eval(arg))
 
         # check all parameter types
-        for param, arg in zip(func.arguments, argvalues):
-            if not self._matches_type(param[0], arg):
+        for param, arg in zip(func.params, argvalues):
+            if param[0] != "any" and not self._matches_type(param[0], arg):
                 argtype = self._runtime_type_name(arg)
                 raise NexRuntimeError(
                     f"param `{param[1]}` has the wrong type, encountered `{argtype}` while expected `{param[0]}`",
@@ -380,36 +364,60 @@ class Interpreter:
                     column=node.column,
                 )
 
-        # push new environment
-        self.env.push()
+        # call a user-defined function
+        if isinstance(func, UserFunction):
+            self.env.push()
+            for param, arg in zip(func.params, argvalues):
+                self.env.declare(param[1], param[0], arg)
 
-        # allocate all variables
-        for param, arg in zip(func.arguments, argvalues):
-            self.env.declare(param[1], param[0], arg)
+            try:
+                for stmt in func.body:
+                    self.exec(stmt)
+            except NexReturnSignal as ret:
+                if not self._matches_type(func.return_type, ret.value):
+                    argtype = self._runtime_type_name(ret.value)
+                    raise NexRuntimeError(
+                        f"return value has wrong type, expected `{func.return_type}` while got `{argtype}`",
+                        line=node.line,
+                        column=node.column,
+                    )
+                return ret.value
+            finally:
+                self.env.pop()
 
-        try:
-            for stmt in func.body:
-                self.exec(stmt)
-        except NexReturnSignal as ret:
-            if not self._matches_type(func.return_type, ret.value):
-                argtype = self._runtime_type_name(ret.value)
+            # if no return value was encountered, the return value is "void" and it
+            # should be explicitly checked then that the function returns this
+            if not self._matches_type(func.return_type, None):
+                raise NexRuntimeError(
+                    f"non-void function `{func.callee}` returned void",
+                    line=node.line,
+                    column=node.column,
+                )
+
+            return None
+
+        # call a builtin function
+        if isinstance(func, BuiltinFunction):
+            try:
+                ret = func.call(argvalues)
+            except NexRuntimeError:
+                raise
+            except Exception as exc:
+                raise NexRuntimeError(
+                    f"builtin function `{func.callee}` failed: {exc}",
+                    line=node.line,
+                    column=node.column,
+                ) from exc
+            if not self._matches_type(func.return_type, ret):
+                argtype = self._runtime_type_name(ret)
                 raise NexRuntimeError(
                     f"return value has wrong type, expected `{func.return_type}` while got `{argtype}`",
                     line=node.line,
                     column=node.column,
                 )
-            return ret.value
-        finally:
-            self.env.pop()
+            return ret
 
-        # if no return value was encountered, the return value is "void" and it
-        # should be explicitly checked then that the function returns this
-        if not self._matches_type(func.return_type, None):
-            raise NexRuntimeError(
-                f"non-void function `{func.callee}` returned void",
-                line=node.line,
-                column=node.column,
-            )
+        raise RuntimeError("unknown function subtype")
 
     # -------------------------------------------------------------------------
     # HELPERS
