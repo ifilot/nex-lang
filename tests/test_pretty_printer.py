@@ -1,4 +1,4 @@
-from nex.interpreter.expr import Binary, FuncCall, Literal, Variable
+from nex.interpreter.expr import Binary, FuncCall, Literal, Postfix, Variable
 from nex.interpreter.stmt import Block, ExprStmt, FuncDecl, Return
 from nex.pretty_printer import PrettyPrinter
 
@@ -79,5 +79,20 @@ def test_pretty_prints_return_without_expression():
             "      `- Block",
             "         `- Return",
             "            `- Expr: None",
+        ]
+    )
+
+
+def test_pretty_prints_postfix_expression():
+    program = [ExprStmt(Postfix(Variable("i"), "++"))]
+
+    rendered = PrettyPrinter().print_program(program)
+
+    assert rendered == "\n".join(
+        [
+            "Program",
+            "`- ExprStmt",
+            "   `- Postfix(++)",
+            "      `- Variable(i)",
         ]
     )

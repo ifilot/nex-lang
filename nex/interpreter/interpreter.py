@@ -419,6 +419,36 @@ class Interpreter:
 
         raise RuntimeError("unknown function subtype")
 
+    def eval_Postfix(self, node):
+        """
+        Evaluate a postfix increment/decrement expression. The expression
+        returns the original value and updates the variable as a side effect.
+        """
+        if not hasattr(node.expr, "name"):
+            raise NexRuntimeError(
+                f"postfix operator `{node.op}` expects a variable operand",
+                line=node.line,
+                column=node.column,
+            )
+
+        current = self.eval(node.expr)
+        if type(current) is not int:
+            raise NexRuntimeError(
+                f"cannot apply postfix operator `{node.op}` to type "
+                f"{self._runtime_type_name(current)}; expected int",
+                line=node.line,
+                column=node.column,
+            )
+
+        delta = 1 if node.op == "++" else -1
+        self.env.assign(
+            node.expr.name,
+            current + delta,
+            line=node.line,
+            column=node.column,
+        )
+        return current
+
     # -------------------------------------------------------------------------
     # HELPERS
     # -------------------------------------------------------------------------

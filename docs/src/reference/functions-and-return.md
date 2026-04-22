@@ -65,6 +65,10 @@ add(1, 2);
 The last example is valid even though its result is ignored. It is simply an
 expression statement whose expression happens to be a function call.
 
+Because function calls are expressions, they can also participate in impure
+evaluation. For example, a call such as `print("hello")` both produces a value
+(`void`) and performs an observable side effect by writing output.
+
 ## Return values
 
 Every function declares a return type after `->`.

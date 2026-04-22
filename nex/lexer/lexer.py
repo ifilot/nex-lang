@@ -68,11 +68,24 @@ class Lexer:
         c = self._advance()
 
         if c == "+":
-            self._add_token(TokenType.PLUS, c)
+            if self._peek() == "=":
+                self._advance()
+                self._add_token(TokenType.PLUSEQ, "+=")
+            elif self._peek() == "+":
+                self._advance()
+                self._add_token(TokenType.INC, "++")
+            else:
+                self._add_token(TokenType.PLUS, c)
         elif c == "-":
             if self._peek() == ">":
                 self._advance()
                 self._add_token(TokenType.RETTYPE, "->")
+            elif self._peek() == "=":
+                self._advance()
+                self._add_token(TokenType.MINUSEQ, "-=")
+            elif self._peek() == "-":
+                self._advance()
+                self._add_token(TokenType.DEC, "--")
             else:
                 self._add_token(TokenType.MINUS, c)
         elif c == "*":

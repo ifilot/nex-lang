@@ -13,7 +13,11 @@ class TokenType(Enum):
 
     # operators
     PLUS = auto()
+    PLUSEQ = auto()
+    INC = auto()
     MINUS = auto()
+    MINUSEQ = auto()
+    DEC = auto()
     STAR = auto()
     SLASH = auto()
     OR = auto()

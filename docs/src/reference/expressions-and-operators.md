@@ -8,6 +8,7 @@ Expressions produce values. The current core includes:
 - variable references
 - parenthesized expressions
 - unary expressions
+- postfix expressions
 - binary expressions
 
 Expressions are the computational side of the language. They are the parts of a
@@ -17,17 +18,26 @@ these two operands with an operator?" In the interpreter, expressions are
 evaluated recursively, which is why precedence and grouping rules matter so
 much.
 
+That said, "expression" in NEX does not mean "pure computation only". An
+expression always produces a value, but some expressions may also have side
+effects while they are being evaluated. Function calls are the clearest example:
+`print("hi")` is an expression even though evaluating it writes output. Postfix
+`++` and `--` behave the same way: they produce a value and update a variable
+as part of that evaluation. In other words, NEX currently allows impure
+expressions.
+
 ## Operator precedence
 
 From highest precedence to lowest:
 
 1. primary expressions: literals, variables, parenthesized expressions
-2. unary operators: `-`, `!`
-3. multiplicative operators: `*`, `/`, `%`
-4. additive operators: `+`, `-`
-5. comparison and equality operators: `<`, `>`, `<=`, `>=`, `==`, `!=`
-6. logical AND: `&&`
-7. logical OR: `||`
+2. postfix operators: function call `(...)`, postfix increment `++`, postfix decrement `--`
+3. unary operators: `-`, `!`
+4. multiplicative operators: `*`, `/`, `%`
+5. additive operators: `+`, `-`
+6. comparison and equality operators: `<`, `>`, `<=`, `>=`, `==`, `!=`
+7. logical AND: `&&`
+8. logical OR: `||`
 
 Binary operators at the same precedence level associate from left to right.
 This precedence structure is a compact way of saying which expression trees the
@@ -37,6 +47,40 @@ For comparison and equality operators, this left-to-right rule also applies to
 chains. For example, `1 < 2 < 3` is parsed as `(1 < 2) < 3`, not as a special
 "between" form. Since `1 < 2` produces a `bool`, the second `<` then attempts
 to compare `bool` with `int`, which is a runtime error.
+
+Postfix operators bind more tightly than unary operators. For example, `-f()`
+is parsed as `-(f())`, not as `(-f)()`.
+
+## Postfix operators
+
+The current postfix operators are:
+
+- function call: `name(...)`
+- postfix increment: `x++`
+- postfix decrement: `x--`
+
+Function calls are described in more detail in
+[Functions And Return](functions-and-return.md). The key idea here is that
+postfix operators attach to an already-parsed primary expression and therefore
+have the highest operator precedence in the language core.
+
+### Postfix increment and decrement
+
+`++` and `--` currently require a variable operand of type `int`.
+
+Examples:
+
+```nex
+int i = 1;
+print(i++);
+print(i);
+```
+
+The first `print` outputs the original value. After that evaluation finishes,
+the variable has been updated by one. `--` works the same way but subtracts one.
+
+Because these operators update program state while also producing a value, they
+are impure expressions rather than pure arithmetic.
 
 ## Unary operators
 

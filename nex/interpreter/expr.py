@@ -95,3 +95,18 @@ class FuncCall(Expr):
     arguments: Tuple[Expr, ...]
     line: int | None = field(default=None, compare=False)
     column: int | None = field(default=None, compare=False)
+
+
+@dataclass(frozen=True)
+class Postfix(Expr):
+    """
+    An expression that applies a postfix operator to a sub-expression.
+    """
+
+    expr: Expr
+    op: str
+    line: int | None = field(default=None, compare=False)
+    column: int | None = field(default=None, compare=False)
+
+    def __repr__(self):
+        return f"({self.expr}{self.op})"

@@ -2,7 +2,7 @@ import pytest
 
 from nex import Interpreter
 from nex.common import NexParseError, NexRuntimeError
-from nex.interpreter.expr import Binary, FuncCall, Literal, Unary, Variable
+from nex.interpreter.expr import Binary, FuncCall, Literal, Postfix, Unary, Variable
 from nex.interpreter.stmt import (
     Assign,
     Block,
@@ -220,6 +220,33 @@ def test_parses_function_call_as_expression_statement():
     assert stmt.expr == FuncCall("hello", 0, ())
 
 
+def test_parses_postfix_increment_as_expression_statement():
+    program = parse("i++;")
+
+    assert len(program) == 1
+    stmt = program[0]
+    assert isinstance(stmt, ExprStmt)
+    assert stmt.expr == Postfix(Variable("i"), "++")
+
+
+def test_parses_postfix_decrement_inside_expression():
+    program = parse("print(i--);")
+
+    assert len(program) == 1
+    stmt = program[0]
+    assert isinstance(stmt, ExprStmt)
+    assert stmt.expr == FuncCall("print", 1, (Postfix(Variable("i"), "--"),))
+
+
+def test_rejects_postfix_update_on_non_variable_operand():
+    with pytest.raises(NexParseError) as excinfo:
+        parse("(1 + 2)++;")
+
+    assert excinfo.value.message == "postfix operators require a variable operand"
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 8
+
+
 def test_parses_function_call_inside_print_expression():
     program = parse("print(add(1, 2));")
 
@@ -349,6 +376,24 @@ def test_executes_unary_not_expression(capsys):
     assert captured.out == "False\nTrue\n"
 
 
+def test_executes_postfix_increment_and_returns_original_value(capsys):
+    program = parse("int i = 1; print(i++); print(i);")
+
+    Interpreter().run(program)
+
+    captured = capsys.readouterr()
+    assert captured.out == "1\n2\n"
+
+
+def test_executes_postfix_decrement_and_returns_original_value(capsys):
+    program = parse("int i = 2; print(i--); print(i);")
+
+    Interpreter().run(program)
+
+    captured = capsys.readouterr()
+    assert captured.out == "2\n1\n"
+
+
 def test_rejects_unary_not_on_non_boolean():
     program = parse("!0;")
 
@@ -361,6 +406,20 @@ def test_rejects_unary_not_on_non_boolean():
     )
     assert excinfo.value.line == 1
     assert excinfo.value.column == 1
+
+
+def test_rejects_postfix_increment_on_non_integer():
+    program = parse('str s = "x"; s++;')
+
+    with pytest.raises(NexRuntimeError) as excinfo:
+        Interpreter().run(program)
+
+    assert (
+        excinfo.value.message
+        == "cannot apply postfix operator `++` to type str; expected int"
+    )
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 15
 
 
 def test_rejects_unary_minus_on_non_integer():

@@ -75,26 +75,31 @@ forms in the general grammar.
 <factor>            ::= <unary> (("*" | "/" | "%") <unary>)*
 
 <unary>             ::= ("-" | "!") <unary>
-                      | <primary>
+                      | <postfix>
+
+<postfix>           ::= <primary> ( <call-suffix> | <postfix-update> )*
+
+<call-suffix>       ::= "(" [ <arguments> ] ")"
+
+<postfix-update>    ::= "++" | "--"
 
 <primary>           ::= <number>
                       | <string>
                       | "true"
                       | "false"
-                      | <function-call>
                       | <identifier>
                       | "(" <expression> ")"
-
-<function-call>     ::= <identifier> "(" [ <arguments> ] ")"
 
 <arguments>         ::= <expression> ("," <expression>)*
 ```
 
 ## Notes
 
-- Function calls are expressions, not statements in their own right. That is
-  why built-in functions such as `print(...)` and `input()` can appear in an
-  initializer, inside another call, or as a plain expression statement.
+- Function calls are postfix expressions, not statements in their own right.
+  That is why built-in functions such as `print(...)` and `input()` can appear
+  in an initializer, inside another call, or as a plain expression statement.
+- Postfix `++` and `--` are also part of the expression grammar. In the current
+  implementation they are restricted to variable operands.
 - `for` reuses declaration, assignment, and expression forms in its header, but
   without extra trailing semicolons inside those clauses.
 - The grammar allows repeated comparison operators syntactically. Runtime type

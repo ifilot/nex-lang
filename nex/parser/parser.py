@@ -1,7 +1,7 @@
 from typing import Tuple
 
 from ..common import NexParseError
-from ..interpreter.expr import Binary, FuncCall, Literal, Unary, Variable
+from ..interpreter.expr import Binary, FuncCall, Literal, Postfix, Unary, Variable
 from ..interpreter.stmt import (
     Assign,
     Block,
@@ -87,17 +87,19 @@ from ..lexer.tokentype import TokenType
 # <factor>            ::= <unary> (("*" | "/" | "%") <unary>)*
 #
 # <unary>             ::= ("-" | "!") <unary>
-#                       | <primary>
+#                       | <postfix>
+#
+# <postfix>           ::= <primary> ( <call-suffix> | <postfix-update> )*
+#
+# <call-suffix>       ::= "(" [ <arguments> ] ")"
+# <postfix-update>    ::= "++" | "--"
 #
 # <primary>           ::= <number>
 #                       | <string>
 #                       | "true"
 #                       | "false"
-#                       | <function-call>
 #                       | <identifier>
 #                       | "(" <expression> ")"
-#
-# <function-call>     ::= <identifier> "(" [ <arguments> ] ")"
 #
 # <arguments>         ::= <expression> ("," <expression>)*
 
@@ -501,19 +503,33 @@ class Parser:
         """
         Parse unary
         """
-        if (
-            self._check(TokenType.IDENTIFIER)
-            and self.tokens[self.pos + 1].type == TokenType.LPAREN
-        ):
-            return self._function_call()
-
         while self._match(TokenType.MINUS, TokenType.EXCLAMATION):
             operator = self._previous()
             op = operator.lexeme
             right = self._unary()
             return Unary(op, right, line=operator.line, column=operator.column)
 
-        return self._primary()
+        return self._postfix()
+
+    def _postfix(self):
+        """
+        Parse postfix expressions. NEX currently supports function-call postfixes
+        and postfix increment/decrement operators.
+        """
+        expr = self._primary()
+
+        while True:
+            if self._match(TokenType.LPAREN):
+                expr = self._finish_function_call(expr)
+                continue
+
+            if self._match(TokenType.INC, TokenType.DEC):
+                expr = self._finish_postfix_update(expr)
+                continue
+
+            break
+
+        return expr
 
     def _primary(self):
         """
@@ -550,12 +566,17 @@ class Parser:
             column=self._peek().column,
         )
 
-    def _function_call(self):
+    def _finish_function_call(self, callee):
         """
-        Parse a function call expression.
+        Parse a function call suffix after the opening '(' was already
+        consumed.
         """
-        callee = self._consume(TokenType.IDENTIFIER, "Expect function name.")
-        self._consume(TokenType.LPAREN, "Expect '('")
+        if not isinstance(callee, Variable):
+            raise NexParseError(
+                "only named functions can be called",
+                line=self._previous().line,
+                column=self._previous().column,
+            )
 
         # consume function values
         arguments = []
@@ -567,11 +588,29 @@ class Parser:
         self._consume(TokenType.RPAREN, "Expect ')'")
 
         return FuncCall(
-            callee.lexeme,  # callee name
+            callee.name,  # callee name
             len(arguments),  # arity
             tuple(arguments),  # argument expressions
             line=callee.line,
             column=callee.column,
+        )
+
+    def _finish_postfix_update(self, expr):
+        """
+        Parse a postfix increment/decrement suffix after the operator token was
+        already consumed. These operators are restricted to variables.
+        """
+        operator = self._previous()
+
+        if not isinstance(expr, Variable):
+            raise NexParseError(
+                "postfix operators require a variable operand",
+                line=operator.line,
+                column=operator.column,
+            )
+
+        return Postfix(
+            expr, operator.lexeme, line=operator.line, column=operator.column
         )
 
     # --------------------------------------------------------------------------

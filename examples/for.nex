@@ -5,13 +5,13 @@
 
 # Regular `for` loop with a declaration in the initializer.
 int N = 3;
-for(int i=0; i<N; i=i+1) {
+for(int i=0; i<N; i=i++) {
     print(i);
 }
 
 # Reuse an existing variable in the initializer.
 int i=-10;
-for(i=0; i<N; i=i+1) {
+for(i=0; i<N; i=i++) {
     print(i);
 }
 

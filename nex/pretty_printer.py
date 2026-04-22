@@ -48,6 +48,12 @@ class PrettyPrinter:
         lines.extend(self.print(node.expr, child_prefix, True))
         return lines
 
+    def print_Postfix(self, node, prefix="", is_last=True):
+        lines = [self._branch(prefix, is_last, f"Postfix({node.op})")]
+        child_prefix = self._child_prefix(prefix, is_last)
+        lines.extend(self.print(node.expr, child_prefix, True))
+        return lines
+
     def print_Binary(self, node, prefix="", is_last=True):
         lines = [self._branch(prefix, is_last, f"Binary({node.op})")]
         child_prefix = self._child_prefix(prefix, is_last)
