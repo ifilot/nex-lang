@@ -16,6 +16,8 @@ class TokenType(Enum):
     MINUS = auto()
     STAR = auto()
     SLASH = auto()
+    OR = auto()
+    AND = auto()
     LT = auto()
     GT = auto()
     LTE = auto()

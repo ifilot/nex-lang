@@ -70,6 +70,9 @@ invalid at execution time, such as:
 
 - using an undefined variable
 - assigning a value of the wrong type
+- calling a function with the wrong number of arguments
+- calling a function with arguments of the wrong type
+- returning a value of the wrong type from a function
 - using a non-boolean condition in `if`, `while`, or `for`
 - applying an operator to unsupported operand types
 - writing a chained comparison such as `1 < 2 < 3`, which becomes `(1 < 2) < 3`

@@ -33,6 +33,12 @@ Install the package in editable mode:
 python -m pip install -e .
 ```
 
+Once published, the package can be installed from PyPI with:
+
+```bash
+python -m pip install nex-lang
+```
+
 Install development dependencies as well:
 
 ```bash
@@ -48,16 +54,16 @@ pre-commit install
 
 ## Running Programs
 
-The package exposes a `nex` command:
+The package exposes a `nexlang` command:
 
 ```bash
-nex examples/hello.nex
+nexlang examples/hello.nex
 ```
 
 You can check the installed CLI version with:
 
 ```bash
-nex --version
+nexlang --version
 ```
 
 You can also run the CLI module directly:
@@ -82,6 +88,17 @@ available at:
 ```text
 https://ifilot.github.io/nex-lang/
 ```
+
+## Releases
+
+PyPI releases are published from Git tags that start with `v`, for example:
+
+```text
+v0.2.0
+```
+
+The published package name is `nex-lang`. The installed CLI command remains
+`nexlang`.
 
 ## Testing
 

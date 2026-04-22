@@ -20,7 +20,7 @@ def test_version_flag_prints_version(capsys):
         main(["--version"])
 
     assert excinfo.value.code == 0
-    assert capsys.readouterr().out.strip() == f"nex {__version__}"
+    assert capsys.readouterr().out.strip() == f"nexlang {__version__}"
 
 
 def test_cli_reports_lexer_errors_to_stderr_and_returns_nonzero(tmp_path, capsys):
@@ -54,7 +54,7 @@ def test_cli_reports_undefined_variable_as_runtime_error(tmp_path, capsys):
 
     assert exit_code == 1
     assert captured.out == ""
-    assert captured.err == "runtime error: line 1, column 7: undefined variable 'x'\n"
+    assert captured.err == "runtime error: line 1, column 7: undefined variable `x`\n"
 
 
 def test_cli_reports_type_mismatch_assignment_as_runtime_error(tmp_path, capsys):
@@ -71,7 +71,7 @@ def test_cli_reports_type_mismatch_assignment_as_runtime_error(tmp_path, capsys)
     assert captured.out == ""
     assert (
         captured.err
-        == "runtime error: line 3, column 13: cannot assign value of type str to variable 'x' of type int\n"
+        == "runtime error: line 3, column 13: cannot assign value of type str to variable `x` of type int\n"
     )
 
 

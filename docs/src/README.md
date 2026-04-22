@@ -33,6 +33,20 @@ while (x < 5) {
 }
 ```
 
+## Installation
+
+NEX can be installed from PyPI:
+
+```bash
+python -m pip install nex-lang
+```
+
+This installs the `nexlang` command-line runner. For example:
+
+```bash
+nexlang examples/hello.nex
+```
+
 The reference chapters describe the language as it exists today. They focus on
 source-level behavior rather than interpreter internals, but they are written
 with implementation-minded readers in mind. When the implementation and the

@@ -26,6 +26,8 @@ From highest precedence to lowest:
 3. multiplicative operators: `*`, `/`, `%`
 4. additive operators: `+`, `-`
 5. comparison and equality operators: `<`, `>`, `<=`, `>=`, `==`, `!=`
+6. logical AND: `&&`
+7. logical OR: `||`
 
 Binary operators at the same precedence level associate from left to right.
 This precedence structure is a compact way of saying which expression trees the
@@ -116,3 +118,24 @@ print(true == false);
 Mixed-type equality is a runtime error rather than automatically evaluating to
 `false`. This keeps equality semantically strict and avoids surprising implicit
 conversions.
+
+## Logical operators
+
+The operators `&&` and `||` require `bool` operands.
+
+Examples:
+
+```nex
+print(true && false);
+print(false || true);
+print(true && (1 < 2));
+```
+
+Logical operators use short-circuit evaluation:
+
+- `a && b` evaluates `b` only if `a` evaluates to `true`
+- `a || b` evaluates `b` only if `a` evaluates to `false`
+
+This matters both for efficiency and for behavior. For example, `false &&
+missing()` does not attempt to evaluate `missing()`, because the left-hand side
+already determines the result.

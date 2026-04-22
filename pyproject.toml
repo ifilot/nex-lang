@@ -3,14 +3,14 @@ requires = ["setuptools>=64", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "nex"
+name = "nex-lang"
 dynamic = ["version"]
 
 [project.optional-dependencies]
 dev = ["pre-commit>=4", "pytest>=8", "ruff>=0.6"]
 
 [project.scripts]
-nex = "nex.cli:main"
+nexlang = "nex.cli:main"
 
 [tool.setuptools.packages.find]
 include = ["nex", "nex.*"]

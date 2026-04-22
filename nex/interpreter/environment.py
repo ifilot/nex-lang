@@ -32,7 +32,7 @@ class Environment:
         """
         if name in self.values[-1]:
             raise NexRuntimeError(
-                f"redeclaration of variable '{name}' in the current scope",
+                f"redeclaration of variable `{name}` in the current scope",
                 line=line,
                 column=column,
             )
@@ -57,13 +57,13 @@ class Environment:
                 if not self._matches_type(binding["type"], value):
                     raise NexRuntimeError(
                         f"cannot assign value of type {self._runtime_type_name(value)} "
-                        f"to variable '{name}' of type {binding['type']}",
+                        f"to variable `{name}` of type {binding['type']}",
                         line=value_line if value_line is not None else line,
                         column=value_column if value_column is not None else column,
                     )
                 binding["value"] = value
                 return
-        raise NexRuntimeError(f"undefined variable '{name}'", line=line, column=column)
+        raise NexRuntimeError(f"undefined variable `{name}`", line=line, column=column)
 
     def lookup(self, name, *, line=None, column=None):
         """
@@ -72,7 +72,7 @@ class Environment:
         for env in reversed(self.values):
             if name in env:
                 return env[name]["value"]
-        raise NexRuntimeError(f"undefined variable '{name}'", line=line, column=column)
+        raise NexRuntimeError(f"undefined variable `{name}`", line=line, column=column)
 
     def _matches_type(self, declared_type, value):
         """

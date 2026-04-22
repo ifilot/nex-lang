@@ -94,7 +94,16 @@ class Interpreter:
         screen
         """
         val = self.eval(node.expr)
-        print(val)
+        valtype = self._runtime_type_name(val)
+        if valtype in ["str", "bool", "int"]:
+            print(val)
+        else:
+            valtype
+            raise NexRuntimeError(
+                f"print function is undefined for type `{valtype}`",
+                line=node.line,
+                column=node.column,
+            )
 
     def exec_Block(self, node):
         """
@@ -113,6 +122,7 @@ class Interpreter:
         """
         Raise a NexReturnSignal with the result of the expression evaluation
         """
+        # assess that we are
         raise NexReturnSignal(self.eval(node.expr) if node.expr is not None else None)
 
     def exec_FuncDecl(self, node):
@@ -181,7 +191,7 @@ class Interpreter:
         Default evaluation; automatically raises a NotImplementedError to inform
         the user that there is no support (yet) for this type of node.
         """
-        raise NotImplementedError(f"No eval for {type(node).__name__}")
+        raise NotImplementedError(f"no eval for `{type(node).__name__}`")
 
     def eval_Literal(self, node):
         """
@@ -198,7 +208,7 @@ class Interpreter:
         if node.op == "!":
             if type(val) is not bool:
                 raise NexRuntimeError(
-                    f"cannot apply unary operator '{node.op}' to type "
+                    f"cannot apply unary operator `{node.op}` to type "
                     f"{self._runtime_type_name(val)}; expected bool",
                     line=node.line,
                     column=node.column,
@@ -208,7 +218,7 @@ class Interpreter:
         if node.op == "-":
             if type(val) is not int:
                 raise NexRuntimeError(
-                    f"cannot apply unary operator '{node.op}' to type "
+                    f"cannot apply unary operator `{node.op}` to type "
                     f"{self._runtime_type_name(val)}; expected int",
                     line=node.line,
                     column=node.column,
@@ -223,6 +233,49 @@ class Interpreter:
         the operator to their values.
         """
         left = self.eval(node.left)
+
+        if node.op == "&&":
+            if type(left) is not bool:
+                raise NexRuntimeError(
+                    f"operator `&&` expects bool operands, got "
+                    f"{self._runtime_type_name(left)} and <unevaluated>",
+                    line=node.line,
+                    column=node.column,
+                )
+            if not left:
+                return False
+
+            right = self.eval(node.right)
+            if type(right) is not bool:
+                raise NexRuntimeError(
+                    f"operator `&&` expects bool operands, got "
+                    f"{self._runtime_type_name(left)} and {self._runtime_type_name(right)}",
+                    line=node.line,
+                    column=node.column,
+                )
+            return left and right
+
+        if node.op == "||":
+            if type(left) is not bool:
+                raise NexRuntimeError(
+                    f"operator `||` expects bool operands, got "
+                    f"{self._runtime_type_name(left)} and <unevaluated>",
+                    line=node.line,
+                    column=node.column,
+                )
+            if left:
+                return True
+
+            right = self.eval(node.right)
+            if type(right) is not bool:
+                raise NexRuntimeError(
+                    f"operator `||` expects bool operands, got "
+                    f"{self._runtime_type_name(left)} and {self._runtime_type_name(right)}",
+                    line=node.line,
+                    column=node.column,
+                )
+            return left or right
+
         right = self.eval(node.right)
         if node.op == "+":
             if self._both_of_type(left, right, int) or self._both_of_type(
@@ -270,7 +323,7 @@ class Interpreter:
                     return left <= right
                 return left >= right
             raise NexRuntimeError(
-                f"operator '{node.op}' expects matching int or str operands, got "
+                f"operator `{node.op}` expects matching int or str operands, got "
                 f"{self._runtime_type_name(left)} and {self._runtime_type_name(right)}",
                 line=node.line,
                 column=node.column,
@@ -279,7 +332,7 @@ class Interpreter:
         if node.op in ("==", "!="):
             if type(left) is not type(right):
                 raise NexRuntimeError(
-                    f"operator '{node.op}' expects operands of the same type, got "
+                    f"operator `{node.op}` expects operands of the same type, got "
                     f"{self._runtime_type_name(left)} and {self._runtime_type_name(right)}",
                     line=node.line,
                     column=node.column,
@@ -307,7 +360,9 @@ class Interpreter:
         # check whether all variables match
         if node.arity != func.arity:
             raise NexRuntimeError(
-                f"incorrect number of arguments provided {node.arity} != {func.arity}"
+                f"incorrect number of arguments provided {node.arity} != {func.arity}",
+                line=node.line,
+                column=node.column,
             )
 
         # evaluate all argument expressions
@@ -318,8 +373,11 @@ class Interpreter:
         # check all parameter types
         for param, arg in zip(func.arguments, argvalues):
             if not self._matches_type(param[0], arg):
+                argtype = self._runtime_type_name(arg)
                 raise NexRuntimeError(
-                    f"param {param[0]} has the wrong type {param[0]} != {arg}"
+                    f"param `{param[1]}` has the wrong type, encountered `{argtype}` while expected `{param[0]}`",
+                    line=node.line,
+                    column=node.column,
                 )
 
         # push new environment
@@ -333,9 +391,25 @@ class Interpreter:
             for stmt in func.body:
                 self.exec(stmt)
         except NexReturnSignal as ret:
+            if not self._matches_type(func.return_type, ret.value):
+                argtype = self._runtime_type_name(ret.value)
+                raise NexRuntimeError(
+                    f"return value has wrong type, expected `{func.return_type}` while got `{argtype}`",
+                    line=node.line,
+                    column=node.column,
+                )
             return ret.value
         finally:
             self.env.pop()
+
+        # if no return value was encountered, the return value is "void" and it
+        # should be explicitly checked then that the function returns this
+        if not self._matches_type(func.return_type, None):
+            raise NexRuntimeError(
+                f"non-void function `{func.callee}` returned void",
+                line=node.line,
+                column=node.column,
+            )
 
     # -------------------------------------------------------------------------
     # HELPERS
@@ -348,8 +422,10 @@ class Interpreter:
             return type(val) is str
         if declared_type == "bool":
             return type(val) is bool
+        if declared_type == "void":
+            return val is None
 
-        raise RuntimeError(f"Unknown type: {declared_type}")
+        raise NexRuntimeError(f"unknown type: `{declared_type}`")
 
     def _runtime_type_name(self, val: object):
         if type(val) is int:
@@ -358,6 +434,8 @@ class Interpreter:
             return "str"
         if type(val) is bool:
             return "bool"
+        if val is None:
+            return "void"
 
         return type(val).__name__
 
@@ -390,7 +468,7 @@ class Interpreter:
             return
 
         raise NexRuntimeError(
-            f"operator '{op}' expects {expectation}, got "
+            f"operator `{op}` expects {expectation}, got "
             f"{self._runtime_type_name(left)} and {self._runtime_type_name(right)}",
             line=node.line,
             column=node.column,

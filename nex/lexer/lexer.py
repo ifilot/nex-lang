@@ -81,6 +81,12 @@ class Lexer:
             self._add_token(TokenType.SLASH, c)
         elif c == "%":
             self._add_token(TokenType.PERCENT, c)
+        elif c == "|" and self._peek() == "|":
+            self._advance()
+            self._add_token(TokenType.OR, "||")
+        elif c == "&" and self._peek() == "&":
+            self._advance()
+            self._add_token(TokenType.AND, "&&")
         elif c == "<":
             if self._peek() == "=":
                 self._advance()

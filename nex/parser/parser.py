@@ -18,8 +18,13 @@ from ..lexer.token import Token
 from ..lexer.tokentype import TokenType
 
 # -----------------------------------------------------------------------------
-# Grammar (BNF)
+# Grammar (BNF-like)
 # -----------------------------------------------------------------------------
+# This grammar describes the parser's surface syntax. Some language rules are
+# enforced separately as context-sensitive checks, such as:
+# - `return` is only allowed inside function bodies
+# - nested function declarations are rejected
+#
 # <program>           ::= <statement>* EOF
 #
 # <statement>         ::= <typed-decl>
@@ -73,9 +78,13 @@ from ..lexer.tokentype import TokenType
 #
 # <expr-stmt>         ::= <expression> ";"
 #
-# <expression>        ::= <comparison>
+# <expression>        ::= <logical-or>
 #
-# <comparison>        ::= <term> [( "<" | ">" | "<=" | ">=" | "==" | "!=" ) <term>]
+# <logical-or>        ::= <logical-and> ( "||" <logical-and> )*
+#
+# <logical-and>       ::= <comparison> ( "&&" <comparison> )*
+#
+# <comparison>        ::= <term> (( "<" | ">" | "<=" | ">=" | "==" | "!=" ) <term>)*
 #
 # <term>              ::= <factor> (("+" | "-") <factor>)*
 #
@@ -106,6 +115,7 @@ class Parser:
     def __init__(self, tokens: Tuple[Token, ...]):
         self.tokens = tokens
         self.pos = 0
+        self.function_depth = 0  # keep track whether we are parsing a function
 
     def parse(self):
         """
@@ -169,6 +179,14 @@ class Parser:
         """
         Parse a return statement
         """
+        # return statements are not allowed at the global level
+        if self.function_depth < 1:
+            raise NexParseError(
+                "return statement are not allowed outside of function declarations",
+                line=self._previous().line,
+                column=self._previous().column,
+            )
+
         ret = self._previous()
         expr = None
         if not self._check(TokenType.SEMICOLON):
@@ -198,19 +216,39 @@ class Parser:
         )
 
     def _function_decl(self):
+        # increment function depth (can in principle never exceed 1, because
+        # nested functions are not allowed)
+        self.function_depth += 1
+
+        if self.function_depth > 1:
+            raise NexParseError(
+                "nested functions are not allowed",
+                line=self._peek().line,
+                column=self._peek().column,
+            )
+
         fn_token = self._previous()
         name = self._consume(TokenType.IDENTIFIER, "Expect variable name.")
         self._consume(TokenType.LPAREN, "Expect '(")
 
-        # consume parameters
-        params = []
+        # consume parameters, check for duplicates
+        param_types = []
+        param_names = []
         while self._match(TokenType.INT, TokenType.STR, TokenType.BOOL):
-            params.append(
-                (
-                    self._previous().lexeme,
-                    self._consume(TokenType.IDENTIFIER, "Expect variable name").lexeme,
+            paramtype = self._previous().lexeme
+            paramname = self._consume(
+                TokenType.IDENTIFIER, "Expect variable name"
+            ).lexeme
+            if paramname in param_names:
+                raise NexParseError(
+                    f"duplicate parameter `{paramname}` encountered",
+                    line=self._previous().line,
+                    column=self._previous().column,
                 )
-            )
+
+            param_types.append(paramtype)
+            param_names.append(paramname)
+
             if not self._check(TokenType.COMMA):
                 break
             self._advance()
@@ -223,13 +261,22 @@ class Parser:
             return_type = self._previous()
         else:
             raise NexParseError(
-                "Unexpected return type",
+                "unexpected return type",
                 line=self._peek().line,
                 column=self._peek().column,
             )
 
         # grab function body
         body = self._block_stmt()
+
+        # decrement function depth
+        self.function_depth -= 1
+
+        # assemble parameters
+        params = [
+            (paramtype, paramname)
+            for paramtype, paramname in zip(param_types, param_names)
+        ]
 
         return FuncDecl(
             name.lexeme,
@@ -406,7 +453,35 @@ class Parser:
         """
         Parse an expression
         """
-        return self._comparison()
+        return self._logical_or()
+
+    def _logical_or(self):
+        """
+        Parse logical OR expressions.
+        """
+        expr = self._logical_and()
+
+        while self._match(TokenType.OR):
+            operator = self._previous()
+            op = operator.lexeme
+            right = self._logical_and()
+            expr = Binary(expr, op, right, line=operator.line, column=operator.column)
+
+        return expr
+
+    def _logical_and(self):
+        """
+        Parse logical AND expressions.
+        """
+        expr = self._comparison()
+
+        while self._match(TokenType.AND):
+            operator = self._previous()
+            op = operator.lexeme
+            right = self._comparison()
+            expr = Binary(expr, op, right, line=operator.line, column=operator.column)
+
+        return expr
 
     def _comparison(self):
         """

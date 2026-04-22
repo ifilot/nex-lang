@@ -47,9 +47,9 @@ Examples:
 - `_name`
 - `with_internal_underscore`
 
-Keywords such as `int`, `bool`, `str`, `if`, `else`, `while`, `for`, `print`,
-`true`, and `false` are reserved. They have fixed meaning in the grammar and
-therefore cannot be used as identifiers.
+Keywords such as `fn`, `return`, `void`, `int`, `bool`, `str`, `if`, `else`,
+`while`, `for`, `print`, `true`, and `false` are reserved. They have fixed
+meaning in the grammar and therefore cannot be used as identifiers.
 
 ## Literals
 
@@ -68,5 +68,6 @@ flow:
 
 - `(` `)` `{` `}` `;`
 - `=` `+` `-` `*` `/` `%`
+- `&&` `||`
 - `<` `>` `<=` `>=` `==` `!=`
 - `!`

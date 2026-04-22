@@ -19,7 +19,7 @@ EXPECTED_OUTPUTS = {
 EXPECTED_ERRORS = {
     "comparison.nex": (
         "6\n",
-        "runtime error: line 7, column 13: operator '<' expects matching int or str operands, got bool and int\n",
+        "runtime error: line 7, column 13: operator `<` expects matching int or str operands, got bool and int\n",
     ),
 }
 

@@ -120,6 +120,23 @@ def test_lexes_two_character_comparison_operators():
     ]
 
 
+def test_lexes_logical_operators():
+    """
+    Test that the lexer correctly identifies logical operators.
+    """
+    assert token_types("a && b; c || d;") == [
+        TokenType.IDENTIFIER,
+        TokenType.AND,
+        TokenType.IDENTIFIER,
+        TokenType.SEMICOLON,
+        TokenType.IDENTIFIER,
+        TokenType.OR,
+        TokenType.IDENTIFIER,
+        TokenType.SEMICOLON,
+        TokenType.EOF,
+    ]
+
+
 def test_lexes_identifiers_with_leading_and_internal_underscores():
     """
     Test that identifiers may start with '_' and may contain '_' internally.

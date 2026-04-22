@@ -33,10 +33,10 @@ class FunctionStore:
         if func.callee not in self.functions:
             self.functions[func.callee] = func
         else:
-            raise NexFunctionStoreError(f"function {func.callee} is already defined")
+            raise NexFunctionStoreError(f"function `{func.callee}` is already defined")
 
     def lookup_function(self, callee: str):
         if callee in self.functions:
             return self.functions[callee]
         else:
-            raise NexFunctionStoreError(f"Undefined function {callee}")
+            raise NexFunctionStoreError(f"undefined function `{callee}`")

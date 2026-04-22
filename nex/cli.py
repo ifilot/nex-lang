@@ -1,4 +1,5 @@
 import sys
+from pathlib import Path
 
 from nex import Interpreter, Lexer, Parser, __version__
 from nex.common import NexLexError, NexParseError, NexRuntimeError
@@ -6,16 +7,18 @@ from nex.pretty_printer import PrettyPrinter
 
 
 def main(argv=None):
+    from_sys_argv = argv is None
     argv = sys.argv[1:] if argv is None else argv
+    prog_name = _detect_prog_name(from_sys_argv)
     commands = {"run", "tokens", "ast"}
 
     if argv and argv[0] in commands:
-        cli_parser = _build_parser()
+        cli_parser = _build_parser(prog_name)
         args = cli_parser.parse_args(argv)
         command = args.command
         file = args.file
     else:
-        cli_parser = _build_run_parser()
+        cli_parser = _build_run_parser(prog_name)
         args = cli_parser.parse_args(argv)
         command = "run"
         file = args.file
@@ -57,11 +60,11 @@ def main(argv=None):
     return 0
 
 
-def _build_parser():
+def _build_parser(prog_name):
     import argparse
 
     cli_parser = argparse.ArgumentParser(
-        prog="nex", description="Run Nex programs or inspect tokens and AST"
+        prog=prog_name, description="Run Nex programs or inspect tokens and AST"
     )
     cli_parser.add_argument(
         "--version",
@@ -87,10 +90,12 @@ def _build_parser():
     return cli_parser
 
 
-def _build_run_parser():
+def _build_run_parser(prog_name):
     import argparse
 
-    cli_parser = argparse.ArgumentParser(prog="nex", description="Run a Nex program")
+    cli_parser = argparse.ArgumentParser(
+        prog=prog_name, description="Run a Nex program"
+    )
     cli_parser.add_argument(
         "--version",
         action="version",
@@ -103,6 +108,14 @@ def _build_run_parser():
 def _read_source(path):
     with open(path, encoding="utf-8") as f:
         return f.read()
+
+
+def _detect_prog_name(from_sys_argv):
+    if from_sys_argv:
+        candidate = Path(sys.argv[0]).name
+        if candidate:
+            return candidate
+    return "nexlang"
 
 
 def _format_tokens(tokens):

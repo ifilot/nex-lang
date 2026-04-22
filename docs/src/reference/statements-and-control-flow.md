@@ -7,7 +7,8 @@ The current NEX core supports these statement forms:
 - variable declarations
 - assignment statements
 - expression statements
-- `print(...)`
+- function declarations
+- `return`
 - block statements
 - `if` and `if ... else`
 - `while`
@@ -17,19 +18,6 @@ Statements are the parts of a NEX program that do work at the top level of a
 block. While expressions compute values, statements use those values to declare
 variables, update state, print results, or choose which block of code to
 execute next. Every simple statement ends with a semicolon.
-
-## Print
-
-`print(...)` evaluates an expression and writes the resulting value.
-
-```nex
-print("hello");
-print(1 + 2);
-```
-
-At the moment, `print` is the only built-in operation exposed directly at the
-statement level. It is useful both practically and pedagogically: it lets small
-programs show their results without needing a larger standard library.
 
 ## Blocks
 
@@ -129,3 +117,19 @@ for (1 + 2; i < 3; i + 1) {
 Using a non-boolean `for` condition is a runtime error. The current `for`
 design is intentionally narrow, but it already shows the classic three-part
 loop structure: setup, test, and update.
+
+## Functions
+
+Function declarations and `return` statements are also part of the current
+statement system. They are described in more detail in
+[Functions And Return](functions-and-return.md), but the short version is:
+
+- `fn ... { ... }` introduces a named function
+- function calls are expressions
+- `return` stops the current function and optionally returns a value
+
+That split is useful to keep in mind. Declaring a function is a statement, but
+calling one is an expression.
+
+Built-in functions such as `print(...)` are described separately in
+[Built-in Functions](built-in-functions.md).
