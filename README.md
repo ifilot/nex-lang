@@ -110,6 +110,24 @@ available at:
 https://ifilot.github.io/nex-lang/
 ```
 
+## VS Code Syntax Highlighting
+
+A lightweight VS Code syntax-highlighting extension for `.nex` files lives at:
+
+```text
+editors/vscode/nex-syntax
+```
+
+If you are using VS Code through WSL, you can expose that extension to the WSL
+server with:
+
+```bash
+cd editors/vscode/nex-syntax
+mkdir -p ~/.vscode-server/extensions && ln -s "$(pwd)" ~/.vscode-server/extensions/local.nex-syntax
+```
+
+After that, reload the VS Code window.
+
 ## Releases
 
 PyPI releases are published from Git tags that start with `v`. The published

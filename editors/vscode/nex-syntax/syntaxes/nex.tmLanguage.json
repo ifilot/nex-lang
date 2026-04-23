@@ -1,0 +1,207 @@
+{
+  "name": "NEX",
+  "scopeName": "source.nex",
+  "patterns": [
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#strings"
+    },
+    {
+      "include": "#function-definitions"
+    },
+    {
+      "include": "#array-types"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#types"
+    },
+    {
+      "include": "#builtins"
+    },
+    {
+      "include": "#constants"
+    },
+    {
+      "include": "#numbers"
+    },
+    {
+      "include": "#operators"
+    },
+    {
+      "include": "#punctuation"
+    },
+    {
+      "include": "#function-calls"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.number-sign.nex",
+          "match": "#.*$"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.nex",
+          "begin": "\"",
+          "beginCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.begin.nex"
+            }
+          },
+          "end": "\"",
+          "endCaptures": {
+            "0": {
+              "name": "punctuation.definition.string.end.nex"
+            }
+          },
+          "patterns": [
+            {
+              "name": "constant.character.escape.nex",
+              "match": "\\\\."
+            }
+          ]
+        }
+      ]
+    },
+    "function-definitions": {
+      "patterns": [
+        {
+          "name": "meta.function.definition.nex",
+          "match": "\\b(fn)\\s+([A-Za-z_][A-Za-z0-9_]*)",
+          "captures": {
+            "1": {
+              "name": "keyword.control.function.nex"
+            },
+            "2": {
+              "name": "entity.name.function.nex"
+            }
+          }
+        }
+      ]
+    },
+    "array-types": {
+      "patterns": [
+        {
+          "name": "meta.type.array.nex",
+          "match": "\\b(array)(<)(int|str)(>)",
+          "captures": {
+            "1": {
+              "name": "keyword.control.type.array.nex"
+            },
+            "2": {
+              "name": "punctuation.definition.type.begin.nex"
+            },
+            "3": {
+              "name": "storage.type.primitive.nex"
+            },
+            "4": {
+              "name": "punctuation.definition.type.end.nex"
+            }
+          }
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.nex",
+          "match": "\\b(fn|return|if|else|while|for|array|void)\\b"
+        }
+      ]
+    },
+    "types": {
+      "patterns": [
+        {
+          "name": "storage.type.primitive.nex",
+          "match": "\\b(int|str|bool)\\b"
+        },
+        {
+          "name": "storage.type.special.any.nex",
+          "match": "\\bany\\b"
+        }
+      ]
+    },
+    "builtins": {
+      "patterns": [
+        {
+          "name": "support.function.builtin.nex",
+          "match": "\\b(print|print_inline|version|input|intstr|strint|resize|length|reset)(?=\\s*\\()"
+        }
+      ]
+    },
+    "constants": {
+      "patterns": [
+        {
+          "name": "constant.language.boolean.nex",
+          "match": "\\b(true|false)\\b"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.integer.nex",
+          "match": "\\b\\d+\\b"
+        }
+      ]
+    },
+    "operators": {
+      "patterns": [
+        {
+          "name": "keyword.operator.nex",
+          "match": "->|\\+\\+|--|\\+=|-=|==|!=|<=|>=|&&|\\|\\||[+\\-*/%^<>=!]"
+        }
+      ]
+    },
+    "punctuation": {
+      "patterns": [
+        {
+          "name": "punctuation.separator.nex",
+          "match": "[,;.]"
+        },
+        {
+          "name": "punctuation.section.braces.begin.nex",
+          "match": "\\{"
+        },
+        {
+          "name": "punctuation.section.braces.end.nex",
+          "match": "\\}"
+        },
+        {
+          "name": "punctuation.section.parens.begin.nex",
+          "match": "\\("
+        },
+        {
+          "name": "punctuation.section.parens.end.nex",
+          "match": "\\)"
+        },
+        {
+          "name": "punctuation.section.brackets.begin.nex",
+          "match": "\\["
+        },
+        {
+          "name": "punctuation.section.brackets.end.nex",
+          "match": "\\]"
+        }
+      ]
+    },
+    "function-calls": {
+      "patterns": [
+        {
+          "name": "entity.name.function.call.nex",
+          "match": "\\b[A-Za-z_][A-Za-z0-9_]*(?=\\s*\\()"
+        }
+      ]
+    }
+  }
+}

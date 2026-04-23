@@ -10,7 +10,7 @@ int limit = 1000;
 array<int> marks;
 marks.resize(limit + 1);
 
-for (int i = 0; i <= limit; i = i + 1) {
+for (int i = 0; i <= limit; i++) {
     marks[i] = 1;
 }
 
@@ -20,7 +20,7 @@ marks[1] = 0;
 print_inline("building sieve up to ");
 print(limit);
 
-for (int p = 2; p * p <= limit; p = p + 1) {
+for (int p = 2; p * p <= limit; p++) {
     if (marks[p] == 1) {
         for (int multiple = p * p; multiple <= limit; multiple = multiple + p) {
             marks[multiple] = 0;
@@ -32,10 +32,10 @@ print("primes:");
 
 int printed = 0;
 
-for (int n = 2; n <= limit; n = n + 1) {
+for (int n = 2; n <= limit; n++) {
     if (marks[n] == 1) {
         print_inline(n);
-        printed = printed + 1;
+        printed++;
 
         if (printed % 10 == 0) {
             print("");
