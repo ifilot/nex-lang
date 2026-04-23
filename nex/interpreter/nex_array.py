@@ -1,7 +1,5 @@
 from dataclasses import dataclass, field
 
-import numpy as np
-
 
 @dataclass
 class NexArray:
@@ -14,7 +12,7 @@ class NexArray:
 
     def __post_init__(self):
         if self.element_type == "int":
-            self.storage = np.array([], dtype=np.int64)
+            self.storage = []
             return
         if self.element_type == "str":
             self.storage = []
@@ -33,29 +31,20 @@ class NexArray:
             raise ValueError("size must be non-negative")
 
         current = self.length()
-        if self.element_type == "int":
-            if size <= current:
-                self.storage = self.storage[:size].copy()
-                return
-            padding = np.zeros(size - current, dtype=np.int64)
-            self.storage = np.concatenate((self.storage, padding))
-            return
-
         if size <= current:
             del self.storage[size:]
             return
-        self.storage.extend([""] * (size - current))
+
+        default = 0 if self.element_type == "int" else ""
+        self.storage.extend([default] * (size - current))
 
     def reset(self) -> None:
         """
         Replace every existing element with that type's default value.
         """
-        if self.element_type == "int":
-            self.storage.fill(0)
-            return
-
+        default = 0 if self.element_type == "int" else ""
         for i in range(self.length()):
-            self.storage[i] = ""
+            self.storage[i] = default
 
     def get(self, index: int):
         return self.storage[self._normalize_index(index)]
@@ -71,6 +60,9 @@ class NexArray:
         return index
 
     def __repr__(self) -> str:
-        if self.element_type == "int":
-            return repr(self.storage.tolist())
         return repr(self.storage)
+
+    def __eq__(self, other) -> bool:
+        if not isinstance(other, NexArray):
+            return NotImplemented
+        return self.element_type == other.element_type and self.storage == other.storage

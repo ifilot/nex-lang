@@ -19,7 +19,8 @@ values.
 
 ## Integers
 
-`int` values are whole numbers.
+`int` values are arbitrary-precision whole numbers. In other words, they are
+not limited to a fixed 32-bit or 64-bit range.
 
 ```nex
 int a = 10;

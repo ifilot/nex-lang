@@ -73,7 +73,7 @@ define the basic shape of NEX expressions, declarations, blocks, and control
 flow:
 
 - `(` `)` `{` `}` `;`
-- `=` `+` `-` `*` `/` `%`
+- `=` `+` `-` `*` `/` `%` `^`
 - `&&` `||`
 - `<` `>` `<=` `>=` `==` `!=`
 - `!`

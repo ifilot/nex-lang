@@ -19,6 +19,7 @@ class TokenType(Enum):
     MINUSEQ = auto()
     DEC = auto()
     STAR = auto()
+    CARET = auto()
     SLASH = auto()
     OR = auto()
     AND = auto()

@@ -28,7 +28,7 @@
         },
         {
           className: "built_in",
-          begin: /\b(print|print_inline|version|input|resize|length|reset)(?=\s*\()/,
+          begin: /\b(print|print_inline|version|input|intstr|strint|resize|length|reset)(?=\s*\()/,
         },
         {
           className: "title",
@@ -41,7 +41,7 @@
         },
         {
           className: "operator",
-          begin: /==|!=|<=|>=|[+\-*/%<>=!]/,
+          begin: /==|!=|<=|>=|[+\-*/%^<>=!]/,
         },
         {
           className: "punctuation",

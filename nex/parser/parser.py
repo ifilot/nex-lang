@@ -105,7 +105,9 @@ from ..lexer.tokentype import TokenType
 #
 # <term>              ::= <factor> (("+" | "-") <factor>)*
 #
-# <factor>            ::= <unary> (("*" | "/" | "%") <unary>)*
+# <factor>            ::= <power> (("*" | "/" | "%") <power>)*
+#
+# <power>             ::= <unary> ["^" <power>]
 #
 # <unary>             ::= ("-" | "!") <unary>
 #                       | <postfix>
@@ -495,12 +497,27 @@ class Parser:
         """
         Parse factors
         """
-        expr = self._unary()
+        expr = self._power()
 
         while self._match(TokenType.STAR, TokenType.SLASH, TokenType.PERCENT):
             operator = self._previous()
             op = operator.lexeme
-            right = self._unary()
+            right = self._power()
+            expr = Binary(expr, op, right, line=operator.line, column=operator.column)
+
+        return expr
+
+    def _power(self):
+        """
+        Parse exponentiation. This operator binds more tightly than
+        multiplication and associates to the right.
+        """
+        expr = self._unary()
+
+        if self._match(TokenType.CARET):
+            operator = self._previous()
+            op = operator.lexeme
+            right = self._power()
             expr = Binary(expr, op, right, line=operator.line, column=operator.column)
 
         return expr

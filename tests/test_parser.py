@@ -96,6 +96,33 @@ def test_parses_modulus_expression_statement():
     assert stmt.expr == Binary(Literal(5), "%", Literal(2))
 
 
+def test_parses_power_expression_statement():
+    program = parse("2 ^ 3;")
+
+    assert len(program) == 1
+    stmt = program[0]
+    assert isinstance(stmt, ExprStmt)
+    assert stmt.expr == Binary(Literal(2), "^", Literal(3))
+
+
+def test_parses_power_with_higher_precedence_than_factor():
+    program = parse("2 * 3 ^ 4;")
+
+    assert len(program) == 1
+    assert program[0] == ExprStmt(
+        Binary(Literal(2), "*", Binary(Literal(3), "^", Literal(4)))
+    )
+
+
+def test_parses_power_as_right_associative():
+    program = parse("2 ^ 3 ^ 2;")
+
+    assert len(program) == 1
+    assert program[0] == ExprStmt(
+        Binary(Literal(2), "^", Binary(Literal(3), "^", Literal(2)))
+    )
+
+
 def test_parses_two_character_comparison_expression_statements():
     program = parse("x <= 3; y >= 4; z == 5; w != 6;")
 

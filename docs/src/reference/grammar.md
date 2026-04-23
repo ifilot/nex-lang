@@ -89,7 +89,9 @@ forms in the general grammar.
 
 <term>              ::= <factor> (("+" | "-") <factor>)*
 
-<factor>            ::= <unary> (("*" | "/" | "%") <unary>)*
+<factor>            ::= <power> (("*" | "/" | "%") <power>)*
+
+<power>             ::= <unary> [ "^" <power> ]
 
 <unary>             ::= ("-" | "!") <unary>
                       | <postfix>
@@ -239,6 +241,10 @@ forms in the general grammar.
 ### `<factor>`
 
 ![Syntax diagram for <factor>](grammar-diagrams/factor.svg)
+
+### `<power>`
+
+![Syntax diagram for <power>](grammar-diagrams/power.svg)
 
 ### `<unary>`
 

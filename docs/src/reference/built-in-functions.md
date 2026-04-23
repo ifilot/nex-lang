@@ -76,6 +76,31 @@ print("Hello, " + name);
 
 If input cannot be read, execution stops with a runtime error.
 
+### `intstr`
+
+<code class="language-nex">intstr(int value) -> str</code>
+
+<code class="language-nex">intstr(...)</code> converts an integer value to its
+string representation.
+
+```nex
+str count = intstr(42);
+print(count);
+```
+
+### `strint`
+
+<code class="language-nex">strint(str value) -> int</code>
+
+<code class="language-nex">strint(...)</code> converts a string to an integer.
+If the string cannot be parsed as an integer, the result is
+<code class="language-nex">0</code>.
+
+```nex
+print(strint("123"));
+print(strint("nope"));
+```
+
 ## Array Built-ins
 
 ### `resize`

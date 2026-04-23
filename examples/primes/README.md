@@ -18,3 +18,4 @@ python3 -m nex.cli examples/primes/<file>.nex
 - `first_n_primes.nex`: generates the first `N` prime numbers by testing candidates one by one.
 - `next_prime.nex`: searches upward until it finds the next prime after a given starting value.
 - `prime_factorization.nex`: prints the prime factors of a number by repeatedly dividing out each divisor.
+- `sieve.nex`: uses an `array<int>` marker array to run the sieve of Eratosthenes up to `1000`, with simple progress output while it marks multiples.

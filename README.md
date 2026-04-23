@@ -112,14 +112,8 @@ https://ifilot.github.io/nex-lang/
 
 ## Releases
 
-PyPI releases are published from Git tags that start with `v`, for example:
-
-```text
-v0.2.0
-```
-
-The published package name is `nex-lang`. The installed CLI command remains
-`nexlang`.
+PyPI releases are published from Git tags that start with `v`. The published
+package name is `nex-lang`. The installed CLI command remains `nexlang`.
 
 ## Testing
 
@@ -152,9 +146,3 @@ nex/
 tests/           Unit tests
 examples/        Example programs
 ```
-
-## Current Status
-
-This is an early interpreter project and the language is still evolving. The
-syntax is intentionally simple and currently leans toward a small C-like
-language.

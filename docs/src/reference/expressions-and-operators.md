@@ -33,11 +33,12 @@ From highest precedence to lowest:
 1. primary expressions: literals, variables, parenthesized expressions
 2. postfix operators: function call `(...)`, index access `[...]`, method call `.name(...)`, postfix increment `++`, postfix decrement `--`
 3. unary operators: `-`, `!`
-4. multiplicative operators: `*`, `/`, `%`
-5. additive operators: `+`, `-`
-6. comparison and equality operators: `<`, `>`, `<=`, `>=`, `==`, `!=`
-7. logical AND: `&&`
-8. logical OR: `||`
+4. exponentiation operator: `^`
+5. multiplicative operators: `*`, `/`, `%`
+6. additive operators: `+`, `-`
+7. comparison and equality operators: `<`, `>`, `<=`, `>=`, `==`, `!=`
+8. logical AND: `&&`
+9. logical OR: `||`
 
 Binary operators at the same precedence level associate from left to right.
 This precedence structure is a compact way of saying which expression trees the
@@ -56,7 +57,10 @@ chains. For example, `1 < 2 < 3` is parsed as `(1 < 2) < 3`, not as a special
 to compare `bool` with `int`, which is a runtime error.
 
 Postfix operators bind more tightly than unary operators. For example, `-f()`
-is parsed as `-(f())`, not as `(-f)()`.
+is parsed as `-(f())`, not as `(-f)()`. Exponentiation binds more tightly than
+`*`, `/`, and `%`, so `2 * 3 ^ 2` is parsed as `2 * (3 ^ 2)`. The `^`
+operator associates to the right, which means `2 ^ 3 ^ 2` is parsed as
+`2 ^ (3 ^ 2)`.
 
 ## Postfix operators
 
@@ -143,6 +147,18 @@ print(!false);
 Using unary operators with the wrong type is a runtime error.
 
 ## Arithmetic operators
+
+### Exponentiation
+
+Binary `^` requires `int` operands on both sides.
+
+```nex
+print(2 ^ 5);
+print(2 ^ 100);
+```
+
+The exponent must be non-negative. Negative exponents are rejected because the
+current arithmetic core only supports integer results.
 
 `-`, `*`, `/`, and `%` require `int` operands on both sides.
 

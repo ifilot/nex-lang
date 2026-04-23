@@ -1,10 +1,12 @@
 from .builtin import (
     nex_input,
+    nex_intstr,
     nex_length,
     nex_print,
     nex_print_inline,
     nex_reset,
     nex_resize,
+    nex_strint,
     nex_version,
 )
 from .function import BuiltinFunction, Function
@@ -100,6 +102,18 @@ class FunctionStore:
                     "params": (),
                     "return_type": "str",
                     "handler": nex_input,
+                },
+                {
+                    "callee": "intstr",
+                    "params": (("int", "value"),),
+                    "return_type": "str",
+                    "handler": nex_intstr,
+                },
+                {
+                    "callee": "strint",
+                    "params": (("str", "value"),),
+                    "return_type": "int",
+                    "handler": nex_strint,
                 },
                 {
                     "callee": "resize",

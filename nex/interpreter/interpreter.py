@@ -1,4 +1,4 @@
-from nex.common import NexRuntimeError
+from nex.common import NexIndexError, NexRuntimeError
 
 from .environment import Environment
 from .function import BuiltinFunction, UserFunction
@@ -134,7 +134,7 @@ class Interpreter:
         try:
             receiver.set(index, value)
         except IndexError:
-            raise NexRuntimeError(
+            raise NexIndexError(
                 f"array index {index} out of bounds for length {receiver.length()}",
                 line=node.target.index.line,
                 column=node.target.index.column,
@@ -322,6 +322,18 @@ class Interpreter:
                 column=node.column,
             )
 
+        if node.op == "^":
+            self._require_matching_types(
+                node, node.op, left, right, int, "int operands"
+            )
+            if right < 0:
+                raise NexRuntimeError(
+                    "operator `^` does not support negative exponents",
+                    line=node.line,
+                    column=node.column,
+                )
+            return left**right
+
         if node.op in ("-", "*", "/", "%"):
             self._require_matching_types(
                 node, node.op, left, right, int, "int operands"
@@ -403,7 +415,7 @@ class Interpreter:
         try:
             return receiver.get(index)
         except IndexError:
-            raise NexRuntimeError(
+            raise NexIndexError(
                 f"array index {index} out of bounds for length {receiver.length()}",
                 line=node.index.line,
                 column=node.index.column,

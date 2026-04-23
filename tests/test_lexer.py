@@ -107,13 +107,15 @@ def test_lexes_arithmetic_operators():
     """
     Test that the lexer correctly identifies arithmetic operators.
     """
-    assert token_types("x = 1 + 2 * 3 / 4 % 5 - 6;") == [
+    assert token_types("x = 1 + 2 * 3 ^ 2 / 4 % 5 - 6;") == [
         TokenType.IDENTIFIER,
         TokenType.EQ,
         TokenType.NUMBER,
         TokenType.PLUS,
         TokenType.NUMBER,
         TokenType.STAR,
+        TokenType.NUMBER,
+        TokenType.CARET,
         TokenType.NUMBER,
         TokenType.SLASH,
         TokenType.NUMBER,

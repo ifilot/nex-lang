@@ -19,6 +19,23 @@ def nex_input() -> str:
     return input()
 
 
+def nex_intstr(value: int) -> str:
+    """
+    Convert an integer value to its string representation.
+    """
+    return str(value)
+
+
+def nex_strint(value: str) -> int:
+    """
+    Convert a string to an integer, falling back to 0 on invalid input.
+    """
+    try:
+        return int(value)
+    except ValueError:
+        return 0
+
+
 def nex_resize(arr: NexArray, size: int) -> None:
     """
     Resize an array in place to the requested logical length.

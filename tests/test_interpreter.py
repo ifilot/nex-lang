@@ -1,8 +1,7 @@
-import numpy as np
 import pytest
 
 from nex import Interpreter, Lexer, Parser, __version__
-from nex.common import NexParseError, NexRuntimeError
+from nex.common import NexIndexError, NexParseError, NexRuntimeError
 from nex.interpreter.nex_array import NexArray
 
 
@@ -60,7 +59,7 @@ def test_array_declaration_creates_empty_backend_values():
     assert isinstance(xs, NexArray)
     assert xs.declared_type == "array<int>"
     assert xs.length() == 0
-    assert isinstance(xs.storage, np.ndarray)
+    assert xs.storage == []
 
     assert isinstance(ys, NexArray)
     assert ys.declared_type == "array<str>"
@@ -72,7 +71,7 @@ def test_reads_array_element_with_negative_index(capsys):
     interpreter = Interpreter()
     interpreter.run(parse_source("array<int> xs;"))
     xs = interpreter.env.lookup("xs")
-    xs.storage = np.array([10, 20, 30], dtype=np.int64)
+    xs.storage = [10, 20, 30]
 
     interpreter.run(parse_source("print(xs[-1]);"))
 
@@ -97,7 +96,7 @@ def test_rejects_out_of_bounds_array_access():
     interpreter = Interpreter()
     interpreter.run(parse_source("array<int> xs;"))
 
-    with pytest.raises(NexRuntimeError) as excinfo:
+    with pytest.raises(NexIndexError) as excinfo:
         interpreter.run(parse_source("print(xs[0]);"))
 
     assert excinfo.value.message == "array index 0 out of bounds for length 0"
@@ -109,7 +108,7 @@ def test_rejects_out_of_bounds_array_assignment():
     interpreter = Interpreter()
     interpreter.run(parse_source("array<int> xs;"))
 
-    with pytest.raises(NexRuntimeError) as excinfo:
+    with pytest.raises(NexIndexError) as excinfo:
         interpreter.run(parse_source("xs[-1] = 1;"))
 
     assert excinfo.value.message == "array index -1 out of bounds for length 0"
@@ -121,7 +120,7 @@ def test_rejects_array_assignment_of_wrong_element_type():
     interpreter = Interpreter()
     interpreter.run(parse_source("array<int> xs;"))
     xs = interpreter.env.lookup("xs")
-    xs.storage = np.array([1], dtype=np.int64)
+    xs.storage = [1]
 
     with pytest.raises(NexRuntimeError) as excinfo:
         interpreter.run(parse_source('xs[0] = "hello";'))
@@ -137,7 +136,7 @@ def test_builtin_length_supports_direct_and_method_style_calls(capsys):
     interpreter = Interpreter()
     interpreter.run(parse_source("array<int> xs;"))
     xs = interpreter.env.lookup("xs")
-    xs.storage = np.array([10, 20, 30], dtype=np.int64)
+    xs.storage = [10, 20, 30]
 
     interpreter.run(parse_source("print(length(xs)); print(xs.length());"))
 
@@ -182,7 +181,7 @@ def test_builtin_reset_supports_direct_and_method_style_calls(capsys):
     interpreter.run(parse_source("array<int> xs; array<str> names;"))
     xs = interpreter.env.lookup("xs")
     names = interpreter.env.lookup("names")
-    xs.storage = np.array([10, 20, 30], dtype=np.int64)
+    xs.storage = [10, 20, 30]
     names.storage = ["Ada", "Grace"]
 
     interpreter.run(
@@ -193,8 +192,90 @@ def test_builtin_reset_supports_direct_and_method_style_calls(capsys):
 
     captured = capsys.readouterr()
     assert captured.out == "0\n0\n\n\n"
-    assert xs.storage.tolist() == [0, 0, 0]
+    assert xs.storage == [0, 0, 0]
     assert names.storage == ["", ""]
+
+
+def test_power_operator_supports_integer_exponentiation(capsys):
+    run_source(
+        """
+        print(2 ^ 5);
+        print(2 * 3 ^ 2);
+        """
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out == "32\n18\n"
+
+
+def test_power_operator_is_right_associative(capsys):
+    run_source("print(2 ^ 3 ^ 2);")
+
+    captured = capsys.readouterr()
+    assert captured.out == "512\n"
+
+
+def test_power_operator_rejects_negative_exponents():
+    with pytest.raises(NexRuntimeError) as excinfo:
+        run_source("print(2 ^ -1);")
+
+    assert excinfo.value.message == "operator `^` does not support negative exponents"
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 9
+
+
+def test_power_operator_preserves_arbitrary_precision_integers(capsys):
+    run_source("print(2 ^ 100);")
+
+    captured = capsys.readouterr()
+    assert captured.out == "1267650600228229401496703205376\n"
+
+
+def test_indexed_int_value_round_trips_as_plain_nex_int(capsys):
+    interpreter = Interpreter()
+    interpreter.run(parse_source("array<int> xs;"))
+    xs = interpreter.env.lookup("xs")
+    xs.storage = [5]
+
+    interpreter.run(parse_source("int y = xs[0]; print(y + 2);"))
+
+    captured = capsys.readouterr()
+    assert captured.out == "7\n"
+
+
+def test_array_equality_is_structural_for_both_array_kinds(capsys):
+    interpreter = Interpreter()
+    interpreter.run(
+        parse_source("array<int> xs; array<int> ys; array<str> a; array<str> b;")
+    )
+
+    xs = interpreter.env.lookup("xs")
+    ys = interpreter.env.lookup("ys")
+    a = interpreter.env.lookup("a")
+    b = interpreter.env.lookup("b")
+
+    xs.storage = [1, 2, 3]
+    ys.storage = [1, 2, 3]
+    a.storage = ["Ada", "Grace"]
+    b.storage = ["Ada", "Linus"]
+
+    interpreter.run(
+        parse_source("print(xs == ys); print(xs != ys); print(a == b); print(a != b);")
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out == "True\nFalse\nFalse\nTrue\n"
+
+
+def test_array_int_supports_arbitrary_precision_values(capsys):
+    big = 10**30
+    interpreter = Interpreter()
+    interpreter.run(parse_source("array<int> xs;"))
+
+    interpreter.run(parse_source(f"resize(xs, 1); xs[0] = {big}; print(xs[0]);"))
+
+    captured = capsys.readouterr()
+    assert captured.out == f"{big}\n"
 
 
 def test_rejects_if_condition_that_is_not_bool():
@@ -325,6 +406,20 @@ def test_builtin_version_returns_interpreter_version(capsys):
 
     captured = capsys.readouterr()
     assert captured.out == f"{__version__}\n"
+
+
+def test_builtin_intstr_converts_int_to_string(capsys):
+    run_source("print(intstr(42)); print(intstr(2 ^ 10));")
+
+    captured = capsys.readouterr()
+    assert captured.out == "42\n1024\n"
+
+
+def test_builtin_strint_converts_string_to_int_with_zero_fallback(capsys):
+    run_source('print(strint("123")); print(strint("-7")); print(strint("nope"));')
+
+    captured = capsys.readouterr()
+    assert captured.out == "123\n-7\n0\n"
 
 
 def test_builtin_print_inline_omits_trailing_newline(capsys):

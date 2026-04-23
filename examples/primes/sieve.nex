@@ -1,0 +1,50 @@
+#
+# Print all prime numbers up to a fixed limit using the sieve of Eratosthenes.
+# Because the current language does not yet have array<bool>, this example uses
+# an array<int> as a simple marker array where 1 means "still prime" and 0
+# means "composite". The program also prints simple progress messages while it
+# marks multiples.
+#
+int limit = 1000;
+
+array<int> marks;
+marks.resize(limit + 1);
+
+for (int i = 0; i <= limit; i = i + 1) {
+    marks[i] = 1;
+}
+
+marks[0] = 0;
+marks[1] = 0;
+
+print_inline("building sieve up to ");
+print(limit);
+
+for (int p = 2; p * p <= limit; p = p + 1) {
+    if (marks[p] == 1) {
+        for (int multiple = p * p; multiple <= limit; multiple = multiple + p) {
+            marks[multiple] = 0;
+        }
+    }
+}
+
+print("primes:");
+
+int printed = 0;
+
+for (int n = 2; n <= limit; n = n + 1) {
+    if (marks[n] == 1) {
+        print_inline(n);
+        printed = printed + 1;
+
+        if (printed % 10 == 0) {
+            print("");
+        } else {
+            print_inline(" ");
+        }
+    }
+}
+
+if (printed % 10 != 0) {
+    print("");
+}

@@ -90,6 +90,8 @@ class Lexer:
                 self._add_token(TokenType.MINUS, c)
         elif c == "*":
             self._add_token(TokenType.STAR, c)
+        elif c == "^":
+            self._add_token(TokenType.CARET, c)
         elif c == "/":
             self._add_token(TokenType.SLASH, c)
         elif c == "%":
