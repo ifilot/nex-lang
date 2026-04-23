@@ -4,6 +4,7 @@ KEYWORDS = {
     "int": TokenType.INT,
     "bool": TokenType.BOOL,
     "str": TokenType.STR,
+    "array": TokenType.ARRAY,
     "if": TokenType.IF,
     "else": TokenType.ELSE,
     "while": TokenType.WHILE,

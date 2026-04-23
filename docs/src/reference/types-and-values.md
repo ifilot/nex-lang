@@ -1,10 +1,11 @@
 # Types And Values
 
-NEX currently has three first-class value types:
+NEX currently has four first-class value categories:
 
 - `int`
 - `str`
 - `bool`
+- `array<int>` / `array<str>`
 
 Variables are declared with an explicit type and keep that type for their
 lifetime. That makes NEX an explicitly typed language core with strong runtime
@@ -66,9 +67,46 @@ use implicit truthiness. In other words, NEX does not silently treat integers
 or strings as conditions. A condition must really be boolean, which keeps the
 rules easy to explain and easy to check.
 
+## Arrays
+
+NEX also supports typed arrays of integers and strings.
+
+```nex
+array<int> numbers;
+array<str> names;
+```
+
+Array creation is currently always empty. Arrays therefore use declaration
+syntax without an initializer expression.
+
+Supported array types are:
+
+- `array<int>`
+- `array<str>`
+
+Elements are accessed with indexing syntax:
+
+```nex
+int first = numbers[0];
+str last = names[-1];
+```
+
+Negative indices count from the back of the array. For example, `arr[-1]`
+refers to the last element and `arr[-2]` to the second-to-last element.
+
+Arrays also support method-style operations in the language surface:
+
+```nex
+numbers.resize(10);
+int count = numbers.length();
+numbers.push(42);
+int removed = numbers.pop();
+```
+
 ## Variable declarations
 
-Variables are introduced with an explicit type, a name, and an initializer.
+Scalar variables are introduced with an explicit type, a name, and an
+initializer.
 
 ```nex
 int count = 0;
@@ -80,6 +118,18 @@ The initializer expression must evaluate to a value that matches the declared
 type. Redeclaring a variable in the same scope is a runtime error. Together,
 these rules make declarations do two things at once: they create a new binding
 and they immediately give it a valid initial value.
+
+In other words, scalar declarations without an initializer are not part of the
+current language. Forms such as `int x;`, `str name;`, and `bool ok;` are
+rejected.
+
+Array declarations are the exception:
+
+```nex
+array<int> arr;
+```
+
+They create an empty array value directly and do not use an initializer.
 
 ## Assignment
 
@@ -96,3 +146,13 @@ Assignments must preserve the declared variable type. Assigning a `str` to an
 that has not been declared is also a runtime error. This means NEX does not
 allow assignment to invent new bindings implicitly; declarations and
 assignments have separate roles.
+
+Arrays extend assignment with indexed element updates:
+
+```nex
+arr[0] = 10;
+arr[-1] = 99;
+```
+
+This syntax updates a slot inside an existing array rather than rebinding the
+array variable itself.

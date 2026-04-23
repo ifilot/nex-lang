@@ -5,6 +5,7 @@
 The current NEX core supports these statement forms:
 
 - variable declarations
+- array declarations
 - assignment statements
 - expression statements
 - function declarations
@@ -19,6 +20,11 @@ block. While expressions compute values, statements use those values to declare
 variables, update state, print results, or choose which block of code to
 execute next. Every simple statement ends with a semicolon.
 
+With arrays, NEX now distinguishes between:
+
+- scalar declarations, which require an initializer
+- array declarations, which create an empty array value
+
 ## Blocks
 
 A block is a sequence of statements enclosed in braces.
@@ -26,6 +32,7 @@ A block is a sequence of statements enclosed in braces.
 ```nex
 {
     int x = 1;
+    array<int> arr;
     print(x);
 }
 ```
@@ -84,6 +91,7 @@ The initializer may be:
 
 - empty
 - a typed variable declaration
+- an empty array declaration
 - an assignment
 - an expression statement form such as `1 + 2`
 
@@ -138,3 +146,21 @@ calling one is an expression.
 
 Built-in functions such as `print(...)` are described separately in
 [Built-in Functions](built-in-functions.md).
+
+## Array operations in statements
+
+Array syntax appears in both statements and expressions:
+
+```nex
+array<int> arr;
+arr.resize(3);
+arr[0] = 10;
+int last = arr[-1];
+```
+
+Here:
+
+- `array<int> arr;` is a declaration statement
+- `arr.resize(3);` is an expression statement
+- `arr[0] = 10;` is an assignment statement
+- `arr[-1]` is an expression used inside an initializer

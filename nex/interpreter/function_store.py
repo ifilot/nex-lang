@@ -20,10 +20,13 @@ class FunctionStore:
         self._load_builtin_functions()
 
     def declare_function(self, func: Function):
-        if func.callee not in self.functions:
-            self.functions[func.callee] = func
-        else:
-            raise NexFunctionStoreError(f"function `{func.callee}` is already defined")
+        overloads = self.functions.setdefault(func.callee, [])
+        if any(existing.param_types == func.param_types for existing in overloads):
+            signature = ", ".join(func.param_types)
+            raise NexFunctionStoreError(
+                f"function `{func.callee}` with signature ({signature}) is already defined"
+            )
+        overloads.append(func)
 
     def lookup_function(self, callee: str):
         if callee in self.functions:
@@ -32,10 +35,7 @@ class FunctionStore:
             raise NexFunctionStoreError(f"undefined function `{callee}`")
 
     def _load(self, func):
-        if func.callee in self.functions.keys():
-            raise RuntimeError(f"Builtin function f{func.callee} is already defined")
-
-        self.functions[func.callee] = func
+        self.declare_function(func)
 
     def _load_builtin_functions(self):
         # print function

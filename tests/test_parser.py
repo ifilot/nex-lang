@@ -2,14 +2,25 @@ import pytest
 
 from nex import Interpreter
 from nex.common import NexParseError, NexRuntimeError
-from nex.interpreter.expr import Binary, FuncCall, Literal, Postfix, Unary, Variable
+from nex.interpreter.expr import (
+    Binary,
+    FuncCall,
+    Index,
+    Literal,
+    MethodCall,
+    Postfix,
+    Unary,
+    Variable,
+)
 from nex.interpreter.stmt import (
+    ArrayDecl,
     Assign,
     Block,
     ExprStmt,
     For,
     FuncDecl,
     If,
+    IndexAssign,
     Return,
     VarDecl,
     While,
@@ -32,6 +43,22 @@ def test_parses_variable_declaration():
     assert len(program) == 1
     stmt = program[0]
     assert stmt == VarDecl("x", Binary(Literal(1), "+", Literal(2)), "int")
+
+
+def test_parses_array_variable_declaration():
+    program = parse("array<int> xs;")
+
+    assert len(program) == 1
+    assert program[0] == ArrayDecl("xs", "array<int>")
+
+
+def test_rejects_scalar_declaration_without_initializer():
+    with pytest.raises(NexParseError) as excinfo:
+        parse("int x;")
+
+    assert excinfo.value.message == "expect '=' after name"
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 6
 
 
 def test_parses_expression_statement():
@@ -163,6 +190,40 @@ def test_parses_function_declaration_with_parameters_and_return():
     assert stmt.body.statements[0] == Return(Binary(Variable("a"), "+", Variable("b")))
 
 
+def test_parses_function_declaration_with_array_types():
+    program = parse(
+        "fn clone(array<int> xs, array<str> ys) -> array<str> { return ys; }"
+    )
+
+    assert len(program) == 1
+    stmt = program[0]
+    assert isinstance(stmt, FuncDecl)
+    assert stmt.arguments == (("array<int>", "xs"), ("array<str>", "ys"))
+    assert stmt.return_type == "array<str>"
+    assert stmt.body.statements == (Return(Variable("ys")),)
+
+
+def test_rejects_array_initializer():
+    with pytest.raises(NexParseError) as excinfo:
+        parse("array<int> xs = 1;")
+
+    assert excinfo.value.message == "array declarations must not have an initializer"
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 15
+
+
+def test_rejects_unsupported_array_element_type():
+    with pytest.raises(NexParseError) as excinfo:
+        parse("array<bool> flags = nope;")
+
+    assert (
+        excinfo.value.message
+        == "unsupported array element type `bool`; expected int or str"
+    )
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 7
+
+
 def test_parses_return_without_expression():
     program = parse("fn noop() -> void { return; }")
 
@@ -218,6 +279,40 @@ def test_parses_function_call_as_expression_statement():
     stmt = program[0]
     assert isinstance(stmt, ExprStmt)
     assert stmt.expr == FuncCall("hello", 0, ())
+
+
+def test_parses_method_call_as_expression_statement():
+    program = parse("arr.resize(100);")
+
+    assert len(program) == 1
+    stmt = program[0]
+    assert isinstance(stmt, ExprStmt)
+    assert stmt.expr == MethodCall(Variable("arr"), "resize", 1, (Literal(100),))
+
+
+def test_parses_zero_argument_method_call():
+    program = parse("arr.length();")
+
+    stmt = program[0]
+    assert isinstance(stmt, ExprStmt)
+    assert stmt.expr == MethodCall(Variable("arr"), "length", 0, ())
+
+
+def test_parses_index_expression_with_negative_offset():
+    program = parse("arr[-1];")
+
+    stmt = program[0]
+    assert isinstance(stmt, ExprStmt)
+    assert stmt.expr == Index(Variable("arr"), Unary("-", Literal(1)))
+
+
+def test_parses_index_assignment_statement():
+    program = parse("arr[-1] = 42;")
+
+    stmt = program[0]
+    assert isinstance(stmt, IndexAssign)
+    assert stmt.target == Index(Variable("arr"), Unary("-", Literal(1)))
+    assert stmt.expr == Literal(42)
 
 
 def test_parses_postfix_increment_as_expression_statement():

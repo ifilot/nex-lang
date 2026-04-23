@@ -61,6 +61,37 @@ def test_lexes_keywords_and_punctuation():
     ]
 
 
+def test_lexes_array_type_tokens():
+    assert token_types("array<int> xs; array<str> ys; xs[-1]; xs.resize(10);") == [
+        TokenType.ARRAY,
+        TokenType.LT,
+        TokenType.INT,
+        TokenType.GT,
+        TokenType.IDENTIFIER,
+        TokenType.SEMICOLON,
+        TokenType.ARRAY,
+        TokenType.LT,
+        TokenType.STR,
+        TokenType.GT,
+        TokenType.IDENTIFIER,
+        TokenType.SEMICOLON,
+        TokenType.IDENTIFIER,
+        TokenType.LBRACKET,
+        TokenType.MINUS,
+        TokenType.NUMBER,
+        TokenType.RBRACKET,
+        TokenType.SEMICOLON,
+        TokenType.IDENTIFIER,
+        TokenType.DOT,
+        TokenType.IDENTIFIER,
+        TokenType.LPAREN,
+        TokenType.NUMBER,
+        TokenType.RPAREN,
+        TokenType.SEMICOLON,
+        TokenType.EOF,
+    ]
+
+
 def test_lexes_number_and_string_literals():
     """
     Test that the lexer correctly identifies numbers (non-negative integers) and

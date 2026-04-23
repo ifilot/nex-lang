@@ -10,8 +10,8 @@
 <line x1="104" y1="70" x2="122" y2="70" stroke="#6a7d95" stroke-width="2"/>
 <rect x="64" y="106" width="40" height="28" rx="8" fill="#eef7ea" stroke="#8fbc8f" stroke-width="1.5"/>
 <text x="84.0" y="125" text-anchor="middle" fill="#204b24" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">--</text>
-<path d="M 46 70 L 46 114 A 6 6 0 0 0 52 120 L 64 120" fill="none" stroke="#6a7d95" stroke-width="2"/>
-<path d="M 104 120 L 116 120 A 6 6 0 0 0 122 114 L 122 70" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 46 70 A 6 6 0 0 1 52 76 L 52 114 A 6 6 0 0 0 58 120 L 64 120" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 104 120 L 110 120 A 6 6 0 0 0 116 114 L 116 76 A 6 6 0 0 1 122 70 " fill="none" stroke="#6a7d95" stroke-width="2"/>
 <line x1="122" y1="70" x2="140" y2="70" stroke="#6a7d95" stroke-width="2"/>
 <circle cx="22" cy="70" r="4.5" fill="#6a7d95"/>
 <circle cx="146" cy="70" r="4.5" fill="#6a7d95"/>

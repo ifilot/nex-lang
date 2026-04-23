@@ -10,6 +10,10 @@ class Function:
     params: Tuple[Tuple[str, str], ...]
     return_type: str
 
+    @property
+    def param_types(self) -> Tuple[str, ...]:
+        return tuple(param_type for param_type, _ in self.params)
+
 
 @dataclass(frozen=True)
 class BuiltinFunction(Function):

@@ -1,5 +1,11 @@
 # Grammar
 
+> Note for new readers:
+> This chapter is included mainly to give a complete structural view of the
+> language. You do not need to read the full grammar to start using or
+> understanding NEX. If the notation feels unfamiliar, it is perfectly fine to
+> skim this page and return to it later as a reference.
+
 This chapter gives a compact view of the current NEX surface grammar. It is
 meant as a structural summary for readers who want to see how the language fits
 together after reading the surrounding reference chapters.
@@ -25,9 +31,18 @@ forms in the general grammar.
 
 <typed-decl>        ::= <typed-decl-core> ";"
 
-<typed-decl-core>   ::= <type> <identifier> "=" <expression>
+<typed-decl-core>   ::= <scalar-typed-decl-core>
+                      | <array-decl-core>
 
-<type>              ::= "int" | "str" | "bool"
+<scalar-typed-decl-core> ::= <scalar-type> <identifier> "=" <expression>
+
+<array-decl-core>   ::= <array-type> <identifier>
+
+<type>              ::= <scalar-type> | <array-type>
+
+<scalar-type>       ::= "int" | "str" | "bool"
+
+<array-type>        ::= "array" "<" ( "int" | "str" ) ">"
 
 <function-decl>     ::= "fn" <identifier> "(" [ <parameters> ] ")" "->" <return-type> <block>
 
@@ -58,7 +73,9 @@ forms in the general grammar.
 
 <assignment-stmt>   ::= <assignment-core> ";"
 
-<assignment-core>   ::= <identifier> "=" <expression>
+<assignment-core>   ::= <assignment-target> "=" <expression>
+
+<assignment-target> ::= <identifier> | <index-expr>
 
 <expr-stmt>         ::= <expression> ";"
 
@@ -77,11 +94,17 @@ forms in the general grammar.
 <unary>             ::= ("-" | "!") <unary>
                       | <postfix>
 
-<postfix>           ::= <primary> ( <call-suffix> | <postfix-update> )*
+<postfix>           ::= <primary> ( <call-suffix> | <index-suffix> | <method-suffix> | <postfix-update> )*
 
 <call-suffix>       ::= "(" [ <arguments> ] ")"
 
+<index-suffix>      ::= "[" <expression> "]"
+
+<method-suffix>     ::= "." <identifier> "(" [ <arguments> ] ")"
+
 <postfix-update>    ::= "++" | "--"
+
+<index-expr>        ::= <postfix> <index-suffix>
 
 <primary>           ::= <number>
                       | <string>
@@ -113,9 +136,25 @@ forms in the general grammar.
 
 ![Syntax diagram for <typed-decl-core>](grammar-diagrams/typed_decl_core.svg)
 
+### `<scalar-typed-decl-core>`
+
+![Syntax diagram for <scalar-typed-decl-core>](grammar-diagrams/scalar_typed_decl_core.svg)
+
+### `<array-decl-core>`
+
+![Syntax diagram for <array-decl-core>](grammar-diagrams/array_decl_core.svg)
+
 ### `<type>`
 
 ![Syntax diagram for <type>](grammar-diagrams/type.svg)
+
+### `<scalar-type>`
+
+![Syntax diagram for <scalar-type>](grammar-diagrams/scalar_type.svg)
+
+### `<array-type>`
+
+![Syntax diagram for <array-type>](grammar-diagrams/array_type.svg)
 
 ### `<function-decl>`
 
@@ -169,6 +208,10 @@ forms in the general grammar.
 
 ![Syntax diagram for <assignment-core>](grammar-diagrams/assignment_core.svg)
 
+### `<assignment-target>`
+
+![Syntax diagram for <assignment-target>](grammar-diagrams/assignment_target.svg)
+
 ### `<expr-stmt>`
 
 ![Syntax diagram for <expr-stmt>](grammar-diagrams/expr_stmt.svg)
@@ -209,9 +252,21 @@ forms in the general grammar.
 
 ![Syntax diagram for <call-suffix>](grammar-diagrams/call_suffix.svg)
 
+### `<index-suffix>`
+
+![Syntax diagram for <index-suffix>](grammar-diagrams/index_suffix.svg)
+
+### `<method-suffix>`
+
+![Syntax diagram for <method-suffix>](grammar-diagrams/method_suffix.svg)
+
 ### `<postfix-update>`
 
 ![Syntax diagram for <postfix-update>](grammar-diagrams/postfix_update.svg)
+
+### `<index-expr>`
+
+![Syntax diagram for <index-expr>](grammar-diagrams/index_expr.svg)
 
 ### `<primary>`
 
@@ -228,8 +283,13 @@ forms in the general grammar.
 - Function calls are postfix expressions, not statements in their own right.
   That is why built-in functions such as `print(...)` and `input()` can appear
   in an initializer, inside another call, or as a plain expression statement.
+- Array declarations are syntactically distinct from scalar declarations:
+  `array<int> arr;` is valid, while array declarations with initializers are
+  currently rejected.
 - Postfix `++` and `--` are also part of the expression grammar. In the current
   implementation they are restricted to variable operands.
+- Postfix expressions now also include array indexing such as `arr[-1]` and
+  method-style calls such as `arr.length()` or `arr.push(1)`.
 - `for` reuses declaration, assignment, and expression forms in its header, but
   without extra trailing semicolons inside those clauses.
 - The grammar allows repeated comparison operators syntactically. Runtime type

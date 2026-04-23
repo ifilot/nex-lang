@@ -15,16 +15,16 @@
 <line x1="214" y1="92" x2="232" y2="92" stroke="#6a7d95" stroke-width="2"/>
 <rect x="174" y="128" width="40" height="28" rx="8" fill="#eef7ea" stroke="#8fbc8f" stroke-width="1.5"/>
 <text x="194.0" y="147" text-anchor="middle" fill="#204b24" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">/</text>
-<path d="M 156 92 L 156 136 A 6 6 0 0 0 162 142 L 174 142" fill="none" stroke="#6a7d95" stroke-width="2"/>
-<path d="M 214 142 L 226 142 A 6 6 0 0 0 232 136 L 232 92" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 156 92 A 6 6 0 0 1 162 98 L 162 136 A 6 6 0 0 0 168 142 L 174 142" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 214 142 L 220 142 A 6 6 0 0 0 226 136 L 226 98 A 6 6 0 0 1 232 92 " fill="none" stroke="#6a7d95" stroke-width="2"/>
 <rect x="174" y="178" width="40" height="28" rx="8" fill="#eef7ea" stroke="#8fbc8f" stroke-width="1.5"/>
 <text x="194.0" y="197" text-anchor="middle" fill="#204b24" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">%</text>
-<path d="M 156 92 L 156 186 A 6 6 0 0 0 162 192 L 174 192" fill="none" stroke="#6a7d95" stroke-width="2"/>
-<path d="M 214 192 L 226 192 A 6 6 0 0 0 232 186 L 232 92" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 156 92 A 6 6 0 0 1 162 98 L 162 186 A 6 6 0 0 0 168 192 L 174 192" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 214 192 L 220 192 A 6 6 0 0 0 226 186 L 226 98 A 6 6 0 0 1 232 92 " fill="none" stroke="#6a7d95" stroke-width="2"/>
 <line x1="232" y1="92" x2="250" y2="92" stroke="#6a7d95" stroke-width="2"/>
 <rect x="250" y="78" width="74" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
 <text x="287.0" y="97" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;unary&gt;</text>
-<path d="M 138 92 L 138 72 A 6 6 0 0 1 144 66 L 336 66 A 6 6 0 0 1 342 72 L 342 92" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 138 92 A 6 6 0 0 0 144 86 L 144 72 A 6 6 0 0 1 150 66 L 330 66 A 6 6 0 0 1 336 72 L 336 86 A 6 6 0 0 0 342 92" fill="none" stroke="#6a7d95" stroke-width="2"/>
 <polygon points="172,61 162,66 172,71" fill="#6a7d95"/>
 <line x1="342" y1="92" x2="360" y2="92" stroke="#6a7d95" stroke-width="2"/>
 <circle cx="22" cy="92" r="4.5" fill="#6a7d95"/>

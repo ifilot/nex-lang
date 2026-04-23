@@ -333,36 +333,14 @@ class Interpreter:
         """
         Evaluates a function call
         """
-        # try to grab the function definition from the function store
+        # evaluate all argument expressions
+        argvalues = [self.eval(arg) for arg in node.arguments]
+
+        # resolve the best overload for this call site
         try:
-            func = self.function_store.lookup_function(node.callee)
+            func = self._resolve_function_overload(node.callee, argvalues)
         except NexFunctionStoreError as e:
             raise NexRuntimeError(e.message, line=node.line, column=node.column)
-
-        # check whether all variables match
-        nrargs = len(node.arguments)
-        nrparams = len(func.params)
-        if nrargs != nrparams:
-            raise NexRuntimeError(
-                f"incorrect number of arguments provided {nrargs} != {nrparams}",
-                line=node.line,
-                column=node.column,
-            )
-
-        # evaluate all argument expressions
-        argvalues = []
-        for arg in node.arguments:
-            argvalues.append(self.eval(arg))
-
-        # check all parameter types
-        for param, arg in zip(func.params, argvalues):
-            if param[0] != "any" and not self._matches_type(param[0], arg):
-                argtype = self._runtime_type_name(arg)
-                raise NexRuntimeError(
-                    f"param `{param[1]}` has the wrong type, encountered `{argtype}` while expected `{param[0]}`",
-                    line=node.line,
-                    column=node.column,
-                )
 
         # call a user-defined function
         if isinstance(func, UserFunction):
@@ -454,6 +432,8 @@ class Interpreter:
     # -------------------------------------------------------------------------
 
     def _matches_type(self, declared_type: str, val: object):
+        if declared_type == "any":
+            return True
         if declared_type == "int":
             return type(val) is int
         if declared_type == "str":
@@ -476,6 +456,46 @@ class Interpreter:
             return "void"
 
         return type(val).__name__
+
+    def _resolve_function_overload(self, callee: str, argvalues: list[object]):
+        overloads = self.function_store.lookup_function(callee)
+        arity_matches = [
+            func for func in overloads if len(func.params) == len(argvalues)
+        ]
+        if not arity_matches:
+            raise NexFunctionStoreError(
+                f"no overload of function `{callee}` accepts {len(argvalues)} arguments"
+            )
+
+        compatible: list[tuple[int, object]] = []
+        for func in arity_matches:
+            score = 0
+            for param, arg in zip(func.params, argvalues):
+                param_type = param[0]
+                if param_type == "any":
+                    score += 1
+                    continue
+                if not self._matches_type(param_type, arg):
+                    break
+                score += 2
+            else:
+                compatible.append((score, func))
+
+        if not compatible:
+            argtypes = ", ".join(self._runtime_type_name(arg) for arg in argvalues)
+            raise NexFunctionStoreError(
+                f"no overload of function `{callee}` matches argument types ({argtypes})"
+            )
+
+        best_score = max(score for score, _ in compatible)
+        best = [func for score, func in compatible if score == best_score]
+        if len(best) > 1:
+            argtypes = ", ".join(self._runtime_type_name(arg) for arg in argvalues)
+            raise NexFunctionStoreError(
+                f"call to function `{callee}` is ambiguous for argument types ({argtypes})"
+            )
+
+        return best[0]
 
     def _checked_condition(self, expr):
         val = self.eval(expr)

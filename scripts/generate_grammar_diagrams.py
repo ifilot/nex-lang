@@ -772,14 +772,16 @@ def draw_repeat_bypass(
     """
     Draw the rounded bypass path used for zero-or-more repetition.
     """
-    radius = min(ROUND_RADIUS, main_y - skip_y, (right_x - left_x) // 4)
+    radius = min(ROUND_RADIUS, (main_y - skip_y) // 2, (right_x - left_x) // 4)
     d = (
         f"M {left_x} {main_y} "
-        f"L {left_x} {skip_y + radius} "
-        f"A {radius} {radius} 0 0 1 {left_x + radius} {skip_y} "
-        f"L {right_x - radius} {skip_y} "
-        f"A {radius} {radius} 0 0 1 {right_x} {skip_y + radius} "
-        f"L {right_x} {main_y}"
+        f"A {radius} {radius} 0 0 0 {left_x + radius} {main_y - radius} "
+        f"L {left_x + radius} {skip_y + radius} "
+        f"A {radius} {radius} 0 0 1 {left_x + 2 * radius} {skip_y} "
+        f"L {right_x - 2 * radius} {skip_y} "
+        f"A {radius} {radius} 0 0 1 {right_x - radius} {skip_y + radius} "
+        f"L {right_x - radius} {main_y - radius} "
+        f"A {radius} {radius} 0 0 0 {right_x} {main_y}"
     )
     draw_path(svg, d)
 
@@ -790,11 +792,12 @@ def draw_down_branch(
     """
     Draw the rounded left-side branch that fans a choice downward.
     """
-    radius = min(ROUND_RADIUS, target_y - top_y, target_x - branch_x)
+    radius = min(ROUND_RADIUS, (target_y - top_y) // 2, (target_x - branch_x) // 2)
     d = (
         f"M {branch_x} {top_y} "
-        f"L {branch_x} {target_y - radius} "
-        f"A {radius} {radius} 0 0 0 {branch_x + radius} {target_y} "
+        f"A {radius} {radius} 0 0 1 {branch_x + radius} {top_y + radius} "
+        f"L {branch_x + radius} {target_y - radius} "
+        f"A {radius} {radius} 0 0 0 {branch_x + 2 * radius} {target_y} "
         f"L {target_x} {target_y}"
     )
     draw_path(svg, d)
@@ -806,12 +809,13 @@ def draw_up_branch(
     """
     Draw the rounded right-side branch that merges a choice upward.
     """
-    radius = min(ROUND_RADIUS, start_y - top_y, branch_x - start_x)
+    radius = min(ROUND_RADIUS, (start_y - top_y) // 2, (branch_x - start_x) // 2)
     d = (
         f"M {start_x} {start_y} "
-        f"L {branch_x - radius} {start_y} "
-        f"A {radius} {radius} 0 0 0 {branch_x} {start_y - radius} "
-        f"L {branch_x} {top_y}"
+        f"L {branch_x - 2 * radius} {start_y} "
+        f"A {radius} {radius} 0 0 0 {branch_x - radius} {start_y - radius} "
+        f"L {branch_x - radius} {top_y + radius} "
+        f"A {radius} {radius} 0 0 1 {branch_x} {top_y} "
     )
     draw_path(svg, d)
 

@@ -1,14 +1,25 @@
 from typing import Tuple
 
 from ..common import NexParseError
-from ..interpreter.expr import Binary, FuncCall, Literal, Postfix, Unary, Variable
+from ..interpreter.expr import (
+    Binary,
+    FuncCall,
+    Index,
+    Literal,
+    MethodCall,
+    Postfix,
+    Unary,
+    Variable,
+)
 from ..interpreter.stmt import (
+    ArrayDecl,
     Assign,
     Block,
     ExprStmt,
     For,
     FuncDecl,
     If,
+    IndexAssign,
     Return,
     VarDecl,
     While,
@@ -37,9 +48,17 @@ from ..lexer.tokentype import TokenType
 #
 # <typed-decl>        ::= <typed-decl-core> ";"
 #
-# <typed-decl-core>   ::= <type> <identifier> "=" <expression>
+# <typed-decl-core>   ::= <scalar-typed-decl-core> | <array-decl-core>
 #
-# <type>              ::= "int" | "str" | "bool"
+# <scalar-typed-decl-core> ::= <scalar-type> <identifier> "=" <expression>
+#
+# <array-decl-core>   ::= <array-type> <identifier>
+#
+# <type>              ::= <scalar-type> | <array-type>
+#
+# <scalar-type>       ::= "int" | "str" | "bool"
+#
+# <array-type>        ::= "array" "<" ( "int" | "str" ) ">"
 #
 # <function-decl>     ::= "fn" <identifier> "(" [ <parameters> ] ")" "->" <return-type> <block>
 #
@@ -70,7 +89,9 @@ from ..lexer.tokentype import TokenType
 #
 # <assignment-stmt>   ::= <assignment-core> ";"
 #
-# <assignment-core>   ::= <identifier> "=" <expression>
+# <assignment-core>   ::= <assignment-target> "=" <expression>
+#
+# <assignment-target> ::= <identifier> | <index-expr>
 #
 # <expr-stmt>         ::= <expression> ";"
 #
@@ -89,9 +110,11 @@ from ..lexer.tokentype import TokenType
 # <unary>             ::= ("-" | "!") <unary>
 #                       | <postfix>
 #
-# <postfix>           ::= <primary> ( <call-suffix> | <postfix-update> )*
+# <postfix>           ::= <primary> ( <call-suffix> | <index-suffix> | <method-suffix> | <postfix-update> )*
 #
 # <call-suffix>       ::= "(" [ <arguments> ] ")"
+# <index-suffix>      ::= "[" <expression> "]"
+# <method-suffix>     ::= "." <identifier> "(" [ <arguments> ] ")"
 # <postfix-update>    ::= "++" | "--"
 #
 # <primary>           ::= <number>
@@ -132,12 +155,8 @@ class Parser:
         """
         Parse a statement
         """
-        if self._match(TokenType.INT):
-            return self._int_decl()
-        elif self._match(TokenType.STR):
-            return self._str_decl()
-        elif self._match(TokenType.BOOL):
-            return self._bool_decl()
+        if self._starts_type():
+            return self._typed_decl(self._parse_type())
         elif self._match(TokenType.FUNCTION):
             return self._function_decl()
         elif self._match(TokenType.RETURN):
@@ -148,34 +167,34 @@ class Parser:
             return self._while_stmt()
         elif self._match(TokenType.FOR):
             return self._for_stmt()
-        elif self._check(TokenType.IDENTIFIER):
-            if self.tokens[self.pos + 1].type == TokenType.EQ:
-                return self._assign_stmt()
+        else:
+            assign_stmt = self._try_assign_stmt()
+            if assign_stmt is not None:
+                return assign_stmt
         return self._expr_stmt()
-
-    def _int_decl(self):
-        """
-        Parse an integer declaration.
-        """
-        return self._typed_decl("int")
-
-    def _str_decl(self):
-        """
-        Parse a string declaration.
-        """
-        return self._typed_decl("str")
-
-    def _bool_decl(self):
-        """
-        Parse a boolean declaration.
-        """
-        return self._typed_decl("bool")
 
     def _typed_decl(self, declared_type, require_semicolon=True):
         """
         Parse a typed variable declaration after the type keyword was consumed.
         """
         name = self._consume(TokenType.IDENTIFIER, "Expect variable name.")
+
+        if self._is_array_type(declared_type):
+            if self._check(TokenType.EQ):
+                raise NexParseError(
+                    "array declarations must not have an initializer",
+                    line=self._peek().line,
+                    column=self._peek().column,
+                )
+            if require_semicolon:
+                self._consume(TokenType.SEMICOLON, "Expect ';'.")
+            return ArrayDecl(
+                name.lexeme,
+                declared_type,
+                line=name.line,
+                column=name.column,
+            )
+
         self._consume(TokenType.EQ, "Expect '=' after name.")
         initializer = self._expression()
         if require_semicolon:
@@ -210,8 +229,8 @@ class Parser:
         # consume parameters, check for duplicates
         param_types = []
         param_names = []
-        while self._match(TokenType.INT, TokenType.STR, TokenType.BOOL):
-            paramtype = self._previous().lexeme
+        while self._starts_type():
+            paramtype = self._parse_type()
             paramname = self._consume(
                 TokenType.IDENTIFIER, "Expect variable name"
             ).lexeme
@@ -233,14 +252,7 @@ class Parser:
         self._consume(TokenType.RETTYPE, "Expect '->'")
 
         # grab return type
-        if self._match(TokenType.INT, TokenType.STR, TokenType.BOOL, TokenType.VOID):
-            return_type = self._previous()
-        else:
-            raise NexParseError(
-                "unexpected return type",
-                line=self._peek().line,
-                column=self._peek().column,
-            )
+        return_type = self._parse_type(allow_void=True)
 
         # grab function body
         body = self._block_stmt()
@@ -259,7 +271,7 @@ class Parser:
             len(params),
             tuple(params),
             body,
-            return_type.lexeme,
+            return_type,
             line=fn_token.line,
             column=fn_token.column,
         )
@@ -356,17 +368,11 @@ class Parser:
         if self._check(TokenType.SEMICOLON):
             return None
 
-        if self._match(TokenType.INT):
-            return self._typed_decl("int", require_semicolon=False)
-        if self._match(TokenType.STR):
-            return self._typed_decl("str", require_semicolon=False)
-        if self._match(TokenType.BOOL):
-            return self._typed_decl("bool", require_semicolon=False)
-        if (
-            self._check(TokenType.IDENTIFIER)
-            and self.tokens[self.pos + 1].type == TokenType.EQ
-        ):
-            return self._assign_stmt(require_semicolon=False)
+        if self._starts_type():
+            return self._typed_decl(self._parse_type(), require_semicolon=False)
+        assign_stmt = self._try_assign_stmt(require_semicolon=False)
+        if assign_stmt is not None:
+            return assign_stmt
         return self._expr_stmt(require_semicolon=False)
 
     def _for_iter_clause(self):
@@ -376,11 +382,9 @@ class Parser:
         if self._check(TokenType.RPAREN):
             return None
 
-        if (
-            self._check(TokenType.IDENTIFIER)
-            and self.tokens[self.pos + 1].type == TokenType.EQ
-        ):
-            return self._assign_stmt(require_semicolon=False)
+        assign_stmt = self._try_assign_stmt(require_semicolon=False)
+        if assign_stmt is not None:
+            return assign_stmt
         return self._expr_stmt(require_semicolon=False)
 
     def _block_stmt(self):
@@ -399,12 +403,14 @@ class Parser:
         Parse an assignment statement (set a value to variable), optionally
         check that it ends with a semicolon.
         """
-        name = self._consume(TokenType.IDENTIFIER, "Expect variable name.")
+        target = self._assignment_target()
         self._consume(TokenType.EQ, "Expect '='.")
         expr = self._expression()
         if require_semicolon:
             self._consume(TokenType.SEMICOLON, "Expect ';'.")
-        return Assign(name.lexeme, expr, line=name.line, column=name.column)
+        if isinstance(target, Variable):
+            return Assign(target.name, expr, line=target.line, column=target.column)
+        return IndexAssign(target, expr, line=target.line, column=target.column)
 
     def _expr_stmt(self, require_semicolon=True):
         """
@@ -523,6 +529,14 @@ class Parser:
                 expr = self._finish_function_call(expr)
                 continue
 
+            if self._match(TokenType.LBRACKET):
+                expr = self._finish_index(expr)
+                continue
+
+            if self._match(TokenType.DOT):
+                expr = self._finish_method_call(expr)
+                continue
+
             if self._match(TokenType.INC, TokenType.DEC):
                 expr = self._finish_postfix_update(expr)
                 continue
@@ -566,6 +580,101 @@ class Parser:
             column=self._peek().column,
         )
 
+    def _starts_type(self, allow_void=False):
+        """
+        Check whether the current token begins a type annotation.
+        """
+        type_tokens = (TokenType.INT, TokenType.STR, TokenType.BOOL, TokenType.ARRAY)
+        if allow_void:
+            type_tokens += (TokenType.VOID,)
+        return self._peek().type in type_tokens if not self._is_at_end() else False
+
+    def _parse_type(self, allow_void=False):
+        """
+        Parse a type annotation and return its canonical string representation.
+        """
+        if self._match(TokenType.INT, TokenType.STR, TokenType.BOOL):
+            return self._previous().lexeme
+
+        if allow_void and self._match(TokenType.VOID):
+            return self._previous().lexeme
+
+        if self._match(TokenType.ARRAY):
+            self._consume(TokenType.LT, "Expect '<' after 'array'.")
+
+            if self._match(TokenType.INT, TokenType.STR):
+                element_type = self._previous().lexeme
+            elif self._match(TokenType.BOOL, TokenType.ARRAY, TokenType.VOID):
+                raise NexParseError(
+                    f"unsupported array element type `{self._previous().lexeme}`; expected int or str",
+                    line=self._previous().line,
+                    column=self._previous().column,
+                )
+            else:
+                raise NexParseError(
+                    "expect array element type",
+                    line=self._peek().line,
+                    column=self._peek().column,
+                )
+
+            self._consume(TokenType.GT, "Expect '>' after array element type.")
+            return f"array<{element_type}>"
+
+        if allow_void:
+            message = "unexpected return type"
+        else:
+            message = "expect type"
+
+        raise NexParseError(
+            message,
+            line=self._peek().line,
+            column=self._peek().column,
+        )
+
+    def _is_array_type(self, declared_type: str) -> bool:
+        return declared_type.startswith("array<")
+
+    def _try_assign_stmt(self, require_semicolon=True):
+        """
+        Attempt to parse an assignment statement without committing on failure.
+        """
+        if not self._check(TokenType.IDENTIFIER):
+            return None
+
+        start = self.pos
+        try:
+            target = self._assignment_target()
+            if not self._check(TokenType.EQ):
+                self.pos = start
+                return None
+            self._advance()
+            expr = self._expression()
+            if require_semicolon:
+                self._consume(TokenType.SEMICOLON, "Expect ';'.")
+            if isinstance(target, Variable):
+                return Assign(
+                    target.name,
+                    expr,
+                    line=target.line,
+                    column=target.column,
+                )
+            return IndexAssign(target, expr, line=target.line, column=target.column)
+        except NexParseError:
+            self.pos = start
+            return None
+
+    def _assignment_target(self):
+        """
+        Parse the left-hand side of an assignment.
+        """
+        name = self._consume(TokenType.IDENTIFIER, "Expect variable name.")
+        target = Variable(name.lexeme, line=name.line, column=name.column)
+
+        while self._match(TokenType.LBRACKET):
+            target = self._finish_index(target)
+
+        return target
+
     def _finish_function_call(self, callee):
         """
         Parse a function call suffix after the opening '(' was already
@@ -593,6 +702,40 @@ class Parser:
             tuple(arguments),  # argument expressions
             line=callee.line,
             column=callee.column,
+        )
+
+    def _finish_index(self, receiver):
+        """
+        Parse an indexing postfix after the opening '[' was already consumed.
+        """
+        bracket = self._previous()
+        index = self._expression()
+        self._consume(TokenType.RBRACKET, "Expect ']'.")
+        return Index(receiver, index, line=bracket.line, column=bracket.column)
+
+    def _finish_method_call(self, receiver):
+        """
+        Parse a method-style call after the '.' token was already consumed.
+        """
+        dot = self._previous()
+        method = self._consume(TokenType.IDENTIFIER, "Expect method name.")
+        self._consume(TokenType.LPAREN, "Expect '(' after method name.")
+
+        arguments = []
+        while not self._check(TokenType.RPAREN):
+            arguments.append(self._expression())
+            if self._check(TokenType.COMMA):
+                self._advance()
+
+        self._consume(TokenType.RPAREN, "Expect ')'")
+
+        return MethodCall(
+            receiver,
+            method.lexeme,
+            len(arguments),
+            tuple(arguments),
+            line=dot.line,
+            column=dot.column,
         )
 
     def _finish_postfix_update(self, expr):

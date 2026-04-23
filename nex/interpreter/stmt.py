@@ -54,6 +54,18 @@ class VarDecl(Stmt):
 
 
 @dataclass(frozen=True)
+class ArrayDecl(Stmt):
+    """
+    A declaration of an empty array value.
+    """
+
+    name: str
+    type: str
+    line: int | None = field(default=None, compare=False)
+    column: int | None = field(default=None, compare=False)
+
+
+@dataclass(frozen=True)
 class Block(Stmt):
     """
     Block statement, contains a set of statements.
@@ -88,6 +100,18 @@ class Assign(Stmt):
     """
 
     name: str
+    expr: Expr
+    line: int | None = field(default=None, compare=False)
+    column: int | None = field(default=None, compare=False)
+
+
+@dataclass(frozen=True)
+class IndexAssign(Stmt):
+    """
+    A statement that updates one indexed slot of an existing value.
+    """
+
+    target: Expr
     expr: Expr
     line: int | None = field(default=None, compare=False)
     column: int | None = field(default=None, compare=False)

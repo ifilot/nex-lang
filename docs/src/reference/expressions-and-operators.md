@@ -31,7 +31,7 @@ expressions.
 From highest precedence to lowest:
 
 1. primary expressions: literals, variables, parenthesized expressions
-2. postfix operators: function call `(...)`, postfix increment `++`, postfix decrement `--`
+2. postfix operators: function call `(...)`, index access `[...]`, method call `.name(...)`, postfix increment `++`, postfix decrement `--`
 3. unary operators: `-`, `!`
 4. multiplicative operators: `*`, `/`, `%`
 5. additive operators: `+`, `-`
@@ -63,6 +63,8 @@ is parsed as `-(f())`, not as `(-f)()`.
 The current postfix operators are:
 
 - function call: `name(...)`
+- index access: `arr[i]`
+- method call: `arr.name(...)`
 - postfix increment: `x++`
 - postfix decrement: `x--`
 
@@ -70,6 +72,32 @@ Function calls are described in more detail in
 [Functions And Return](functions-and-return.md). The key idea here is that
 postfix operators attach to an already-parsed primary expression and therefore
 have the highest operator precedence in the language core.
+
+### Index access
+
+Index access reads a value from an indexed receiver expression.
+
+```nex
+int first = arr[0];
+int last = arr[-1];
+```
+
+Negative indices count from the back. This means `arr[-1]` refers to the last
+element, `arr[-2]` to the second-to-last element, and so on.
+
+### Method calls
+
+Method-style calls are postfix expressions attached to a receiver:
+
+```nex
+arr.resize(100);
+int size = arr.length();
+arr.push(42);
+int removed = arr.pop();
+```
+
+This syntax is used for array operations such as resizing, length queries,
+push, and pop.
 
 ### Postfix increment and decrement
 

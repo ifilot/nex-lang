@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="330" height="130" viewBox="0 0 330 130" role="img" aria-labelledby="title-index_expr desc-index_expr">
+<title id="title-index_expr">&lt;index-expr&gt; syntax diagram</title>
+<desc id="desc-index_expr">Syntax diagram for &lt;index-expr&gt; generated from the grammar reference.</desc>
+<rect x="0.5" y="0.5" width="329" height="129" rx="18" fill="#fbfcfe" stroke="#d6deea"/>
+<text x="28" y="28" fill="#14324a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" font-weight="700">&lt;index-expr&gt;</text>
+<line x1="28" y1="70" x2="46" y2="70" stroke="#6a7d95" stroke-width="2"/>
+<rect x="46" y="56" width="90" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
+<text x="91.0" y="75" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;postfix&gt;</text>
+<line x1="136" y1="70" x2="154" y2="70" stroke="#6a7d95" stroke-width="2"/>
+<rect x="154" y="56" width="130" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
+<text x="219.0" y="75" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;index-suffix&gt;</text>
+<line x1="284" y1="70" x2="302" y2="70" stroke="#6a7d95" stroke-width="2"/>
+<circle cx="22" cy="70" r="4.5" fill="#6a7d95"/>
+<circle cx="308" cy="70" r="4.5" fill="#6a7d95"/>
+</svg>

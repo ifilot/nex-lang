@@ -14,7 +14,7 @@
 <line x1="236" y1="92" x2="254" y2="92" stroke="#6a7d95" stroke-width="2"/>
 <rect x="254" y="78" width="114" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
 <text x="311.0" y="97" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;expression&gt;</text>
-<path d="M 178 92 L 178 72 A 6 6 0 0 1 184 66 L 380 66 A 6 6 0 0 1 386 72 L 386 92" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 178 92 A 6 6 0 0 0 184 86 L 184 72 A 6 6 0 0 1 190 66 L 374 66 A 6 6 0 0 1 380 72 L 380 86 A 6 6 0 0 0 386 92" fill="none" stroke="#6a7d95" stroke-width="2"/>
 <polygon points="212,61 202,66 212,71" fill="#6a7d95"/>
 <line x1="386" y1="92" x2="404" y2="92" stroke="#6a7d95" stroke-width="2"/>
 <circle cx="22" cy="92" r="4.5" fill="#6a7d95"/>

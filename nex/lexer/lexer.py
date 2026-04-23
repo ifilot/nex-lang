@@ -130,10 +130,16 @@ class Lexer:
             self._add_token(TokenType.LPAREN, c)
         elif c == ")":
             self._add_token(TokenType.RPAREN, c)
+        elif c == "[":
+            self._add_token(TokenType.LBRACKET, c)
+        elif c == "]":
+            self._add_token(TokenType.RBRACKET, c)
         elif c == "{":
             self._add_token(TokenType.LBRACE, c)
         elif c == "}":
             self._add_token(TokenType.RBRACE, c)
+        elif c == ".":
+            self._add_token(TokenType.DOT, c)
         elif c == ",":
             self._add_token(TokenType.COMMA, c)
         elif c == '"':

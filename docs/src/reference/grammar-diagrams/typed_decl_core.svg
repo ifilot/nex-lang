@@ -1,21 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="480" height="130" viewBox="0 0 480 130" role="img" aria-labelledby="title-typed_decl_core desc-typed_decl_core">
+<svg xmlns="http://www.w3.org/2000/svg" width="338" height="180" viewBox="0 0 338 180" role="img" aria-labelledby="title-typed_decl_core desc-typed_decl_core">
 <title id="title-typed_decl_core">&lt;typed-decl-core&gt; syntax diagram</title>
 <desc id="desc-typed_decl_core">Syntax diagram for &lt;typed-decl-core&gt; generated from the grammar reference.</desc>
-<rect x="0.5" y="0.5" width="479" height="129" rx="18" fill="#fbfcfe" stroke="#d6deea"/>
+<rect x="0.5" y="0.5" width="337" height="179" rx="18" fill="#fbfcfe" stroke="#d6deea"/>
 <text x="28" y="28" fill="#14324a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" font-weight="700">&lt;typed-decl-core&gt;</text>
 <line x1="28" y1="70" x2="46" y2="70" stroke="#6a7d95" stroke-width="2"/>
-<rect x="46" y="56" width="66" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
-<text x="79.0" y="75" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;type&gt;</text>
-<line x1="112" y1="70" x2="130" y2="70" stroke="#6a7d95" stroke-width="2"/>
-<rect x="130" y="56" width="114" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
-<text x="187.0" y="75" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;identifier&gt;</text>
-<line x1="244" y1="70" x2="262" y2="70" stroke="#6a7d95" stroke-width="2"/>
-<rect x="262" y="56" width="40" height="28" rx="8" fill="#eef7ea" stroke="#8fbc8f" stroke-width="1.5"/>
-<text x="282.0" y="75" text-anchor="middle" fill="#204b24" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">=</text>
-<line x1="302" y1="70" x2="320" y2="70" stroke="#6a7d95" stroke-width="2"/>
-<rect x="320" y="56" width="114" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
-<text x="377.0" y="75" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;expression&gt;</text>
-<line x1="434" y1="70" x2="452" y2="70" stroke="#6a7d95" stroke-width="2"/>
+<rect x="64" y="56" width="210" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
+<text x="169.0" y="75" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;scalar-typed-decl-core&gt;</text>
+<line x1="46" y1="70" x2="64" y2="70" stroke="#6a7d95" stroke-width="2"/>
+<line x1="274" y1="70" x2="292" y2="70" stroke="#6a7d95" stroke-width="2"/>
+<rect x="64" y="106" width="154" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
+<text x="141.0" y="125" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;array-decl-core&gt;</text>
+<path d="M 46 70 A 6 6 0 0 1 52 76 L 52 114 A 6 6 0 0 0 58 120 L 64 120" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 218 120 L 280 120 A 6 6 0 0 0 286 114 L 286 76 A 6 6 0 0 1 292 70 " fill="none" stroke="#6a7d95" stroke-width="2"/>
+<line x1="292" y1="70" x2="310" y2="70" stroke="#6a7d95" stroke-width="2"/>
 <circle cx="22" cy="70" r="4.5" fill="#6a7d95"/>
-<circle cx="458" cy="70" r="4.5" fill="#6a7d95"/>
+<circle cx="316" cy="70" r="4.5" fill="#6a7d95"/>
 </svg>

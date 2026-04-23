@@ -26,7 +26,7 @@
 <line x1="512" y1="92" x2="530" y2="92" stroke="#6a7d95" stroke-width="2"/>
 <rect x="530" y="78" width="74" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
 <text x="567.0" y="97" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;block&gt;</text>
-<path d="M 444 92 L 444 72 A 6 6 0 0 1 450 66 L 616 66 A 6 6 0 0 1 622 72 L 622 92" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 444 92 A 6 6 0 0 0 450 86 L 450 72 A 6 6 0 0 1 456 66 L 610 66 A 6 6 0 0 1 616 72 L 616 86 A 6 6 0 0 0 622 92" fill="none" stroke="#6a7d95" stroke-width="2"/>
 <line x1="622" y1="92" x2="640" y2="92" stroke="#6a7d95" stroke-width="2"/>
 <circle cx="22" cy="92" r="4.5" fill="#6a7d95"/>
 <circle cx="646" cy="92" r="4.5" fill="#6a7d95"/>

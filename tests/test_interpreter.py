@@ -239,7 +239,9 @@ def test_rejects_duplicate_function_declaration():
             """
         )
 
-    assert excinfo.value.message == "function `ping` is already defined"
+    assert (
+        excinfo.value.message == "function `ping` with signature () is already defined"
+    )
     assert excinfo.value.line == 6
     assert excinfo.value.column == 13
 
@@ -256,7 +258,7 @@ def test_rejects_function_call_with_wrong_arity_and_reports_call_site():
             """
         )
 
-    assert excinfo.value.message == "incorrect number of arguments provided 0 != 1"
+    assert excinfo.value.message == "no overload of function `add` accepts 0 arguments"
     assert excinfo.value.line == 6
     assert excinfo.value.column == 13
 
@@ -275,10 +277,63 @@ def test_rejects_function_call_with_wrong_argument_type_and_reports_call_site():
 
     assert (
         excinfo.value.message
-        == "param `a` has the wrong type, encountered `str` while expected `int`"
+        == "no overload of function `add` matches argument types (str)"
     )
     assert excinfo.value.line == 6
     assert excinfo.value.column == 13
+
+
+def test_dispatches_overloaded_functions_by_argument_type(capsys):
+    run_source(
+        """
+        fn show(int x) -> void {
+            print("int");
+        }
+
+        fn show(str x) -> void {
+            print("str");
+        }
+
+        show(1);
+        show("hello");
+        """
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out == "int\nstr\n"
+
+
+def test_allows_overloads_with_same_name_and_different_arity(capsys):
+    run_source(
+        """
+        fn show() -> void {
+            print("zero");
+        }
+
+        fn show(int x) -> void {
+            print("one");
+        }
+
+        show();
+        show(1);
+        """
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out == "zero\none\n"
+
+
+def test_builtin_print_still_accepts_any_supported_value_type(capsys):
+    run_source(
+        """
+        print(1);
+        print("hello");
+        print(true);
+        """
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out == "1\nhello\nTrue\n"
 
 
 def test_rejects_nonvoid_function_that_falls_through_in_statement_position():

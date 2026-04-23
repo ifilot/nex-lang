@@ -38,13 +38,17 @@ class TokenType(Enum):
     SEMICOLON = auto()
     LPAREN = auto()
     RPAREN = auto()
+    LBRACKET = auto()
+    RBRACKET = auto()
     LBRACE = auto()
     RBRACE = auto()
+    DOT = auto()
 
     # keywords
     INT = auto()
     BOOL = auto()
     STR = auto()
+    ARRAY = auto()
     IF = auto()
     ELSE = auto()
     WHILE = auto()

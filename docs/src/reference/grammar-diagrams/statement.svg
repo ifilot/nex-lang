@@ -10,32 +10,32 @@
 <line x1="178" y1="70" x2="236" y2="70" stroke="#6a7d95" stroke-width="2"/>
 <rect x="64" y="106" width="138" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
 <text x="133.0" y="125" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;function-decl&gt;</text>
-<path d="M 46 70 L 46 114 A 6 6 0 0 0 52 120 L 64 120" fill="none" stroke="#6a7d95" stroke-width="2"/>
-<path d="M 202 120 L 230 120 A 6 6 0 0 0 236 114 L 236 70" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 46 70 A 6 6 0 0 1 52 76 L 52 114 A 6 6 0 0 0 58 120 L 64 120" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 202 120 L 224 120 A 6 6 0 0 0 230 114 L 230 76 A 6 6 0 0 1 236 70 " fill="none" stroke="#6a7d95" stroke-width="2"/>
 <rect x="64" y="156" width="122" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
 <text x="125.0" y="175" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;return-stmt&gt;</text>
-<path d="M 46 70 L 46 164 A 6 6 0 0 0 52 170 L 64 170" fill="none" stroke="#6a7d95" stroke-width="2"/>
-<path d="M 186 170 L 230 170 A 6 6 0 0 0 236 164 L 236 70" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 46 70 A 6 6 0 0 1 52 76 L 52 164 A 6 6 0 0 0 58 170 L 64 170" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 186 170 L 224 170 A 6 6 0 0 0 230 164 L 230 76 A 6 6 0 0 1 236 70 " fill="none" stroke="#6a7d95" stroke-width="2"/>
 <rect x="64" y="206" width="90" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
 <text x="109.0" y="225" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;if-stmt&gt;</text>
-<path d="M 46 70 L 46 214 A 6 6 0 0 0 52 220 L 64 220" fill="none" stroke="#6a7d95" stroke-width="2"/>
-<path d="M 154 220 L 230 220 A 6 6 0 0 0 236 214 L 236 70" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 46 70 A 6 6 0 0 1 52 76 L 52 214 A 6 6 0 0 0 58 220 L 64 220" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 154 220 L 224 220 A 6 6 0 0 0 230 214 L 230 76 A 6 6 0 0 1 236 70 " fill="none" stroke="#6a7d95" stroke-width="2"/>
 <rect x="64" y="256" width="114" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
 <text x="121.0" y="275" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;while-stmt&gt;</text>
-<path d="M 46 70 L 46 264 A 6 6 0 0 0 52 270 L 64 270" fill="none" stroke="#6a7d95" stroke-width="2"/>
-<path d="M 178 270 L 230 270 A 6 6 0 0 0 236 264 L 236 70" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 46 70 A 6 6 0 0 1 52 76 L 52 264 A 6 6 0 0 0 58 270 L 64 270" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 178 270 L 224 270 A 6 6 0 0 0 230 264 L 230 76 A 6 6 0 0 1 236 70 " fill="none" stroke="#6a7d95" stroke-width="2"/>
 <rect x="64" y="306" width="98" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
 <text x="113.0" y="325" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;for-stmt&gt;</text>
-<path d="M 46 70 L 46 314 A 6 6 0 0 0 52 320 L 64 320" fill="none" stroke="#6a7d95" stroke-width="2"/>
-<path d="M 162 320 L 230 320 A 6 6 0 0 0 236 314 L 236 70" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 46 70 A 6 6 0 0 1 52 76 L 52 314 A 6 6 0 0 0 58 320 L 64 320" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 162 320 L 224 320 A 6 6 0 0 0 230 314 L 230 76 A 6 6 0 0 1 236 70 " fill="none" stroke="#6a7d95" stroke-width="2"/>
 <rect x="64" y="356" width="154" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
 <text x="141.0" y="375" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;assignment-stmt&gt;</text>
-<path d="M 46 70 L 46 364 A 6 6 0 0 0 52 370 L 64 370" fill="none" stroke="#6a7d95" stroke-width="2"/>
-<path d="M 218 370 L 230 370 A 6 6 0 0 0 236 364 L 236 70" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 46 70 A 6 6 0 0 1 52 76 L 52 364 A 6 6 0 0 0 58 370 L 64 370" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 218 370 L 224 370 A 6 6 0 0 0 230 364 L 230 76 A 6 6 0 0 1 236 70 " fill="none" stroke="#6a7d95" stroke-width="2"/>
 <rect x="64" y="406" width="106" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
 <text x="117.0" y="425" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;expr-stmt&gt;</text>
-<path d="M 46 70 L 46 414 A 6 6 0 0 0 52 420 L 64 420" fill="none" stroke="#6a7d95" stroke-width="2"/>
-<path d="M 170 420 L 230 420 A 6 6 0 0 0 236 414 L 236 70" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 46 70 A 6 6 0 0 1 52 76 L 52 414 A 6 6 0 0 0 58 420 L 64 420" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 170 420 L 224 420 A 6 6 0 0 0 230 414 L 230 76 A 6 6 0 0 1 236 70 " fill="none" stroke="#6a7d95" stroke-width="2"/>
 <line x1="236" y1="70" x2="254" y2="70" stroke="#6a7d95" stroke-width="2"/>
 <circle cx="22" cy="70" r="4.5" fill="#6a7d95"/>
 <circle cx="260" cy="70" r="4.5" fill="#6a7d95"/>

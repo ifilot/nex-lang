@@ -69,10 +69,22 @@ class PrettyPrinter:
         lines.extend(self.print(node.initializer, child_prefix, True))
         return lines
 
+    def print_ArrayDecl(self, node, prefix="", is_last=True):
+        return [self._branch(prefix, is_last, f"ArrayDecl({node.type} {node.name})")]
+
     def print_Assign(self, node, prefix="", is_last=True):
         lines = [self._branch(prefix, is_last, f"Assign({node.name})")]
         child_prefix = self._child_prefix(prefix, is_last)
         lines.extend(self.print(node.expr, child_prefix, True))
+        return lines
+
+    def print_IndexAssign(self, node, prefix="", is_last=True):
+        lines = [self._branch(prefix, is_last, "IndexAssign")]
+        child_prefix = self._child_prefix(prefix, is_last)
+        lines.extend(
+            self._render_labeled_child("Target", node.target, child_prefix, False)
+        )
+        lines.extend(self._render_labeled_child("Expr", node.expr, child_prefix, True))
         return lines
 
     def print_Block(self, node, prefix="", is_last=True):
@@ -162,6 +174,38 @@ class PrettyPrinter:
                     index == len(node.arguments) - 1,
                 )
             )
+        return lines
+
+    def print_MethodCall(self, node, prefix="", is_last=True):
+        lines = [self._branch(prefix, is_last, f"MethodCall [{node.method}]")]
+        child_prefix = self._child_prefix(prefix, is_last)
+        lines.extend(
+            self._render_labeled_child(
+                "Receiver", node.receiver, child_prefix, not node.arguments
+            )
+        )
+        if not node.arguments:
+            return lines
+        for index, arg in enumerate(node.arguments):
+            lines.extend(
+                self._render_labeled_child(
+                    f"Argument {index + 1}",
+                    arg,
+                    child_prefix,
+                    index == len(node.arguments) - 1,
+                )
+            )
+        return lines
+
+    def print_Index(self, node, prefix="", is_last=True):
+        lines = [self._branch(prefix, is_last, "Index")]
+        child_prefix = self._child_prefix(prefix, is_last)
+        lines.extend(
+            self._render_labeled_child("Receiver", node.receiver, child_prefix, False)
+        )
+        lines.extend(
+            self._render_labeled_child("Offset", node.index, child_prefix, True)
+        )
         return lines
 
     def print_Return(self, node, prefix="", is_last=True):
