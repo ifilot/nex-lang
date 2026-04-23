@@ -37,6 +37,12 @@ class FunctionStore:
         signatures differ. Redeclaring an identical signature is rejected.
         """
         overloads = self.functions.setdefault(func.callee, [])
+        if not isinstance(func, BuiltinFunction) and any(
+            isinstance(existing, BuiltinFunction) for existing in overloads
+        ):
+            raise NexFunctionStoreError(
+                f"cannot declare function `{func.callee}` because it conflicts with a built-in function"
+            )
         if any(existing.param_types == func.param_types for existing in overloads):
             signature = ", ".join(func.param_types)
             raise NexFunctionStoreError(

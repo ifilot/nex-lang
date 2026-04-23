@@ -43,6 +43,7 @@ from ..lexer.tokentype import TokenType
 #                       | <if-stmt>
 #                       | <while-stmt>
 #                       | <for-stmt>
+#                       | <block>
 #                       | <assignment-stmt>
 #                       | <expr-stmt>
 #
@@ -89,7 +90,9 @@ from ..lexer.tokentype import TokenType
 #
 # <assignment-stmt>   ::= <assignment-core> ";"
 #
-# <assignment-core>   ::= <assignment-target> "=" <expression>
+# <assignment-core>   ::= <assignment-target> <assignment-op> <expression>
+#
+# <assignment-op>     ::= "=" | "+=" | "-=" | "*=" | "/=" | "^="
 #
 # <assignment-target> ::= <identifier> | <index-expr>
 #
@@ -139,6 +142,7 @@ class Parser:
         self.tokens = tokens
         self.pos = 0
         self.function_depth = 0  # keep track whether we are parsing a function
+        self.block_depth = 0  # keep track whether we are inside any block
 
     def parse(self):
         """
@@ -169,6 +173,8 @@ class Parser:
             return self._while_stmt()
         elif self._match(TokenType.FOR):
             return self._for_stmt()
+        elif self._check(TokenType.LBRACE):
+            return self._block_stmt()
         else:
             assign_stmt = self._try_assign_stmt()
             if assign_stmt is not None:
@@ -213,18 +219,18 @@ class Parser:
         """
         Parse a function declaration.
         """
+        fn_token = self._previous()
+        if self.function_depth > 0 or self.block_depth > 0:
+            raise NexParseError(
+                "nested functions are not allowed",
+                line=fn_token.line,
+                column=fn_token.column,
+            )
+
         # increment function depth (can in principle never exceed 1, because
         # nested functions are not allowed)
         self.function_depth += 1
 
-        if self.function_depth > 1:
-            raise NexParseError(
-                "nested functions are not allowed",
-                line=self._peek().line,
-                column=self._peek().column,
-            )
-
-        fn_token = self._previous()
         name = self._consume(TokenType.IDENTIFIER, "Expect variable name.")
         self._consume(TokenType.LPAREN, "Expect '(")
 
@@ -253,14 +259,15 @@ class Parser:
         self._consume(TokenType.RPAREN, "Expect ')'")
         self._consume(TokenType.RETTYPE, "Expect '->'")
 
-        # grab return type
-        return_type = self._parse_type(allow_void=True)
+        try:
+            # grab return type
+            return_type = self._parse_type(allow_void=True)
 
-        # grab function body
-        body = self._block_stmt()
-
-        # decrement function depth
-        self.function_depth -= 1
+            # grab function body
+            body = self._block_stmt()
+        finally:
+            # decrement function depth even if parsing the body fails
+            self.function_depth -= 1
 
         # assemble parameters
         params = [
@@ -395,9 +402,13 @@ class Parser:
         """
         statements = []
         self._consume(TokenType.LBRACE, "Expect '{'.")
-        while not self._check(TokenType.RBRACE):
-            statements.append(self._statement())
-        self._consume(TokenType.RBRACE, "Expect '}'.")
+        self.block_depth += 1
+        try:
+            while not self._check(TokenType.RBRACE) and not self._is_at_end():
+                statements.append(self._statement())
+            self._consume(TokenType.RBRACE, "Expect '}'.")
+        finally:
+            self.block_depth -= 1
         return Block(tuple(statements))
 
     def _assign_stmt(self, require_semicolon=True):
@@ -406,13 +417,11 @@ class Parser:
         check that it ends with a semicolon.
         """
         target = self._assignment_target()
-        self._consume(TokenType.EQ, "Expect '='.")
+        operator = self._assignment_operator()
         expr = self._expression()
         if require_semicolon:
             self._consume(TokenType.SEMICOLON, "Expect ';'.")
-        if isinstance(target, Variable):
-            return Assign(target.name, expr, line=target.line, column=target.column)
-        return IndexAssign(target, expr, line=target.line, column=target.column)
+        return self._build_assignment_stmt(target, operator, expr)
 
     def _expr_stmt(self, require_semicolon=True):
         """
@@ -659,26 +668,15 @@ class Parser:
             return None
 
         start = self.pos
-        try:
-            target = self._assignment_target()
-            if not self._check(TokenType.EQ):
-                self.pos = start
-                return None
-            self._advance()
-            expr = self._expression()
-            if require_semicolon:
-                self._consume(TokenType.SEMICOLON, "Expect ';'.")
-            if isinstance(target, Variable):
-                return Assign(
-                    target.name,
-                    expr,
-                    line=target.line,
-                    column=target.column,
-                )
-            return IndexAssign(target, expr, line=target.line, column=target.column)
-        except NexParseError:
+        target = self._assignment_target()
+        if not self._check_assignment_operator():
             self.pos = start
             return None
+        operator = self._assignment_operator()
+        expr = self._expression()
+        if require_semicolon:
+            self._consume(TokenType.SEMICOLON, "Expect ';'.")
+        return self._build_assignment_stmt(target, operator, expr)
 
     def _assignment_target(self):
         """
@@ -691,6 +689,62 @@ class Parser:
             target = self._finish_index(target)
 
         return target
+
+    def _check_assignment_operator(self):
+        return any(
+            self._check(token_type)
+            for token_type in (
+                TokenType.EQ,
+                TokenType.PLUSEQ,
+                TokenType.MINUSEQ,
+                TokenType.STAREQ,
+                TokenType.CARETEQ,
+                TokenType.SLASHEQ,
+            )
+        )
+
+    def _assignment_operator(self):
+        if self._match(
+            TokenType.EQ,
+            TokenType.PLUSEQ,
+            TokenType.MINUSEQ,
+            TokenType.STAREQ,
+            TokenType.CARETEQ,
+            TokenType.SLASHEQ,
+        ):
+            return self._previous()
+
+        raise NexParseError(
+            "Expect assignment operator.",
+            line=self._peek().line,
+            column=self._peek().column,
+        )
+
+    def _build_assignment_stmt(self, target, operator, expr):
+        if operator.type != TokenType.EQ:
+            expr = Binary(
+                target,
+                operator.lexeme[0],
+                expr,
+                line=operator.line,
+                column=operator.column,
+            )
+
+        if isinstance(target, Variable):
+            return Assign(
+                target.name,
+                expr,
+                operator.lexeme,
+                line=target.line,
+                column=target.column,
+            )
+        return IndexAssign(
+            target,
+            expr,
+            operator.lexeme,
+            line=target.line,
+            column=target.column,
+        )
 
     def _finish_function_call(self, callee):
         """
@@ -706,10 +760,11 @@ class Parser:
 
         # consume function values
         arguments = []
-        while not self._check(TokenType.RPAREN):
-            arguments.append(self._expression())
-            if self._check(TokenType.COMMA):
-                self._advance()
+        if not self._check(TokenType.RPAREN):
+            while True:
+                arguments.append(self._expression())
+                if not self._match(TokenType.COMMA):
+                    break
 
         self._consume(TokenType.RPAREN, "Expect ')'")
 
@@ -739,10 +794,11 @@ class Parser:
         self._consume(TokenType.LPAREN, "Expect '(' after method name.")
 
         arguments = []
-        while not self._check(TokenType.RPAREN):
-            arguments.append(self._expression())
-            if self._check(TokenType.COMMA):
-                self._advance()
+        if not self._check(TokenType.RPAREN):
+            while True:
+                arguments.append(self._expression())
+                if not self._match(TokenType.COMMA):
+                    break
 
         self._consume(TokenType.RPAREN, "Expect ')'")
 

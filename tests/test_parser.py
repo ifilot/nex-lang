@@ -187,6 +187,18 @@ def test_parses_while_statement():
     assert stmt.body.statements[0] == ExprStmt(FuncCall("print", 1, (Variable("x"),)))
 
 
+def test_parses_standalone_block_statement():
+    program = parse("{ int x = 1; print(x); }")
+
+    assert len(program) == 1
+    stmt = program[0]
+    assert isinstance(stmt, Block)
+    assert stmt.statements == (
+        VarDecl("x", Literal(1), "int"),
+        ExprStmt(FuncCall("print", 1, (Variable("x"),))),
+    )
+
+
 def test_parses_function_declaration_without_parameters():
     program = parse('fn hello() -> void { print("hi"); }')
 
@@ -299,6 +311,15 @@ def test_rejects_return_outside_function_with_structured_parse_error():
     assert excinfo.value.column == 1
 
 
+def test_rejects_function_declaration_inside_block():
+    with pytest.raises(NexParseError) as excinfo:
+        parse("if (true) { fn inner() -> void { return; } }")
+
+    assert excinfo.value.message == "nested functions are not allowed"
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 13
+
+
 def test_parses_function_call_as_expression_statement():
     program = parse("hello();")
 
@@ -338,8 +359,33 @@ def test_parses_index_assignment_statement():
 
     stmt = program[0]
     assert isinstance(stmt, IndexAssign)
+    assert stmt.op == "="
     assert stmt.target == Index(Variable("arr"), Unary("-", Literal(1)))
     assert stmt.expr == Literal(42)
+
+
+def test_parses_compound_variable_assignment_statement():
+    program = parse("x += 1; x *= 2; x ^= 3; x /= 4; x -= 5;")
+
+    assert program[0] == Assign("x", Binary(Variable("x"), "+", Literal(1)), "+=")
+    assert program[1] == Assign("x", Binary(Variable("x"), "*", Literal(2)), "*=")
+    assert program[2] == Assign("x", Binary(Variable("x"), "^", Literal(3)), "^=")
+    assert program[3] == Assign("x", Binary(Variable("x"), "/", Literal(4)), "/=")
+    assert program[4] == Assign("x", Binary(Variable("x"), "-", Literal(5)), "-=")
+
+
+def test_parses_compound_index_assignment_statement():
+    program = parse("arr[-1] += 42;")
+
+    stmt = program[0]
+    assert isinstance(stmt, IndexAssign)
+    assert stmt.op == "+="
+    assert stmt.target == Index(Variable("arr"), Unary("-", Literal(1)))
+    assert stmt.expr == Binary(
+        Index(Variable("arr"), Unary("-", Literal(1))),
+        "+",
+        Literal(42),
+    )
 
 
 def test_parses_postfix_increment_as_expression_statement():
@@ -406,7 +452,7 @@ def test_parses_for_statement_with_typed_initializer():
     assert stmt.condition.left == Variable("i")
     assert stmt.condition.op == "<"
     assert stmt.condition.right == Literal(3)
-    assert stmt.iter == Assign("i", Binary(Variable("i"), "+", Literal(1)))
+    assert stmt.iter == Assign("i", Binary(Variable("i"), "+", Literal(1)), "=")
     assert isinstance(stmt.body, Block)
     assert len(stmt.body.statements) == 1
     assert stmt.body.statements[0] == ExprStmt(FuncCall("print", 1, (Variable("i"),)))
@@ -417,8 +463,17 @@ def test_parses_for_statement_with_assignment_initializer():
 
     stmt = program[0]
     assert isinstance(stmt, For)
-    assert stmt.init == Assign("i", Literal(0))
-    assert stmt.iter == Assign("i", Binary(Variable("i"), "+", Literal(1)))
+    assert stmt.init == Assign("i", Literal(0), "=")
+    assert stmt.iter == Assign("i", Binary(Variable("i"), "+", Literal(1)), "=")
+
+
+def test_parses_for_statement_with_compound_assignment_iteration():
+    program = parse("for (i = 0; i < 3; i += 1) { print(i); }")
+
+    stmt = program[0]
+    assert isinstance(stmt, For)
+    assert stmt.init == Assign("i", Literal(0), "=")
+    assert stmt.iter == Assign("i", Binary(Variable("i"), "+", Literal(1)), "+=")
 
 
 def test_parses_for_statement_with_empty_initializer_and_iteration():
@@ -440,7 +495,7 @@ def test_parses_for_statement_with_expression_initializer():
     stmt = program[0]
     assert isinstance(stmt, For)
     assert stmt.init == ExprStmt(Binary(Literal(1), "+", Literal(2)))
-    assert stmt.iter == Assign("i", Binary(Variable("i"), "+", Literal(1)))
+    assert stmt.iter == Assign("i", Binary(Variable("i"), "+", Literal(1)), "=")
 
 
 def test_parses_for_statement_with_expression_iteration():
@@ -475,9 +530,18 @@ def test_rejects_missing_closing_paren_with_structured_parse_error():
     with pytest.raises(NexParseError) as excinfo:
         parse("print((1 + 2);")
 
-    assert excinfo.value.message == "expected expression"
+    assert excinfo.value.message == "expect ')'"
     assert excinfo.value.line == 1
     assert excinfo.value.column == 14
+
+
+def test_rejects_malformed_assignment_without_hiding_expression_error():
+    with pytest.raises(NexParseError) as excinfo:
+        parse("x = ;")
+
+    assert excinfo.value.message == "expected expression"
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 5
 
 
 def test_executes_expression_statement_without_output(capsys):
@@ -495,7 +559,7 @@ def test_executes_unary_not_expression(capsys):
     Interpreter().run(program)
 
     captured = capsys.readouterr()
-    assert captured.out == "False\nTrue\n"
+    assert captured.out == "false\ntrue\n"
 
 
 def test_executes_postfix_increment_and_returns_original_value(capsys):
@@ -564,7 +628,7 @@ def test_executes_boolean_literals(capsys):
     Interpreter().run(program)
 
     captured = capsys.readouterr()
-    assert captured.out == "True\nFalse\n"
+    assert captured.out == "true\nfalse\n"
 
 
 def test_executes_string_concatenation_and_comparison(capsys):
@@ -573,7 +637,7 @@ def test_executes_string_concatenation_and_comparison(capsys):
     Interpreter().run(program)
 
     captured = capsys.readouterr()
-    assert captured.out == "hello\nTrue\n"
+    assert captured.out == "hello\ntrue\n"
 
 
 def test_executes_two_character_comparisons(capsys):
@@ -584,7 +648,7 @@ def test_executes_two_character_comparisons(capsys):
     Interpreter().run(program)
 
     captured = capsys.readouterr()
-    assert captured.out == "True\nTrue\nFalse\nTrue\nTrue\n"
+    assert captured.out == "true\ntrue\nfalse\ntrue\ntrue\n"
 
 
 def test_executes_logical_operators(capsys):
@@ -595,7 +659,7 @@ def test_executes_logical_operators(capsys):
     Interpreter().run(program)
 
     captured = capsys.readouterr()
-    assert captured.out == "True\nFalse\nTrue\nFalse\n"
+    assert captured.out == "true\nfalse\ntrue\nfalse\n"
 
 
 def test_short_circuits_logical_operators():

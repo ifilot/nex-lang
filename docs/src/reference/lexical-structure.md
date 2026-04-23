@@ -1,4 +1,4 @@
-# Lexical Structure
+# Lexical structure
 
 ## Source files
 
@@ -73,7 +73,7 @@ define the basic shape of NEX expressions, declarations, blocks, and control
 flow:
 
 - `(` `)` `{` `}` `;`
-- `=` `+` `-` `*` `/` `%` `^`
+- `=` `+=` `-=` `*=` `/=` `^=` `+` `-` `*` `/` `%` `^`
 - `&&` `||`
 - `<` `>` `<=` `>=` `==` `!=`
 - `!`

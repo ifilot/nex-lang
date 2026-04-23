@@ -1,11 +1,13 @@
-# Scopes And Bindings
+# Scopes and bindings
 
 ## Lexical scope
 
 NEX uses lexical scoping with nested block environments. In a lexically scoped
 language, the meaning of a variable name depends on where that name appears in
 the source program, not on some dynamic history of how execution arrived
-there.
+there. User-defined functions are top-level declarations, so function calls use
+the function's own local scope together with the live global scope; they do not
+capture or borrow caller-local scopes.
 
 Each block creates a new scope. Variables declared in an inner scope can shadow
 variables from an outer scope, which means the inner binding temporarily hides
@@ -71,6 +73,43 @@ This prints:
 Assigning to an undefined variable is an error, and reading an undefined
 variable is a runtime error. These checks keep the environment disciplined and
 prevent names from appearing "by accident" during execution.
+
+## Function scope
+
+Functions can read and update globals because globals are part of the scope
+available when the function body executes:
+
+```nex
+int total = 1;
+
+fn add_one() -> void {
+    total += 1;
+}
+
+add_one();
+print(total);
+```
+
+This prints:
+
+```text
+2
+```
+
+Functions do not capture local variables from the block or function that calls
+them:
+
+```nex
+fn show() -> void {
+    print(local);
+}
+
+{
+    int local = 3;
+    show(); # runtime error: local is not visible inside show
+}
+```
+
 ## For-loop scope
 
 The current interpreter gives each `for` loop its own scope.

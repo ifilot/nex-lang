@@ -4,7 +4,7 @@
 #
 int total = 0;
 
-for (int n = 1; n <= 10; n = n + 1) {
-    total = total + n;
+for (int n = 1; n <= 10; n += 1) {
+    total += n;
     print(total);
 }

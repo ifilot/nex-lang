@@ -3,12 +3,31 @@ from nex import __version__
 from .nex_array import NexArray
 
 
+def _format_string_literal(value: str) -> str:
+    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+    escaped = escaped.replace("\n", "\\n").replace("\t", "\\t")
+    return f'"{escaped}"'
+
+
+def _format_value(value: object, *, nested: bool = False) -> str:
+    if type(value) is bool:
+        return "true" if value else "false"
+    if type(value) is str:
+        return _format_string_literal(value) if nested else value
+    if value is None:
+        return "void"
+    if isinstance(value, NexArray):
+        contents = ", ".join(_format_value(item, nested=True) for item in value.storage)
+        return f"[{contents}]"
+    return str(value)
+
+
 def nex_print(msg: str) -> None:
-    print(msg)
+    print(_format_value(msg))
 
 
 def nex_print_inline(msg: str) -> None:
-    print(msg, end="")
+    print(_format_value(msg), end="")
 
 
 def nex_version() -> str:

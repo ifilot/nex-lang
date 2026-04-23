@@ -1,4 +1,4 @@
-# Built-in Functions
+# Built-in functions
 
 Built-in functions are names provided directly by the language runtime. They do
 not need to be declared before use.
@@ -20,7 +20,7 @@ as <code class="language-nex">print(...)</code> and
 declare parameters, variables, and return types with the ordinary concrete
 types of the language.
 
-## General Built-ins
+## General built-ins
 
 ### `print`
 
@@ -101,7 +101,7 @@ print(strint("123"));
 print(strint("nope"));
 ```
 
-## Array Built-ins
+## Array built-ins
 
 ### `resize`
 
@@ -165,8 +165,7 @@ print(nums[0]);
 
 For <code class="language-nex">array&lt;int&gt;</code>, the default value is
 <code class="language-nex">0</code>. For
-<code class="language-nex">array&lt;str&gt;</code>, the default value is
-<code class="language-nex">""</code>.
+<code class="language-nex">array&lt;str&gt;</code>, the default value is `""`.
 
 This builtin can also be called with method syntax:
 

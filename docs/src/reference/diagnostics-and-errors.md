@@ -1,4 +1,4 @@
-# Diagnostics And Errors
+# Diagnostics and errors
 
 NEX reports failures in three main phases:
 

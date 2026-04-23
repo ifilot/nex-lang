@@ -1,4 +1,4 @@
-# Statements And Control Flow
+# Statements and control flow
 
 ## Statements
 
@@ -20,10 +20,42 @@ block. While expressions compute values, statements use those values to declare
 variables, update state, print results, or choose which block of code to
 execute next. Every simple statement ends with a semicolon.
 
+Function declarations are the exception to the usual block-level statement
+rule: they are accepted only at the top level of a program. They are described
+with statements because they appear in the program's statement sequence, but
+they cannot be nested inside blocks or other functions.
+
 With arrays, NEX now distinguishes between:
 
 - scalar declarations, which require an initializer
 - array declarations, which create an empty array value
+
+## Assignment statements
+
+An assignment updates an existing binding:
+
+```nex
+x = x + 1;
+```
+
+NEX also supports compound assignment as shorthand:
+
+```nex
+x += 1;
+x -= 2;
+x *= 3;
+x /= 4;
+x ^= 2;
+```
+
+These forms assign the result of the corresponding binary operation back to the
+same target. For example, `x += 1;` behaves like `x = x + 1;`.
+
+Indexed targets support the same syntax:
+
+```nex
+arr[i] *= 2;
+```
 
 ## Blocks
 
@@ -106,7 +138,7 @@ The condition is mandatory and must evaluate to `bool`.
 Example:
 
 ```nex
-for (int i = 0; i < 3; i = i + 1) {
+for (int i = 0; i < 3; i += 1) {
     print(i);
 }
 ```
@@ -137,12 +169,13 @@ Function declarations and `return` statements are also part of the current
 statement system. They are described in more detail in
 [Functions And Return](functions-and-return.md), but the short version is:
 
-- `fn ... { ... }` introduces a named function
+- `fn ... { ... }` introduces a named top-level function
 - function calls are expressions
 - `return` stops the current function and optionally returns a value
 
 That split is useful to keep in mind. Declaring a function is a statement, but
-calling one is an expression.
+calling one is an expression. Function declarations cannot appear inside an
+`if`, `while`, `for`, plain block, or another function body.
 
 Built-in functions such as `print(...)` are described separately in
 [Built-in Functions](built-in-functions.md).

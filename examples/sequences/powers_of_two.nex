@@ -4,7 +4,7 @@
 #
 int value = 1;
 
-for (int exponent = 0; exponent <= 10; exponent = exponent + 1) {
+for (int exponent = 0; exponent <= 10; exponent += 1) {
     print(value);
-    value = value * 2;
+    value *= 2;
 }

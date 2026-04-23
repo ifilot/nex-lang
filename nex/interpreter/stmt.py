@@ -101,6 +101,7 @@ class Assign(Stmt):
 
     name: str
     expr: Expr
+    op: str = "="
     line: int | None = field(default=None, compare=False)
     column: int | None = field(default=None, compare=False)
 
@@ -113,6 +114,7 @@ class IndexAssign(Stmt):
 
     target: Expr
     expr: Expr
+    op: str = "="
     line: int | None = field(default=None, compare=False)
     column: int | None = field(default=None, compare=False)
 

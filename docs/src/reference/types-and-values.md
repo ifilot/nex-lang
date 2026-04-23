@@ -1,4 +1,4 @@
-# Types And Values
+# Types and values
 
 NEX currently has four first-class value categories:
 
@@ -155,6 +155,19 @@ x = x + 2;
 print(x);
 ```
 
+Compound assignment is also supported:
+
+```nex
+x += 2;
+x *= 3;
+x /= 2;
+x -= 1;
+x ^= 2;
+```
+
+These forms update the current value in place using the corresponding operator.
+For example, `x += 2;` behaves like `x = x + 2;`.
+
 Assignments must preserve the declared variable type. Assigning a `str` to an
 `int` variable, for example, is a runtime error. Assigning to a variable name
 that has not been declared is also a runtime error. This means NEX does not
@@ -166,6 +179,13 @@ Arrays extend assignment with indexed element updates:
 ```nex
 arr[0] = 10;
 arr[-1] = 99;
+```
+
+Compound assignment works with indexed targets too:
+
+```nex
+arr[0] += 10;
+arr[-1] *= 2;
 ```
 
 This syntax updates a slot inside an existing array rather than rebinding the

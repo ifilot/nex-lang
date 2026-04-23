@@ -133,13 +133,25 @@ def test_lexes_compound_and_increment_operators():
     Test that the lexer correctly identifies compound assignment and
     increment/decrement operators.
     """
-    assert token_types("x += 1; y -= 2; i++; j--;") == [
+    assert token_types("x += 1; y -= 2; z *= 3; q ^= 5; w /= 4; i++; j--;") == [
         TokenType.IDENTIFIER,
         TokenType.PLUSEQ,
         TokenType.NUMBER,
         TokenType.SEMICOLON,
         TokenType.IDENTIFIER,
         TokenType.MINUSEQ,
+        TokenType.NUMBER,
+        TokenType.SEMICOLON,
+        TokenType.IDENTIFIER,
+        TokenType.STAREQ,
+        TokenType.NUMBER,
+        TokenType.SEMICOLON,
+        TokenType.IDENTIFIER,
+        TokenType.CARETEQ,
+        TokenType.NUMBER,
+        TokenType.SEMICOLON,
+        TokenType.IDENTIFIER,
+        TokenType.SLASHEQ,
         TokenType.NUMBER,
         TokenType.SEMICOLON,
         TokenType.IDENTIFIER,
@@ -255,7 +267,7 @@ def test_tracks_line_and_column_numbers_for_new_two_character_operators():
     Test that the lexer assigns the correct source location to new two-character
     operators.
     """
-    tokens = lex("x += 1;\ny--;\nz -= 2;\nw++;")
+    tokens = lex("x += 1;\ny--;\nz -= 2;\na *= 3;\nb ^= 4;\nc /= 5;\nw++;")
 
     assert [(token.type, token.line, token.column) for token in tokens] == [
         (TokenType.IDENTIFIER, 1, 1),
@@ -270,9 +282,21 @@ def test_tracks_line_and_column_numbers_for_new_two_character_operators():
         (TokenType.NUMBER, 3, 6),
         (TokenType.SEMICOLON, 3, 7),
         (TokenType.IDENTIFIER, 4, 1),
-        (TokenType.INC, 4, 2),
-        (TokenType.SEMICOLON, 4, 4),
-        (TokenType.EOF, 4, 4),
+        (TokenType.STAREQ, 4, 3),
+        (TokenType.NUMBER, 4, 6),
+        (TokenType.SEMICOLON, 4, 7),
+        (TokenType.IDENTIFIER, 5, 1),
+        (TokenType.CARETEQ, 5, 3),
+        (TokenType.NUMBER, 5, 6),
+        (TokenType.SEMICOLON, 5, 7),
+        (TokenType.IDENTIFIER, 6, 1),
+        (TokenType.SLASHEQ, 6, 3),
+        (TokenType.NUMBER, 6, 6),
+        (TokenType.SEMICOLON, 6, 7),
+        (TokenType.IDENTIFIER, 7, 1),
+        (TokenType.INC, 7, 2),
+        (TokenType.SEMICOLON, 7, 4),
+        (TokenType.EOF, 7, 4),
     ]
 
 

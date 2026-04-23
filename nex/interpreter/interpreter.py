@@ -1,6 +1,7 @@
 from nex.common import NexIndexError, NexRuntimeError
 
 from .environment import Environment
+from .expr import Binary, Index
 from .function import BuiltinFunction, UserFunction
 from .function_store import FunctionStore, NexFunctionStoreError
 from .nex_array import NexArray
@@ -92,7 +93,11 @@ class Interpreter:
         """
         Assigns a value to variable or declares and initializes a new variable
         """
-        val = self.eval(node.expr)
+        if node.op == "=":
+            val = self.eval(node.expr)
+        else:
+            current = self.env.lookup(node.name, line=node.line, column=node.column)
+            val = self._eval_compound_assignment_value(node.expr, current)
         self.env.assign(
             node.name,
             val,
@@ -106,23 +111,19 @@ class Interpreter:
         """
         Assign into an indexed array slot.
         """
-        receiver = self.eval(node.target.receiver)
-        if not isinstance(receiver, NexArray):
-            raise NexRuntimeError(
-                f"cannot index-assign value of type {self._runtime_type_name(receiver)}; expected array",
-                line=node.target.line,
-                column=node.target.column,
-            )
-
-        index = self.eval(node.target.index)
-        if type(index) is not int:
-            raise NexRuntimeError(
-                f"array index must evaluate to int, got {self._runtime_type_name(index)}",
-                line=node.target.index.line,
-                column=node.target.index.column,
-            )
-
-        value = self.eval(node.expr)
+        receiver, index = self._resolve_index_target(node.target)
+        if node.op == "=":
+            value = self.eval(node.expr)
+        else:
+            try:
+                current = receiver.get(index)
+            except IndexError:
+                raise NexIndexError(
+                    f"array index {index} out of bounds for length {receiver.length()}",
+                    line=node.target.index.line,
+                    column=node.target.index.column,
+                )
+            value = self._eval_compound_assignment_value(node.expr, current)
         if not self._matches_type(receiver.element_type, value):
             raise NexRuntimeError(
                 f"cannot assign value of type {self._runtime_type_name(value)} "
@@ -310,81 +311,7 @@ class Interpreter:
             return left or right
 
         right = self.eval(node.right)
-        if node.op == "+":
-            if self._both_of_type(left, right, int) or self._both_of_type(
-                left, right, str
-            ):
-                return left + right
-            raise NexRuntimeError(
-                f"operator '+' expects int+int or str+str, got "
-                f"{self._runtime_type_name(left)} and {self._runtime_type_name(right)}",
-                line=node.line,
-                column=node.column,
-            )
-
-        if node.op == "^":
-            self._require_matching_types(
-                node, node.op, left, right, int, "int operands"
-            )
-            if right < 0:
-                raise NexRuntimeError(
-                    "operator `^` does not support negative exponents",
-                    line=node.line,
-                    column=node.column,
-                )
-            return left**right
-
-        if node.op in ("-", "*", "/", "%"):
-            self._require_matching_types(
-                node, node.op, left, right, int, "int operands"
-            )
-            if node.op == "-":
-                return left - right
-            if node.op == "*":
-                return left * right
-            if node.op == "/":
-                if right == 0:
-                    raise NexRuntimeError(
-                        "division by zero", line=node.line, column=node.column
-                    )
-                return int(left / right)
-            if node.op == "%":
-                if right == 0:
-                    raise NexRuntimeError(
-                        "division by zero", line=node.line, column=node.column
-                    )
-                return left % right
-            return NexRuntimeError("invalid operation detected.")
-
-        if node.op in ("<", ">", "<=", ">="):
-            if self._both_of_type(left, right, int) or self._both_of_type(
-                left, right, str
-            ):
-                if node.op == "<":
-                    return left < right
-                if node.op == ">":
-                    return left > right
-                if node.op == "<=":
-                    return left <= right
-                return left >= right
-            raise NexRuntimeError(
-                f"operator `{node.op}` expects matching int or str operands, got "
-                f"{self._runtime_type_name(left)} and {self._runtime_type_name(right)}",
-                line=node.line,
-                column=node.column,
-            )
-
-        if node.op in ("==", "!="):
-            if type(left) is not type(right):
-                raise NexRuntimeError(
-                    f"operator `{node.op}` expects operands of the same type, got "
-                    f"{self._runtime_type_name(left)} and {self._runtime_type_name(right)}",
-                    line=node.line,
-                    column=node.column,
-                )
-            return left == right if node.op == "==" else left != right
-
-        raise NotImplementedError(f"Unsupported operator: {node.op}")
+        return self._apply_binary_operator(node, left, right)
 
     def eval_Variable(self, node):
         """
@@ -465,24 +392,26 @@ class Interpreter:
 
         # call a user-defined function
         if isinstance(func, UserFunction):
-            self.env.push()
-            for param, arg in zip(func.params, argvalues):
-                self.env.declare(param[1], param[0], arg)
-
+            caller_values = self.env.values
+            self.env.values = [caller_values[0], {}]
             try:
-                for stmt in func.body:
-                    self.exec(stmt)
-            except NexReturnSignal as ret:
-                if not self._matches_type(func.return_type, ret.value):
-                    argtype = self._runtime_type_name(ret.value)
-                    raise NexRuntimeError(
-                        f"return value has wrong type, expected `{func.return_type}` while got `{argtype}`",
-                        line=line,
-                        column=column,
-                    )
-                return ret.value
+                for param, arg in zip(func.params, argvalues):
+                    self.env.declare(param[1], param[0], arg)
+
+                try:
+                    for stmt in func.body:
+                        self.exec(stmt)
+                except NexReturnSignal as ret:
+                    if not self._matches_type(func.return_type, ret.value):
+                        argtype = self._runtime_type_name(ret.value)
+                        raise NexRuntimeError(
+                            f"return value has wrong type, expected `{func.return_type}` while got `{argtype}`",
+                            line=line,
+                            column=column,
+                        )
+                    return ret.value
             finally:
-                self.env.pop()
+                self.env.values = caller_values
 
             # if no return value was encountered, the return value is "void" and it
             # should be explicitly checked then that the function returns this
@@ -548,13 +477,124 @@ class Interpreter:
         )
         return current
 
+    def _resolve_index_target(self, target: Index) -> tuple[NexArray, int]:
+        receiver = self.eval(target.receiver)
+        if not isinstance(receiver, NexArray):
+            raise NexRuntimeError(
+                f"cannot index-assign value of type {self._runtime_type_name(receiver)}; expected array",
+                line=target.line,
+                column=target.column,
+            )
+
+        index = self.eval(target.index)
+        if type(index) is not int:
+            raise NexRuntimeError(
+                f"array index must evaluate to int, got {self._runtime_type_name(index)}",
+                line=target.index.line,
+                column=target.index.column,
+            )
+
+        return receiver, index
+
+    def _eval_compound_assignment_value(self, expr, current: object):
+        if not isinstance(expr, Binary):
+            raise RuntimeError("compound assignment expected lowered binary expression")
+
+        right = self.eval(expr.right)
+        return self._apply_binary_operator(expr, current, right)
+
+    def _apply_binary_operator(self, node: Binary, left: object, right: object):
+        if node.op == "+":
+            if self._both_of_type(left, right, int) or self._both_of_type(
+                left, right, str
+            ):
+                return left + right
+            raise NexRuntimeError(
+                f"operator '+' expects int+int or str+str, got "
+                f"{self._runtime_type_name(left)} and {self._runtime_type_name(right)}",
+                line=node.line,
+                column=node.column,
+            )
+
+        if node.op == "^":
+            self._require_matching_types(
+                node, node.op, left, right, int, "int operands"
+            )
+            if right < 0:
+                raise NexRuntimeError(
+                    "operator `^` does not support negative exponents",
+                    line=node.line,
+                    column=node.column,
+                )
+            return left**right
+
+        if node.op in ("-", "*", "/", "%"):
+            self._require_matching_types(
+                node, node.op, left, right, int, "int operands"
+            )
+            if node.op == "-":
+                return left - right
+            if node.op == "*":
+                return left * right
+            if node.op == "/":
+                if right == 0:
+                    raise NexRuntimeError(
+                        "division by zero", line=node.line, column=node.column
+                    )
+                return self._truncate_division_toward_zero(left, right)
+            if node.op == "%":
+                if right == 0:
+                    raise NexRuntimeError(
+                        "division by zero", line=node.line, column=node.column
+                    )
+                return left % right
+            return NexRuntimeError("invalid operation detected.")
+
+        if node.op in ("<", ">", "<=", ">="):
+            if self._both_of_type(left, right, int) or self._both_of_type(
+                left, right, str
+            ):
+                if node.op == "<":
+                    return left < right
+                if node.op == ">":
+                    return left > right
+                if node.op == "<=":
+                    return left <= right
+                return left >= right
+            raise NexRuntimeError(
+                f"operator `{node.op}` expects matching int or str operands, got "
+                f"{self._runtime_type_name(left)} and {self._runtime_type_name(right)}",
+                line=node.line,
+                column=node.column,
+            )
+
+        if node.op in ("==", "!="):
+            left_type = self._runtime_type_name(left)
+            right_type = self._runtime_type_name(right)
+            if left_type == "void" or right_type == "void":
+                raise NexRuntimeError(
+                    f"operator `{node.op}` does not support void operands",
+                    line=node.line,
+                    column=node.column,
+                )
+            if left_type != right_type:
+                raise NexRuntimeError(
+                    f"operator `{node.op}` expects operands of the same type, got "
+                    f"{left_type} and {right_type}",
+                    line=node.line,
+                    column=node.column,
+                )
+            return left == right if node.op == "==" else left != right
+
+        raise NotImplementedError(f"Unsupported operator: {node.op}")
+
     # -------------------------------------------------------------------------
     # HELPERS
     # -------------------------------------------------------------------------
 
     def _matches_type(self, declared_type: str, val: object):
         if declared_type == "any":
-            return True
+            return val is not None
         if declared_type == "int":
             return type(val) is int
         if declared_type == "str":
@@ -605,6 +645,8 @@ class Interpreter:
             for param, arg in zip(func.params, argvalues):
                 param_type = param[0]
                 if param_type == "any":
+                    if not self._matches_type(param_type, arg):
+                        break
                     score += 1
                     continue
                 if not self._matches_type(param_type, arg):
@@ -644,6 +686,12 @@ class Interpreter:
 
     def _both_of_type(self, left: object, right: object, expected_type: type) -> bool:
         return type(left) is expected_type and type(right) is expected_type
+
+    def _truncate_division_toward_zero(self, left: int, right: int) -> int:
+        quotient = abs(left) // abs(right)
+        if (left < 0) != (right < 0):
+            return -quotient
+        return quotient
 
     def _require_matching_types(
         self,

@@ -1,7 +1,7 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="282" height="480" viewBox="0 0 282 480" role="img" aria-labelledby="title-statement desc-statement">
+<svg xmlns="http://www.w3.org/2000/svg" width="282" height="530" viewBox="0 0 282 530" role="img" aria-labelledby="title-statement desc-statement">
 <title id="title-statement">&lt;statement&gt; syntax diagram</title>
 <desc id="desc-statement">Syntax diagram for &lt;statement&gt; generated from the grammar reference.</desc>
-<rect x="0.5" y="0.5" width="281" height="479" rx="18" fill="#fbfcfe" stroke="#d6deea"/>
+<rect x="0.5" y="0.5" width="281" height="529" rx="18" fill="#fbfcfe" stroke="#d6deea"/>
 <text x="28" y="28" fill="#14324a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" font-weight="700">&lt;statement&gt;</text>
 <line x1="28" y1="70" x2="46" y2="70" stroke="#6a7d95" stroke-width="2"/>
 <rect x="64" y="56" width="114" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
@@ -28,14 +28,18 @@
 <text x="113.0" y="325" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;for-stmt&gt;</text>
 <path d="M 46 70 A 6 6 0 0 1 52 76 L 52 314 A 6 6 0 0 0 58 320 L 64 320" fill="none" stroke="#6a7d95" stroke-width="2"/>
 <path d="M 162 320 L 224 320 A 6 6 0 0 0 230 314 L 230 76 A 6 6 0 0 1 236 70 " fill="none" stroke="#6a7d95" stroke-width="2"/>
-<rect x="64" y="356" width="154" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
-<text x="141.0" y="375" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;assignment-stmt&gt;</text>
+<rect x="64" y="356" width="74" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
+<text x="101.0" y="375" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;block&gt;</text>
 <path d="M 46 70 A 6 6 0 0 1 52 76 L 52 364 A 6 6 0 0 0 58 370 L 64 370" fill="none" stroke="#6a7d95" stroke-width="2"/>
-<path d="M 218 370 L 224 370 A 6 6 0 0 0 230 364 L 230 76 A 6 6 0 0 1 236 70 " fill="none" stroke="#6a7d95" stroke-width="2"/>
-<rect x="64" y="406" width="106" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
-<text x="117.0" y="425" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;expr-stmt&gt;</text>
+<path d="M 138 370 L 224 370 A 6 6 0 0 0 230 364 L 230 76 A 6 6 0 0 1 236 70 " fill="none" stroke="#6a7d95" stroke-width="2"/>
+<rect x="64" y="406" width="154" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
+<text x="141.0" y="425" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;assignment-stmt&gt;</text>
 <path d="M 46 70 A 6 6 0 0 1 52 76 L 52 414 A 6 6 0 0 0 58 420 L 64 420" fill="none" stroke="#6a7d95" stroke-width="2"/>
-<path d="M 170 420 L 224 420 A 6 6 0 0 0 230 414 L 230 76 A 6 6 0 0 1 236 70 " fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 218 420 L 224 420 A 6 6 0 0 0 230 414 L 230 76 A 6 6 0 0 1 236 70 " fill="none" stroke="#6a7d95" stroke-width="2"/>
+<rect x="64" y="456" width="106" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
+<text x="117.0" y="475" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;expr-stmt&gt;</text>
+<path d="M 46 70 A 6 6 0 0 1 52 76 L 52 464 A 6 6 0 0 0 58 470 L 64 470" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 170 470 L 224 470 A 6 6 0 0 0 230 464 L 230 76 A 6 6 0 0 1 236 70 " fill="none" stroke="#6a7d95" stroke-width="2"/>
 <line x1="236" y1="70" x2="254" y2="70" stroke="#6a7d95" stroke-width="2"/>
 <circle cx="22" cy="70" r="4.5" fill="#6a7d95"/>
 <circle cx="260" cy="70" r="4.5" fill="#6a7d95"/>

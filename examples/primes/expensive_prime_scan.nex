@@ -8,7 +8,7 @@ fn is_prime_naive(int n) -> bool {
         return false;
     }
 
-    for (int divisor = 2; divisor < n; divisor = divisor + 1) {
+    for (int divisor = 2; divisor < n; divisor += 1) {
         if (n % divisor == 0) {
             return false;
         }
@@ -20,9 +20,9 @@ fn is_prime_naive(int n) -> bool {
 fn count_primes(int limit) -> int {
     int count = 0;
 
-    for (int candidate = 2; candidate <= limit; candidate = candidate + 1) {
+    for (int candidate = 2; candidate <= limit; candidate += 1) {
         if (is_prime_naive(candidate)) {
-            count = count + 1;
+            count += 1;
         }
     }
 

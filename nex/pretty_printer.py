@@ -73,13 +73,19 @@ class PrettyPrinter:
         return [self._branch(prefix, is_last, f"ArrayDecl({node.type} {node.name})")]
 
     def print_Assign(self, node, prefix="", is_last=True):
-        lines = [self._branch(prefix, is_last, f"Assign({node.name})")]
+        label = (
+            f"Assign({node.name})"
+            if node.op == "="
+            else f"Assign({node.name} {node.op})"
+        )
+        lines = [self._branch(prefix, is_last, label)]
         child_prefix = self._child_prefix(prefix, is_last)
         lines.extend(self.print(node.expr, child_prefix, True))
         return lines
 
     def print_IndexAssign(self, node, prefix="", is_last=True):
-        lines = [self._branch(prefix, is_last, "IndexAssign")]
+        label = "IndexAssign" if node.op == "=" else f"IndexAssign({node.op})"
+        lines = [self._branch(prefix, is_last, label)]
         child_prefix = self._child_prefix(prefix, is_last)
         lines.extend(
             self._render_labeled_child("Target", node.target, child_prefix, False)

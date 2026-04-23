@@ -7,7 +7,7 @@ fn is_prime(int n) -> bool {
         return false;
     }
 
-    for (int divisor = 2; divisor * divisor <= n; divisor = divisor + 1) {
+    for (int divisor = 2; divisor * divisor <= n; divisor += 1) {
         if (n % divisor == 0) {
             return false;
         }
@@ -23,8 +23,8 @@ int candidate = 2;
 while (found < target) {
     if (is_prime(candidate)) {
         print(candidate);
-        found = found + 1;
+        found += 1;
     }
 
-    candidate = candidate + 1;
+    candidate += 1;
 }

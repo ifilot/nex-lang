@@ -12,8 +12,8 @@ together after reading the surrounding reference chapters.
 
 Like most practical parsers, NEX also has a few rules that are checked outside
 the grammar itself. For example, `return` is only valid inside a function body,
-and nested function declarations are rejected even though both are statement
-forms in the general grammar.
+and function declarations are accepted only at the top level of a program even
+though the compact statement grammar shows them beside other statement forms.
 
 ## Surface grammar
 
@@ -26,6 +26,7 @@ forms in the general grammar.
                       | <if-stmt>
                       | <while-stmt>
                       | <for-stmt>
+                      | <block>
                       | <assignment-stmt>
                       | <expr-stmt>
 
@@ -73,7 +74,9 @@ forms in the general grammar.
 
 <assignment-stmt>   ::= <assignment-core> ";"
 
-<assignment-core>   ::= <assignment-target> "=" <expression>
+<assignment-core>   ::= <assignment-target> <assignment-op> <expression>
+
+<assignment-op>     ::= "=" | "+=" | "-=" | "*=" | "/=" | "^="
 
 <assignment-target> ::= <identifier> | <index-expr>
 
@@ -210,6 +213,10 @@ forms in the general grammar.
 
 ![Syntax diagram for <assignment-core>](grammar-diagrams/assignment_core.svg)
 
+### `<assignment-op>`
+
+![Syntax diagram for <assignment-op>](grammar-diagrams/assignment_op.svg)
+
 ### `<assignment-target>`
 
 ![Syntax diagram for <assignment-target>](grammar-diagrams/assignment_target.svg)
@@ -289,6 +296,9 @@ forms in the general grammar.
 - Function calls are postfix expressions, not statements in their own right.
   That is why built-in functions such as `print(...)` and `input()` can appear
   in an initializer, inside another call, or as a plain expression statement.
+- Function declarations are top-level declarations. They are listed under
+  `<statement>` so the grammar can show their source shape, but declarations
+  inside blocks or other functions are rejected by the parser.
 - Array declarations are syntactically distinct from scalar declarations:
   `array<int> arr;` is valid, while array declarations with initializers are
   currently rejected.

@@ -1,4 +1,4 @@
-# Expressions And Operators
+# Expressions and operators
 
 ## Overview
 

@@ -22,7 +22,7 @@ print(limit);
 
 for (int p = 2; p * p <= limit; p++) {
     if (marks[p] == 1) {
-        for (int multiple = p * p; multiple <= limit; multiple = multiple + p) {
+        for (int multiple = p * p; multiple <= limit; multiple += p) {
             marks[multiple] = 0;
         }
     }

@@ -15,7 +15,7 @@ EXPECTED_OUTPUTS = {
     "math.nex": "13\n11\n21\n2\n",
     "prime_report.nex": "1\ncomposite\n2\nprime\n3\nprime\n4\ncomposite\n5\nprime\n6\ncomposite\n7\nprime\n8\ncomposite\n9\ncomposite\n10\ncomposite\n11\nprime\n12\ncomposite\n",
     "scope.nex": "outer\ninner\nnested\ninner\nouter\n",
-    "short_circuit.nex": "left false\nFalse\nleft true\nTrue\nfirst\nsecond\nTrue\nfallback\nrescue\nTrue\n",
+    "short_circuit.nex": "left false\nfalse\nleft true\ntrue\nfirst\nsecond\ntrue\nfallback\nrescue\ntrue\n",
     "string_pyramid.nex": "# narrow\n## narrow\n### wide\n#### wide\n",
     "strings.nex": "Hello, NEX!\nordered\nexact match\ncustom target\n",
     "while.nex": "0\n1\n2\n3\n4\n5\n6\n7\n8\n9\n",

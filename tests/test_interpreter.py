@@ -32,6 +32,23 @@ def test_executes_typed_assignment_and_print(capsys):
     assert captured.out == "3\n"
 
 
+def test_executes_compound_scalar_assignments(capsys):
+    run_source(
+        """
+        int x = 2;
+        x += 1;
+        x *= 15;
+        x /= 3;
+        x -= 10;
+        x ^= 2;
+        print(x);
+        """
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out == "25\n"
+
+
 def test_rejects_assignment_of_wrong_type():
     with pytest.raises(NexRuntimeError) as excinfo:
         run_source(
@@ -90,6 +107,47 @@ def test_assigns_array_element_with_negative_index(capsys):
     captured = capsys.readouterr()
     assert captured.out == "Linus\n"
     assert names.storage == ["Ada", "Linus"]
+
+
+def test_executes_compound_index_assignment(capsys):
+    interpreter = Interpreter()
+    interpreter.run(parse_source("array<int> xs;"))
+    xs = interpreter.env.lookup("xs")
+    xs.storage = [10, 20, 30]
+
+    interpreter.run(parse_source("xs[-1] += 5; print(xs[-1]);"))
+
+    captured = capsys.readouterr()
+    assert captured.out == "35\n"
+    assert xs.storage == [10, 20, 35]
+
+
+def test_compound_index_assignment_evaluates_target_once(capsys):
+    interpreter = Interpreter()
+    interpreter.run(parse_source("array<int> xs;"))
+    xs = interpreter.env.lookup("xs")
+    xs.storage = [10, 20]
+
+    interpreter.run(parse_source("int i = 0; xs[i++] += 5; print(xs[0]); print(i);"))
+
+    captured = capsys.readouterr()
+    assert captured.out == "15\n1\n"
+    assert xs.storage == [15, 20]
+
+
+def test_explicit_index_self_assignment_preserves_double_evaluation(capsys):
+    interpreter = Interpreter()
+    interpreter.run(parse_source("array<int> xs;"))
+    xs = interpreter.env.lookup("xs")
+    xs.storage = [10, 20]
+
+    interpreter.run(
+        parse_source("int i = 0; xs[i++] = xs[i++] + 1; print(xs[0]); print(i);")
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out == "21\n2\n"
+    assert xs.storage == [21, 20]
 
 
 def test_rejects_out_of_bounds_array_access():
@@ -231,6 +289,22 @@ def test_power_operator_preserves_arbitrary_precision_integers(capsys):
     assert captured.out == "1267650600228229401496703205376\n"
 
 
+def test_integer_division_preserves_arbitrary_precision(capsys):
+    big = 10**400
+
+    run_source(f"print({big} / 3);")
+
+    captured = capsys.readouterr()
+    assert captured.out == f"{big // 3}\n"
+
+
+def test_integer_division_truncates_toward_zero(capsys):
+    run_source("print(-8 / 3); print(8 / -3); print(-8 / -3);")
+
+    captured = capsys.readouterr()
+    assert captured.out == "-2\n-2\n2\n"
+
+
 def test_indexed_int_value_round_trips_as_plain_nex_int(capsys):
     interpreter = Interpreter()
     interpreter.run(parse_source("array<int> xs;"))
@@ -264,7 +338,25 @@ def test_array_equality_is_structural_for_both_array_kinds(capsys):
     )
 
     captured = capsys.readouterr()
-    assert captured.out == "True\nFalse\nFalse\nTrue\n"
+    assert captured.out == "true\nfalse\nfalse\ntrue\n"
+
+
+def test_rejects_equality_between_different_array_types():
+    with pytest.raises(NexRuntimeError) as excinfo:
+        run_source(
+            """
+            array<int> xs;
+            array<str> ys;
+            print(xs == ys);
+            """
+        )
+
+    assert (
+        excinfo.value.message
+        == "operator `==` expects operands of the same type, got array<int> and array<str>"
+    )
+    assert excinfo.value.line == 4
+    assert excinfo.value.column == 22
 
 
 def test_array_int_supports_arbitrary_precision_values(capsys):
@@ -374,6 +466,22 @@ def test_block_scope_shadows_outer_variable(capsys):
         """
         int x = 1;
         if (true) {
+            int x = 2;
+            print(x);
+        }
+        print(x);
+        """
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out == "2\n1\n"
+
+
+def test_standalone_block_creates_scope(capsys):
+    run_source(
+        """
+        int x = 1;
+        {
             int x = 2;
             print(x);
         }
@@ -495,6 +603,24 @@ def test_rejects_duplicate_function_declaration():
     assert excinfo.value.column == 13
 
 
+def test_rejects_user_function_that_conflicts_with_builtin():
+    with pytest.raises(NexRuntimeError) as excinfo:
+        run_source(
+            """
+            fn print(int x) -> void {
+                return;
+            }
+            """
+        )
+
+    assert (
+        excinfo.value.message
+        == "cannot declare function `print` because it conflicts with a built-in function"
+    )
+    assert excinfo.value.line == 2
+    assert excinfo.value.column == 13
+
+
 def test_rejects_function_call_with_wrong_arity_and_reports_call_site():
     with pytest.raises(NexRuntimeError) as excinfo:
         run_source(
@@ -552,6 +678,104 @@ def test_dispatches_overloaded_functions_by_argument_type(capsys):
     assert captured.out == "int\nstr\n"
 
 
+def test_function_reads_live_global_value_at_call_time(capsys):
+    run_source(
+        """
+        int y = 2;
+
+        fn show() -> void {
+            print(y);
+        }
+
+        show();
+        y = 3;
+        show();
+        """
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out == "2\n3\n"
+
+
+def test_function_can_update_global_variable(capsys):
+    run_source(
+        """
+        int y = 2;
+
+        fn bump() -> void {
+            y = y + 1;
+        }
+
+        bump();
+        print(y);
+        """
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out == "3\n"
+
+
+def test_function_local_shadow_does_not_leak_to_global(capsys):
+    run_source(
+        """
+        int y = 2;
+
+        fn show() -> void {
+            int y = 10;
+            print(y);
+        }
+
+        show();
+        print(y);
+        """
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out == "10\n2\n"
+
+
+def test_function_cannot_read_callers_block_local():
+    with pytest.raises(NexRuntimeError) as excinfo:
+        run_source(
+            """
+            fn show() -> void {
+                print(y);
+            }
+
+            if (true) {
+                int y = 2;
+                show();
+            }
+            """
+        )
+
+    assert excinfo.value.message == "undefined variable `y`"
+    assert excinfo.value.line == 3
+    assert excinfo.value.column == 23
+
+
+def test_function_cannot_read_callers_function_local():
+    with pytest.raises(NexRuntimeError) as excinfo:
+        run_source(
+            """
+            fn show() -> void {
+                print(x);
+            }
+
+            fn caller() -> void {
+                int x = 2;
+                show();
+            }
+
+            caller();
+            """
+        )
+
+    assert excinfo.value.message == "undefined variable `x`"
+    assert excinfo.value.line == 3
+    assert excinfo.value.column == 23
+
+
 def test_allows_overloads_with_same_name_and_different_arity(capsys):
     run_source(
         """
@@ -582,7 +806,46 @@ def test_builtin_print_still_accepts_any_supported_value_type(capsys):
     )
 
     captured = capsys.readouterr()
-    assert captured.out == "1\nhello\nTrue\n"
+    assert captured.out == "1\nhello\ntrue\n"
+
+
+def test_builtin_print_formats_arrays_with_nex_value_rendering(capsys):
+    interpreter = Interpreter()
+    interpreter.run(parse_source("array<int> xs; array<str> names;"))
+    xs = interpreter.env.lookup("xs")
+    names = interpreter.env.lookup("names")
+    xs.storage = [1, 2, 3]
+    names.storage = ["Ada", "Grace"]
+
+    interpreter.run(parse_source("print(xs); print(names);"))
+
+    captured = capsys.readouterr()
+    assert captured.out == '[1, 2, 3]\n["Ada", "Grace"]\n'
+
+
+def test_rejects_void_as_print_argument(capsys):
+    with pytest.raises(NexRuntimeError) as excinfo:
+        run_source('print(print("inner"));')
+
+    captured = capsys.readouterr()
+    assert captured.out == "inner\n"
+    assert (
+        excinfo.value.message
+        == "no overload of function `print` matches argument types (void)"
+    )
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 1
+
+
+def test_rejects_void_equality(capsys):
+    with pytest.raises(NexRuntimeError) as excinfo:
+        run_source('bool b = print("a") == print("b");')
+
+    captured = capsys.readouterr()
+    assert captured.out == "a\nb\n"
+    assert excinfo.value.message == "operator `==` does not support void operands"
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 21
 
 
 def test_rejects_nonvoid_function_that_falls_through_in_statement_position():

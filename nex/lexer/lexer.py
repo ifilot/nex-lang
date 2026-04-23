@@ -89,11 +89,23 @@ class Lexer:
             else:
                 self._add_token(TokenType.MINUS, c)
         elif c == "*":
-            self._add_token(TokenType.STAR, c)
+            if self._peek() == "=":
+                self._advance()
+                self._add_token(TokenType.STAREQ, "*=")
+            else:
+                self._add_token(TokenType.STAR, c)
         elif c == "^":
-            self._add_token(TokenType.CARET, c)
+            if self._peek() == "=":
+                self._advance()
+                self._add_token(TokenType.CARETEQ, "^=")
+            else:
+                self._add_token(TokenType.CARET, c)
         elif c == "/":
-            self._add_token(TokenType.SLASH, c)
+            if self._peek() == "=":
+                self._advance()
+                self._add_token(TokenType.SLASHEQ, "/=")
+            else:
+                self._add_token(TokenType.SLASH, c)
         elif c == "%":
             self._add_token(TokenType.PERCENT, c)
         elif c == "|" and self._peek() == "|":

@@ -46,7 +46,7 @@ def test_cli_reports_missing_closing_paren_to_stderr_and_returns_nonzero(
 
     assert exit_code == 1
     assert captured.out == ""
-    assert captured.err == "parse error: line 1, column 14: expected expression\n"
+    assert captured.err == "parse error: line 1, column 14: expect ')'\n"
 
 
 def test_cli_reports_undefined_variable_as_runtime_error(tmp_path, capsys):

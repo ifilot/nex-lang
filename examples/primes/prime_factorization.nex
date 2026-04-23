@@ -13,10 +13,10 @@ fn factorize(int n) -> void {
             }
             print_inline(divisor);
             first = false;
-            n = n / divisor;
+            n /= divisor;
         }
 
-        divisor = divisor + 1;
+        divisor += 1;
     }
 
     if (n > 1) {
