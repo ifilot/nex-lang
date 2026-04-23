@@ -36,6 +36,13 @@ not contain two competing bindings for the same name. Shadowing a variable in a
 nested scope is allowed, because the nested block is a distinct environment
 with its own lifetime.
 
+For example, this is invalid because both declarations live in the same block:
+
+```nex
+int score = 10;
+int score = 20;
+```
+
 ## Assignment lookup
 
 Assignments search outward through enclosing scopes and update the nearest
@@ -43,11 +50,27 @@ matching binding. Variable reads also search outward through enclosing scopes.
 This is a simple but important rule: lookup starts locally and only falls back
 to outer scopes if the current one has no matching name.
 
+```nex
+int total = 1;
+
+{
+    total = total + 2;
+    print(total);
+}
+
+print(total);
+```
+
+This prints:
+
+```text
+3
+3
+```
+
 Assigning to an undefined variable is an error, and reading an undefined
 variable is a runtime error. These checks keep the environment disciplined and
 prevent names from appearing "by accident" during execution.
-
-
 ## For-loop scope
 
 The current interpreter gives each `for` loop its own scope.

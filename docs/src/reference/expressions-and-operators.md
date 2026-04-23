@@ -43,6 +43,13 @@ Binary operators at the same precedence level associate from left to right.
 This precedence structure is a compact way of saying which expression trees the
 parser is supposed to build when several operators appear together.
 
+For example:
+
+```nex
+print(2 + 3 * 4);
+print((2 + 3) * 4);
+```
+
 For comparison and equality operators, this left-to-right rule also applies to
 chains. For example, `1 < 2 < 3` is parsed as `(1 < 2) < 3`, not as a special
 "between" form. Since `1 < 2` produces a `bool`, the second `<` then attempts
@@ -125,6 +132,13 @@ Binary `+` supports:
 Mixed-type addition is not allowed.
 The interpreter does not try to guess what you meant by combining unrelated
 types. Instead, it reports a runtime error.
+
+Examples:
+
+```nex
+print(3 + 4);
+print("Hello, " + "NEX");
+```
 
 ## Comparisons
 

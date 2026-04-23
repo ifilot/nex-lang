@@ -40,6 +40,9 @@ jobs:
       - name: Run ASCII-only check
         run: python scripts/check_ascii.py
 
+      - name: Check generated grammar diagrams
+        run: python scripts/generate_grammar_diagrams.py --check
+
       - name: Run unit tests
         run: python -m pytest -q tests
 

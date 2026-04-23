@@ -39,10 +39,12 @@ and end.
 An `if` statement requires a boolean condition.
 
 ```nex
-if (x < 10) {
-    print("small");
+int temperature = 18;
+
+if (temperature < 20) {
+    print("cool");
 } else {
-    print("large");
+    print("warm");
 }
 ```
 
@@ -105,10 +107,13 @@ The initializer and iteration clauses reuse statement-like forms, but they do
 not carry their own trailing semicolons. The semicolons inside the `for (...)`
 header already separate the three clauses.
 
-For example:
+These clauses may also use expression forms, though that is usually most useful
+when the expression has a side effect. For example:
 
 ```nex
-for (1 + 2; i < 3; i + 1) {
+int i = 0;
+
+for (print_inline("start "); i < 3; print_inline(".")) {
     print(i);
     i = i + 1;
 }

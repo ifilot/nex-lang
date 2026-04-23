@@ -1,0 +1,19 @@
+#
+# Print the Collatz sequence for a starting value.
+# Even values are halved; odd values are transformed with 3n + 1.
+#
+fn collatz_step(int n) -> int {
+    if (n % 2 == 0) {
+        return n / 2;
+    }
+
+    return 3 * n + 1;
+}
+
+int value = 19;
+print(value);
+
+while (value != 1) {
+    value = collatz_step(value);
+    print(value);
+}

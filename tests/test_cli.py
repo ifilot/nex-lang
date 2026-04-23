@@ -154,3 +154,60 @@ def test_cli_ast_command_reports_parse_errors(tmp_path, capsys):
     assert exit_code == 1
     assert captured.out == ""
     assert captured.err == "parse error: line 1, column 9: expect ';'\n"
+
+
+def test_cli_times_flag_prints_stage_timings_after_running_program(tmp_path, capsys):
+    source_file = tmp_path / "program.nex"
+    source_file.write_text('print("hi");', encoding="utf-8")
+
+    exit_code = main(["--times", str(source_file)])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert captured.err == ""
+    assert captured.out.startswith("hi\n\nExecution Times\n")
+    assert "Stage" in captured.out
+    assert "Time" in captured.out
+    assert "Lexer" in captured.out
+    assert "Parser" in captured.out
+    assert "Interpreter" in captured.out
+    assert "Total" in captured.out
+
+
+def test_cli_run_times_flag_prints_stage_timings_after_running_program(
+    tmp_path, capsys
+):
+    source_file = tmp_path / "program.nex"
+    source_file.write_text("print(1);", encoding="utf-8")
+
+    exit_code = main(["run", "--times", str(source_file)])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert captured.err == ""
+    assert captured.out.startswith("1\n\nExecution Times\n")
+
+
+def test_cli_color_flag_prints_colored_stage_timings(tmp_path, capsys):
+    source_file = tmp_path / "program.nex"
+    source_file.write_text("print(1);", encoding="utf-8")
+
+    exit_code = main(["--times", "--color", str(source_file)])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert captured.err == ""
+    assert "\x1b[" in captured.out
+    assert "Execution Times" in captured.out
+
+
+def test_cli_short_color_flag_prints_colored_stage_timings(tmp_path, capsys):
+    source_file = tmp_path / "program.nex"
+    source_file.write_text("print(1);", encoding="utf-8")
+
+    exit_code = main(["run", "--times", "-c", str(source_file)])
+    captured = capsys.readouterr()
+
+    assert exit_code == 0
+    assert captured.err == ""
+    assert "\x1b[" in captured.out

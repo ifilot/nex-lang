@@ -1,0 +1,31 @@
+#
+# Search upward until the next prime is found.
+# Demonstrates a function that keeps refining a candidate inside a `while` loop.
+#
+fn is_prime(int n) -> bool {
+    if (n < 2) {
+        return false;
+    }
+
+    for (int divisor = 2; divisor * divisor <= n; divisor = divisor + 1) {
+        if (n % divisor == 0) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+fn next_prime(int start) -> int {
+    int candidate = start + 1;
+
+    while (!is_prime(candidate)) {
+        candidate = candidate + 1;
+    }
+
+    return candidate;
+}
+
+print(next_prime(10));
+print(next_prime(100));
+print(next_prime(250));

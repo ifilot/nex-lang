@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="396" height="130" viewBox="0 0 396 130" role="img" aria-labelledby="title-assignment_core desc-assignment_core">
+<title id="title-assignment_core">&lt;assignment-core&gt; syntax diagram</title>
+<desc id="desc-assignment_core">Syntax diagram for &lt;assignment-core&gt; generated from the grammar reference.</desc>
+<rect x="0.5" y="0.5" width="395" height="129" rx="18" fill="#fbfcfe" stroke="#d6deea"/>
+<text x="28" y="28" fill="#14324a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" font-weight="700">&lt;assignment-core&gt;</text>
+<line x1="28" y1="70" x2="46" y2="70" stroke="#6a7d95" stroke-width="2"/>
+<rect x="46" y="56" width="114" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
+<text x="103.0" y="75" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;identifier&gt;</text>
+<line x1="160" y1="70" x2="178" y2="70" stroke="#6a7d95" stroke-width="2"/>
+<rect x="178" y="56" width="40" height="28" rx="8" fill="#eef7ea" stroke="#8fbc8f" stroke-width="1.5"/>
+<text x="198.0" y="75" text-anchor="middle" fill="#204b24" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">=</text>
+<line x1="218" y1="70" x2="236" y2="70" stroke="#6a7d95" stroke-width="2"/>
+<rect x="236" y="56" width="114" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
+<text x="293.0" y="75" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;expression&gt;</text>
+<line x1="350" y1="70" x2="368" y2="70" stroke="#6a7d95" stroke-width="2"/>
+<circle cx="22" cy="70" r="4.5" fill="#6a7d95"/>
+<circle cx="374" cy="70" r="4.5" fill="#6a7d95"/>
+</svg>

@@ -63,6 +63,13 @@ Parse errors describe violations of the grammar, such as:
 These are errors in the *shape* of the program. They tell you that the parser
 cannot build a meaningful abstract syntax tree from the given tokens.
 
+For example, this program is missing a semicolon after the declaration:
+
+```nex
+int x = 1
+print(x);
+```
+
 ## Runtime errors
 
 Runtime errors describe programs that are syntactically valid but semantically
@@ -80,6 +87,14 @@ invalid at execution time, such as:
 These are errors in the *meaning* of the program as it runs. They are
 especially valuable in a small interpreter because they show how a language can
 stay simple while still enforcing strong semantic rules.
+
+For example, this program is syntactically valid but tries to assign a string
+to an integer variable:
+
+```nex
+int count = 3;
+count = "three";
+```
 
 ## Stability note
 

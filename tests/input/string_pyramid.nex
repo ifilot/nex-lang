@@ -1,0 +1,25 @@
+#
+# Build strings incrementally inside helper functions.
+# Demonstrates loops that return strings and a caller that combines multiple helpers.
+#
+fn repeat(str chunk, int count) -> str {
+    str out = "";
+
+    for (int i = 0; i < count; i = i + 1) {
+        out = out + chunk;
+    }
+
+    return out;
+}
+
+fn status(int width) -> str {
+    if (width >= 3) {
+        return "wide";
+    }
+
+    return "narrow";
+}
+
+for (int width = 1; width <= 4; width = width + 1) {
+    print(repeat("#", width) + " " + status(width));
+}

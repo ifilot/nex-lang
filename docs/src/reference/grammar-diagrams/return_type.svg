@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="194" height="180" viewBox="0 0 194 180" role="img" aria-labelledby="title-return_type desc-return_type">
+<title id="title-return_type">&lt;return-type&gt; syntax diagram</title>
+<desc id="desc-return_type">Syntax diagram for &lt;return-type&gt; generated from the grammar reference.</desc>
+<rect x="0.5" y="0.5" width="193" height="179" rx="18" fill="#fbfcfe" stroke="#d6deea"/>
+<text x="28" y="28" fill="#14324a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" font-weight="700">&lt;return-type&gt;</text>
+<line x1="28" y1="70" x2="46" y2="70" stroke="#6a7d95" stroke-width="2"/>
+<rect x="64" y="56" width="66" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
+<text x="97.0" y="75" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;type&gt;</text>
+<line x1="46" y1="70" x2="64" y2="70" stroke="#6a7d95" stroke-width="2"/>
+<line x1="130" y1="70" x2="148" y2="70" stroke="#6a7d95" stroke-width="2"/>
+<rect x="64" y="106" width="50" height="28" rx="8" fill="#eef7ea" stroke="#8fbc8f" stroke-width="1.5"/>
+<text x="89.0" y="125" text-anchor="middle" fill="#204b24" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">void</text>
+<path d="M 46 70 L 46 114 A 6 6 0 0 0 52 120 L 64 120" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 114 120 L 142 120 A 6 6 0 0 0 148 114 L 148 70" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<line x1="148" y1="70" x2="166" y2="70" stroke="#6a7d95" stroke-width="2"/>
+<circle cx="22" cy="70" r="4.5" fill="#6a7d95"/>
+<circle cx="172" cy="70" r="4.5" fill="#6a7d95"/>
+</svg>

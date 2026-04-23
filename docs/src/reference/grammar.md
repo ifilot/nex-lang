@@ -93,6 +93,136 @@ forms in the general grammar.
 <arguments>         ::= <expression> ("," <expression>)*
 ```
 
+<!-- GENERATED GRAMMAR DIAGRAMS START -->
+
+## Syntax diagrams
+
+### `<program>`
+
+![Syntax diagram for <program>](grammar-diagrams/program.svg)
+
+### `<statement>`
+
+![Syntax diagram for <statement>](grammar-diagrams/statement.svg)
+
+### `<typed-decl>`
+
+![Syntax diagram for <typed-decl>](grammar-diagrams/typed_decl.svg)
+
+### `<typed-decl-core>`
+
+![Syntax diagram for <typed-decl-core>](grammar-diagrams/typed_decl_core.svg)
+
+### `<type>`
+
+![Syntax diagram for <type>](grammar-diagrams/type.svg)
+
+### `<function-decl>`
+
+![Syntax diagram for <function-decl>](grammar-diagrams/function_decl.svg)
+
+### `<parameters>`
+
+![Syntax diagram for <parameters>](grammar-diagrams/parameters.svg)
+
+### `<parameter>`
+
+![Syntax diagram for <parameter>](grammar-diagrams/parameter.svg)
+
+### `<return-type>`
+
+![Syntax diagram for <return-type>](grammar-diagrams/return_type.svg)
+
+### `<return-stmt>`
+
+![Syntax diagram for <return-stmt>](grammar-diagrams/return_stmt.svg)
+
+### `<if-stmt>`
+
+![Syntax diagram for <if-stmt>](grammar-diagrams/if_stmt.svg)
+
+### `<while-stmt>`
+
+![Syntax diagram for <while-stmt>](grammar-diagrams/while_stmt.svg)
+
+### `<for-stmt>`
+
+![Syntax diagram for <for-stmt>](grammar-diagrams/for_stmt.svg)
+
+### `<for-init>`
+
+![Syntax diagram for <for-init>](grammar-diagrams/for_init.svg)
+
+### `<for-iter>`
+
+![Syntax diagram for <for-iter>](grammar-diagrams/for_iter.svg)
+
+### `<block>`
+
+![Syntax diagram for <block>](grammar-diagrams/block.svg)
+
+### `<assignment-stmt>`
+
+![Syntax diagram for <assignment-stmt>](grammar-diagrams/assignment_stmt.svg)
+
+### `<assignment-core>`
+
+![Syntax diagram for <assignment-core>](grammar-diagrams/assignment_core.svg)
+
+### `<expr-stmt>`
+
+![Syntax diagram for <expr-stmt>](grammar-diagrams/expr_stmt.svg)
+
+### `<expression>`
+
+![Syntax diagram for <expression>](grammar-diagrams/expression.svg)
+
+### `<logical-or>`
+
+![Syntax diagram for <logical-or>](grammar-diagrams/logical_or.svg)
+
+### `<logical-and>`
+
+![Syntax diagram for <logical-and>](grammar-diagrams/logical_and.svg)
+
+### `<comparison>`
+
+![Syntax diagram for <comparison>](grammar-diagrams/comparison.svg)
+
+### `<term>`
+
+![Syntax diagram for <term>](grammar-diagrams/term.svg)
+
+### `<factor>`
+
+![Syntax diagram for <factor>](grammar-diagrams/factor.svg)
+
+### `<unary>`
+
+![Syntax diagram for <unary>](grammar-diagrams/unary.svg)
+
+### `<postfix>`
+
+![Syntax diagram for <postfix>](grammar-diagrams/postfix.svg)
+
+### `<call-suffix>`
+
+![Syntax diagram for <call-suffix>](grammar-diagrams/call_suffix.svg)
+
+### `<postfix-update>`
+
+![Syntax diagram for <postfix-update>](grammar-diagrams/postfix_update.svg)
+
+### `<primary>`
+
+![Syntax diagram for <primary>](grammar-diagrams/primary.svg)
+
+### `<arguments>`
+
+![Syntax diagram for <arguments>](grammar-diagrams/arguments.svg)
+
+<!-- GENERATED GRAMMAR DIAGRAMS END -->
+
 ## Notes
 
 - Function calls are postfix expressions, not statements in their own right.

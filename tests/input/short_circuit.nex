@@ -1,0 +1,18 @@
+#
+# Logical short-circuiting with visible side effects.
+# Demonstrates that `&&` and `||` can skip evaluating the right-hand side.
+#
+fn mark_true(str label) -> bool {
+    print(label);
+    return true;
+}
+
+fn mark_false(str label) -> bool {
+    print(label);
+    return false;
+}
+
+print(mark_false("left false") && mark_true("right true"));
+print(mark_true("left true") || mark_false("right false"));
+print(mark_true("first") && mark_true("second"));
+print(mark_false("fallback") || mark_true("rescue"));

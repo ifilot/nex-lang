@@ -1,0 +1,36 @@
+#
+# Deliberately expensive prime search.
+# Uses a naive primality test that tries every smaller divisor instead of
+# stopping near the square root, so the runtime grows quickly.
+#
+fn is_prime_naive(int n) -> bool {
+    if (n < 2) {
+        return false;
+    }
+
+    for (int divisor = 2; divisor < n; divisor = divisor + 1) {
+        if (n % divisor == 0) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+fn count_primes(int limit) -> int {
+    int count = 0;
+
+    for (int candidate = 2; candidate <= limit; candidate = candidate + 1) {
+        if (is_prime_naive(candidate)) {
+            count = count + 1;
+        }
+    }
+
+    return count;
+}
+
+int limit = 3000;
+
+print("counting primes up to");
+print(limit);
+print(count_primes(limit));

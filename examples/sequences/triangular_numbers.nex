@@ -1,0 +1,10 @@
+#
+# Print the first few triangular numbers.
+# Each step adds the next integer onto a running total.
+#
+int total = 0;
+
+for (int n = 1; n <= 10; n = n + 1) {
+    total = total + n;
+    print(total);
+}

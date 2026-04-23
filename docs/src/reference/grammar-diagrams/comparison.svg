@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="372" height="402" viewBox="0 0 372 402" role="img" aria-labelledby="title-comparison desc-comparison">
+<title id="title-comparison">&lt;comparison&gt; syntax diagram</title>
+<desc id="desc-comparison">Syntax diagram for &lt;comparison&gt; generated from the grammar reference.</desc>
+<rect x="0.5" y="0.5" width="371" height="401" rx="18" fill="#fbfcfe" stroke="#d6deea"/>
+<text x="28" y="28" fill="#14324a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" font-weight="700">&lt;comparison&gt;</text>
+<line x1="28" y1="92" x2="46" y2="92" stroke="#6a7d95" stroke-width="2"/>
+<rect x="46" y="78" width="66" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
+<text x="79.0" y="97" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;term&gt;</text>
+<line x1="112" y1="92" x2="130" y2="92" stroke="#6a7d95" stroke-width="2"/>
+<line x1="130" y1="92" x2="148" y2="92" stroke="#6a7d95" stroke-width="2"/>
+<line x1="308" y1="92" x2="326" y2="92" stroke="#6a7d95" stroke-width="2"/>
+<rect x="166" y="78" width="40" height="28" rx="8" fill="#eef7ea" stroke="#8fbc8f" stroke-width="1.5"/>
+<text x="186.0" y="97" text-anchor="middle" fill="#204b24" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;</text>
+<line x1="148" y1="92" x2="166" y2="92" stroke="#6a7d95" stroke-width="2"/>
+<line x1="206" y1="92" x2="224" y2="92" stroke="#6a7d95" stroke-width="2"/>
+<rect x="166" y="128" width="40" height="28" rx="8" fill="#eef7ea" stroke="#8fbc8f" stroke-width="1.5"/>
+<text x="186.0" y="147" text-anchor="middle" fill="#204b24" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&gt;</text>
+<path d="M 148 92 L 148 136 A 6 6 0 0 0 154 142 L 166 142" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 206 142 L 218 142 A 6 6 0 0 0 224 136 L 224 92" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<rect x="166" y="178" width="40" height="28" rx="8" fill="#eef7ea" stroke="#8fbc8f" stroke-width="1.5"/>
+<text x="186.0" y="197" text-anchor="middle" fill="#204b24" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;=</text>
+<path d="M 148 92 L 148 186 A 6 6 0 0 0 154 192 L 166 192" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 206 192 L 218 192 A 6 6 0 0 0 224 186 L 224 92" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<rect x="166" y="228" width="40" height="28" rx="8" fill="#eef7ea" stroke="#8fbc8f" stroke-width="1.5"/>
+<text x="186.0" y="247" text-anchor="middle" fill="#204b24" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&gt;=</text>
+<path d="M 148 92 L 148 236 A 6 6 0 0 0 154 242 L 166 242" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 206 242 L 218 242 A 6 6 0 0 0 224 236 L 224 92" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<rect x="166" y="278" width="40" height="28" rx="8" fill="#eef7ea" stroke="#8fbc8f" stroke-width="1.5"/>
+<text x="186.0" y="297" text-anchor="middle" fill="#204b24" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">==</text>
+<path d="M 148 92 L 148 286 A 6 6 0 0 0 154 292 L 166 292" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 206 292 L 218 292 A 6 6 0 0 0 224 286 L 224 92" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<rect x="166" y="328" width="40" height="28" rx="8" fill="#eef7ea" stroke="#8fbc8f" stroke-width="1.5"/>
+<text x="186.0" y="347" text-anchor="middle" fill="#204b24" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">!=</text>
+<path d="M 148 92 L 148 336 A 6 6 0 0 0 154 342 L 166 342" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 206 342 L 218 342 A 6 6 0 0 0 224 336 L 224 92" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<line x1="224" y1="92" x2="242" y2="92" stroke="#6a7d95" stroke-width="2"/>
+<rect x="242" y="78" width="66" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
+<text x="275.0" y="97" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;term&gt;</text>
+<path d="M 130 92 L 130 72 A 6 6 0 0 1 136 66 L 320 66 A 6 6 0 0 1 326 72 L 326 92" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<polygon points="164,61 154,66 164,71" fill="#6a7d95"/>
+<line x1="326" y1="92" x2="344" y2="92" stroke="#6a7d95" stroke-width="2"/>
+<circle cx="22" cy="92" r="4.5" fill="#6a7d95"/>
+<circle cx="350" cy="92" r="4.5" fill="#6a7d95"/>
+</svg>

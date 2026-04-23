@@ -60,6 +60,12 @@ directly produce values without first looking them up from a variable:
 - string literals such as `"hello"`
 - boolean literals `true` and `false`
 
+```nex
+print(42);
+print("hello");
+print(true);
+```
+
 ## Punctuation and operators
 
 The lexer recognizes the following punctuation and operators. Together, they
@@ -71,3 +77,13 @@ flow:
 - `&&` `||`
 - `<` `>` `<=` `>=` `==` `!=`
 - `!`
+
+Example:
+
+```nex
+int score = 10;
+
+if (score >= 10 && score != 15) {
+    print("good");
+}
+```

@@ -53,7 +53,12 @@ lexicographically.
 
 ```nex
 bool ready = true;
-print(!ready);
+
+if (!ready) {
+    print("wait");
+} else {
+    print("go");
+}
 ```
 
 Conditions in `if`, `while`, and `for` must evaluate to `bool`. NEX does not
@@ -83,6 +88,7 @@ Assignment updates an existing variable.
 ```nex
 int x = 1;
 x = x + 2;
+print(x);
 ```
 
 Assignments must preserve the declared variable type. Assigning a `str` to an

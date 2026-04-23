@@ -1,0 +1,39 @@
+#
+# Print the prime factorization of a number.
+# Each factor is emitted inline as soon as it is discovered, so no array is needed.
+#
+fn factorize(int n) -> void {
+    int divisor = 2;
+    bool first = true;
+
+    while (divisor * divisor <= n) {
+        while (n % divisor == 0) {
+            if (!first) {
+                print_inline(", ");
+            }
+            print_inline(divisor);
+            first = false;
+            n = n / divisor;
+        }
+
+        divisor = divisor + 1;
+    }
+
+    if (n > 1) {
+        if (!first) {
+            print_inline(", ");
+        }
+        print_inline(n);
+    }
+
+    print("");
+}
+
+print("factors of 84");
+factorize(84);
+
+print("factors of 97");
+factorize(97);
+
+print("factors of 360");
+factorize(360);

@@ -1,9 +1,0 @@
-#
-# Simple `while` loop acting like a counting loop.
-# Useful when the update step needs to stay inside the loop body.
-#
-int x = 0;
-while(x < 10) {
-    print(x);
-    x = x + 1;
-}

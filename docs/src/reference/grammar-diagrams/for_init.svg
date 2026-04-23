@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="282" height="280" viewBox="0 0 282 280" role="img" aria-labelledby="title-for_init desc-for_init">
+<title id="title-for_init">&lt;for-init&gt; syntax diagram</title>
+<desc id="desc-for_init">Syntax diagram for &lt;for-init&gt; generated from the grammar reference.</desc>
+<rect x="0.5" y="0.5" width="281" height="279" rx="18" fill="#fbfcfe" stroke="#d6deea"/>
+<text x="28" y="28" fill="#14324a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" font-weight="700">&lt;for-init&gt;</text>
+<line x1="28" y1="70" x2="46" y2="70" stroke="#6a7d95" stroke-width="2"/>
+<rect x="64" y="56" width="58" height="28" rx="8" fill="#fff4df" stroke="#f0c16a" stroke-width="1.5"/>
+<text x="93.0" y="75" text-anchor="middle" fill="#7a4d00" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">empty</text>
+<line x1="46" y1="70" x2="64" y2="70" stroke="#6a7d95" stroke-width="2"/>
+<line x1="122" y1="70" x2="236" y2="70" stroke="#6a7d95" stroke-width="2"/>
+<rect x="64" y="106" width="154" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
+<text x="141.0" y="125" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;typed-decl-core&gt;</text>
+<path d="M 46 70 L 46 114 A 6 6 0 0 0 52 120 L 64 120" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 218 120 L 230 120 A 6 6 0 0 0 236 114 L 236 70" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<rect x="64" y="156" width="154" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
+<text x="141.0" y="175" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;assignment-core&gt;</text>
+<path d="M 46 70 L 46 164 A 6 6 0 0 0 52 170 L 64 170" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 218 170 L 230 170 A 6 6 0 0 0 236 164 L 236 70" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<rect x="64" y="206" width="114" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
+<text x="121.0" y="225" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;expression&gt;</text>
+<path d="M 46 70 L 46 214 A 6 6 0 0 0 52 220 L 64 220" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 178 220 L 230 220 A 6 6 0 0 0 236 214 L 236 70" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<line x1="236" y1="70" x2="254" y2="70" stroke="#6a7d95" stroke-width="2"/>
+<circle cx="22" cy="70" r="4.5" fill="#6a7d95"/>
+<circle cx="260" cy="70" r="4.5" fill="#6a7d95"/>
+</svg>
