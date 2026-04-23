@@ -1,0 +1,30 @@
+#
+# Generate the first N primes without storing them in an array.
+# The program keeps only the current candidate and the count found so far.
+#
+fn is_prime(int n) -> bool {
+    if (n < 2) {
+        return false;
+    }
+
+    for (int divisor = 2; divisor * divisor <= n; divisor += 1) {
+        if (n % divisor == 0) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+int target = 12;
+int found = 0;
+int candidate = 2;
+
+while (found < target) {
+    if (is_prime(candidate)) {
+        print(candidate);
+        found += 1;
+    }
+
+    candidate += 1;
+}

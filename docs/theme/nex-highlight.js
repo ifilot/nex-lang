@@ -1,7 +1,7 @@
 (function () {
   function registerNex(hljs) {
     const KEYWORDS = {
-      keyword: "fn return if else while for",
+      keyword: "fn return if else while for array void",
       literal: "true false",
     };
     const STRING = {
@@ -23,8 +23,12 @@
           begin: /\b(int|str|bool)\b/,
         },
         {
+          className: "meta",
+          begin: /\bany\b/,
+        },
+        {
           className: "built_in",
-          begin: /\bprint(?=\s*\()/,
+          begin: /\b(print|print_inline|version|input|intstr|strint|resize|length|reset)(?=\s*\()/,
         },
         {
           className: "title",
@@ -37,11 +41,11 @@
         },
         {
           className: "operator",
-          begin: /==|!=|<=|>=|[+\-*/%<>=!]/,
+          begin: /==|!=|<=|>=|[+\-*/%^<>=!]/,
         },
         {
           className: "punctuation",
-          begin: /[(){};,]/,
+          begin: /[()[\]{};,]/,
         },
       ],
     };
@@ -56,7 +60,7 @@
       window.hljs.registerLanguage("nex", registerNex);
     }
 
-    document.querySelectorAll("pre code.language-nex").forEach((block) => {
+    document.querySelectorAll("code.language-nex").forEach((block) => {
       block.textContent = block.textContent;
       window.hljs.highlightBlock(block);
       block.classList.add("hljs");

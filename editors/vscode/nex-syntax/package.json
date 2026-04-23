@@ -1,0 +1,41 @@
+{
+  "name": "nex-syntax",
+  "displayName": "NEX Syntax",
+  "description": "Syntax highlighting and language configuration for the NEX language.",
+  "version": "0.1.0",
+  "publisher": "local",
+  "license": "MIT",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Programming Languages"
+  ],
+  "icon": "../../../img/nex-lang-logo-128.png",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ifilot/nex-lang.git"
+  },
+  "contributes": {
+    "languages": [
+      {
+        "id": "nex",
+        "aliases": [
+          "NEX",
+          "nex"
+        ],
+        "extensions": [
+          ".nex"
+        ],
+        "configuration": "./language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "nex",
+        "scopeName": "source.nex",
+        "path": "./syntaxes/nex.tmLanguage.json"
+      }
+    ]
+  }
+}

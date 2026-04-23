@@ -1,4 +1,4 @@
-# Lexical Structure
+# Lexical structure
 
 ## Source files
 
@@ -47,8 +47,8 @@ Examples:
 - `_name`
 - `with_internal_underscore`
 
-Keywords such as `fn`, `return`, `void`, `int`, `bool`, `str`, `if`, `else`,
-`while`, `for`, `print`, `true`, and `false` are reserved. They have fixed
+Keywords such as `fn`, `return`, `void`, `int`, `bool`, `str`, `array`, `if`,
+`else`, `while`, `for`, `true`, and `false` are reserved. They have fixed
 meaning in the grammar and therefore cannot be used as identifiers.
 
 ## Literals
@@ -60,6 +60,12 @@ directly produce values without first looking them up from a variable:
 - string literals such as `"hello"`
 - boolean literals `true` and `false`
 
+```nex
+print(42);
+print("hello");
+print(true);
+```
+
 ## Punctuation and operators
 
 The lexer recognizes the following punctuation and operators. Together, they
@@ -67,7 +73,17 @@ define the basic shape of NEX expressions, declarations, blocks, and control
 flow:
 
 - `(` `)` `{` `}` `;`
-- `=` `+` `-` `*` `/` `%`
+- `=` `+=` `-=` `*=` `/=` `^=` `+` `-` `*` `/` `%` `^`
 - `&&` `||`
 - `<` `>` `<=` `>=` `==` `!=`
 - `!`
+
+Example:
+
+```nex
+int score = 10;
+
+if (score >= 10 && score != 15) {
+    print("good");
+}
+```

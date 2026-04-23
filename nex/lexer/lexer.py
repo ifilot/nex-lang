@@ -68,17 +68,44 @@ class Lexer:
         c = self._advance()
 
         if c == "+":
-            self._add_token(TokenType.PLUS, c)
+            if self._peek() == "=":
+                self._advance()
+                self._add_token(TokenType.PLUSEQ, "+=")
+            elif self._peek() == "+":
+                self._advance()
+                self._add_token(TokenType.INC, "++")
+            else:
+                self._add_token(TokenType.PLUS, c)
         elif c == "-":
             if self._peek() == ">":
                 self._advance()
                 self._add_token(TokenType.RETTYPE, "->")
+            elif self._peek() == "=":
+                self._advance()
+                self._add_token(TokenType.MINUSEQ, "-=")
+            elif self._peek() == "-":
+                self._advance()
+                self._add_token(TokenType.DEC, "--")
             else:
                 self._add_token(TokenType.MINUS, c)
         elif c == "*":
-            self._add_token(TokenType.STAR, c)
+            if self._peek() == "=":
+                self._advance()
+                self._add_token(TokenType.STAREQ, "*=")
+            else:
+                self._add_token(TokenType.STAR, c)
+        elif c == "^":
+            if self._peek() == "=":
+                self._advance()
+                self._add_token(TokenType.CARETEQ, "^=")
+            else:
+                self._add_token(TokenType.CARET, c)
         elif c == "/":
-            self._add_token(TokenType.SLASH, c)
+            if self._peek() == "=":
+                self._advance()
+                self._add_token(TokenType.SLASHEQ, "/=")
+            else:
+                self._add_token(TokenType.SLASH, c)
         elif c == "%":
             self._add_token(TokenType.PERCENT, c)
         elif c == "|" and self._peek() == "|":
@@ -117,10 +144,16 @@ class Lexer:
             self._add_token(TokenType.LPAREN, c)
         elif c == ")":
             self._add_token(TokenType.RPAREN, c)
+        elif c == "[":
+            self._add_token(TokenType.LBRACKET, c)
+        elif c == "]":
+            self._add_token(TokenType.RBRACKET, c)
         elif c == "{":
             self._add_token(TokenType.LBRACE, c)
         elif c == "}":
             self._add_token(TokenType.RBRACE, c)
+        elif c == ".":
+            self._add_token(TokenType.DOT, c)
         elif c == ",":
             self._add_token(TokenType.COMMA, c)
         elif c == '"':

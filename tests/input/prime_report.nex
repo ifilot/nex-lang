@@ -1,0 +1,31 @@
+#
+# Small prime classifier.
+# Demonstrates early returns, nested control flow, and function reuse inside a loop.
+#
+fn is_prime(int n) -> bool {
+    if (n < 2) {
+        return false;
+    }
+
+    for (int divisor = 2; divisor * divisor <= n; divisor = divisor + 1) {
+        if (n % divisor == 0) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+fn describe(int n) -> void {
+    print(n);
+
+    if (is_prime(n)) {
+        print("prime");
+    } else {
+        print("composite");
+    }
+}
+
+for (int n = 1; n <= 12; n = n + 1) {
+    describe(n);
+}

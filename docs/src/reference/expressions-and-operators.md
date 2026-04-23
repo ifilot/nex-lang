@@ -1,4 +1,4 @@
-# Expressions And Operators
+# Expressions and operators
 
 ## Overview
 
@@ -8,6 +8,7 @@ Expressions produce values. The current core includes:
 - variable references
 - parenthesized expressions
 - unary expressions
+- postfix expressions
 - binary expressions
 
 Expressions are the computational side of the language. They are the parts of a
@@ -17,26 +18,113 @@ these two operands with an operator?" In the interpreter, expressions are
 evaluated recursively, which is why precedence and grouping rules matter so
 much.
 
+That said, "expression" in NEX does not mean "pure computation only". An
+expression always produces a value, but some expressions may also have side
+effects while they are being evaluated. Function calls are the clearest example:
+`print("hi")` is an expression even though evaluating it writes output. Postfix
+`++` and `--` behave the same way: they produce a value and update a variable
+as part of that evaluation. In other words, NEX currently allows impure
+expressions.
+
 ## Operator precedence
 
 From highest precedence to lowest:
 
 1. primary expressions: literals, variables, parenthesized expressions
-2. unary operators: `-`, `!`
-3. multiplicative operators: `*`, `/`, `%`
-4. additive operators: `+`, `-`
-5. comparison and equality operators: `<`, `>`, `<=`, `>=`, `==`, `!=`
-6. logical AND: `&&`
-7. logical OR: `||`
+2. postfix operators: function call `(...)`, index access `[...]`, method call `.name(...)`, postfix increment `++`, postfix decrement `--`
+3. unary operators: `-`, `!`
+4. exponentiation operator: `^`
+5. multiplicative operators: `*`, `/`, `%`
+6. additive operators: `+`, `-`
+7. comparison and equality operators: `<`, `>`, `<=`, `>=`, `==`, `!=`
+8. logical AND: `&&`
+9. logical OR: `||`
 
 Binary operators at the same precedence level associate from left to right.
 This precedence structure is a compact way of saying which expression trees the
 parser is supposed to build when several operators appear together.
 
+For example:
+
+```nex
+print(2 + 3 * 4);
+print((2 + 3) * 4);
+```
+
 For comparison and equality operators, this left-to-right rule also applies to
 chains. For example, `1 < 2 < 3` is parsed as `(1 < 2) < 3`, not as a special
 "between" form. Since `1 < 2` produces a `bool`, the second `<` then attempts
 to compare `bool` with `int`, which is a runtime error.
+
+Postfix operators bind more tightly than unary operators. For example, `-f()`
+is parsed as `-(f())`, not as `(-f)()`. Exponentiation binds more tightly than
+`*`, `/`, and `%`, so `2 * 3 ^ 2` is parsed as `2 * (3 ^ 2)`. The `^`
+operator associates to the right, which means `2 ^ 3 ^ 2` is parsed as
+`2 ^ (3 ^ 2)`.
+
+## Postfix operators
+
+The current postfix operators are:
+
+- function call: `name(...)`
+- index access: `arr[i]`
+- method call: `arr.name(...)`
+- postfix increment: `x++`
+- postfix decrement: `x--`
+
+Function calls are described in more detail in
+[Functions And Return](functions-and-return.md). The key idea here is that
+postfix operators attach to an already-parsed primary expression and therefore
+have the highest operator precedence in the language core.
+
+### Index access
+
+Index access reads a value from an indexed receiver expression.
+
+```nex
+int first = arr[0];
+int last = arr[-1];
+```
+
+Negative indices count from the back. This means `arr[-1]` refers to the last
+element, `arr[-2]` to the second-to-last element, and so on.
+
+### Method calls
+
+Method-style calls are postfix expressions attached to a receiver:
+
+```nex
+arr.resize(100);
+arr.reset();
+int size = arr.length();
+```
+
+This syntax is currently used for array operations such as resizing, resetting,
+and length queries.
+
+Method calls in NEX use a uniform function call style. That means the receiver
+expression becomes the first argument of an ordinary function call. For
+example, `arr.length()` behaves like `length(arr)`, and `arr.resize(100)`
+behaves like `resize(arr, 100)`. In the same way, `arr.reset()` behaves like
+`reset(arr)`.
+
+### Postfix increment and decrement
+
+`++` and `--` currently require a variable operand of type `int`.
+
+Examples:
+
+```nex
+int i = 1;
+print(i++);
+print(i);
+```
+
+The first `print` outputs the original value. After that evaluation finishes,
+the variable has been updated by one. `--` works the same way but subtracts one.
+
+Because these operators update program state while also producing a value, they
+are impure expressions rather than pure arithmetic.
 
 ## Unary operators
 
@@ -60,6 +148,18 @@ Using unary operators with the wrong type is a runtime error.
 
 ## Arithmetic operators
 
+### Exponentiation
+
+Binary `^` requires `int` operands on both sides.
+
+```nex
+print(2 ^ 5);
+print(2 ^ 100);
+```
+
+The exponent must be non-negative. Negative exponents are rejected because the
+current arithmetic core only supports integer results.
+
 `-`, `*`, `/`, and `%` require `int` operands on both sides.
 
 ```nex
@@ -81,6 +181,13 @@ Binary `+` supports:
 Mixed-type addition is not allowed.
 The interpreter does not try to guess what you meant by combining unrelated
 types. Instead, it reports a runtime error.
+
+Examples:
+
+```nex
+print(3 + 4);
+print("Hello, " + "NEX");
+```
 
 ## Comparisons
 

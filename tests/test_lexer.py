@@ -50,13 +50,44 @@ def test_lexes_keywords_and_punctuation():
         TokenType.NUMBER,
         TokenType.RPAREN,
         TokenType.LBRACE,
-        TokenType.PRINT,
+        TokenType.IDENTIFIER,
         TokenType.LPAREN,
         TokenType.IDENTIFIER,
         TokenType.RPAREN,
         TokenType.SEMICOLON,
         TokenType.RBRACE,
         TokenType.FALSE,
+        TokenType.EOF,
+    ]
+
+
+def test_lexes_array_type_tokens():
+    assert token_types("array<int> xs; array<str> ys; xs[-1]; xs.resize(10);") == [
+        TokenType.ARRAY,
+        TokenType.LT,
+        TokenType.INT,
+        TokenType.GT,
+        TokenType.IDENTIFIER,
+        TokenType.SEMICOLON,
+        TokenType.ARRAY,
+        TokenType.LT,
+        TokenType.STR,
+        TokenType.GT,
+        TokenType.IDENTIFIER,
+        TokenType.SEMICOLON,
+        TokenType.IDENTIFIER,
+        TokenType.LBRACKET,
+        TokenType.MINUS,
+        TokenType.NUMBER,
+        TokenType.RBRACKET,
+        TokenType.SEMICOLON,
+        TokenType.IDENTIFIER,
+        TokenType.DOT,
+        TokenType.IDENTIFIER,
+        TokenType.LPAREN,
+        TokenType.NUMBER,
+        TokenType.RPAREN,
+        TokenType.SEMICOLON,
         TokenType.EOF,
     ]
 
@@ -76,7 +107,7 @@ def test_lexes_arithmetic_operators():
     """
     Test that the lexer correctly identifies arithmetic operators.
     """
-    assert token_types("x = 1 + 2 * 3 / 4 % 5 - 6;") == [
+    assert token_types("x = 1 + 2 * 3 ^ 2 / 4 % 5 - 6;") == [
         TokenType.IDENTIFIER,
         TokenType.EQ,
         TokenType.NUMBER,
@@ -84,12 +115,69 @@ def test_lexes_arithmetic_operators():
         TokenType.NUMBER,
         TokenType.STAR,
         TokenType.NUMBER,
+        TokenType.CARET,
+        TokenType.NUMBER,
         TokenType.SLASH,
         TokenType.NUMBER,
         TokenType.PERCENT,
         TokenType.NUMBER,
         TokenType.MINUS,
         TokenType.NUMBER,
+        TokenType.SEMICOLON,
+        TokenType.EOF,
+    ]
+
+
+def test_lexes_compound_and_increment_operators():
+    """
+    Test that the lexer correctly identifies compound assignment and
+    increment/decrement operators.
+    """
+    assert token_types("x += 1; y -= 2; z *= 3; q ^= 5; w /= 4; i++; j--;") == [
+        TokenType.IDENTIFIER,
+        TokenType.PLUSEQ,
+        TokenType.NUMBER,
+        TokenType.SEMICOLON,
+        TokenType.IDENTIFIER,
+        TokenType.MINUSEQ,
+        TokenType.NUMBER,
+        TokenType.SEMICOLON,
+        TokenType.IDENTIFIER,
+        TokenType.STAREQ,
+        TokenType.NUMBER,
+        TokenType.SEMICOLON,
+        TokenType.IDENTIFIER,
+        TokenType.CARETEQ,
+        TokenType.NUMBER,
+        TokenType.SEMICOLON,
+        TokenType.IDENTIFIER,
+        TokenType.SLASHEQ,
+        TokenType.NUMBER,
+        TokenType.SEMICOLON,
+        TokenType.IDENTIFIER,
+        TokenType.INC,
+        TokenType.SEMICOLON,
+        TokenType.IDENTIFIER,
+        TokenType.DEC,
+        TokenType.SEMICOLON,
+        TokenType.EOF,
+    ]
+
+
+def test_prefers_longer_plus_and_minus_tokens():
+    """
+    Test that the lexer prefers the longest valid token for + and - prefixes.
+    """
+    assert token_types("a+++b; c---d;") == [
+        TokenType.IDENTIFIER,
+        TokenType.INC,
+        TokenType.PLUS,
+        TokenType.IDENTIFIER,
+        TokenType.SEMICOLON,
+        TokenType.IDENTIFIER,
+        TokenType.DEC,
+        TokenType.MINUS,
+        TokenType.IDENTIFIER,
         TokenType.SEMICOLON,
         TokenType.EOF,
     ]
@@ -161,7 +249,7 @@ def test_tracks_line_and_column_numbers():
         (TokenType.EQ, 1, 7),
         (TokenType.NUMBER, 1, 9),
         (TokenType.SEMICOLON, 1, 10),
-        (TokenType.PRINT, 2, 1),
+        (TokenType.IDENTIFIER, 2, 1),
         (TokenType.LPAREN, 2, 6),
         (TokenType.STRING, 2, 7),
         (TokenType.RPAREN, 2, 11),
@@ -174,12 +262,50 @@ def test_tracks_line_and_column_numbers():
     ]
 
 
+def test_tracks_line_and_column_numbers_for_new_two_character_operators():
+    """
+    Test that the lexer assigns the correct source location to new two-character
+    operators.
+    """
+    tokens = lex("x += 1;\ny--;\nz -= 2;\na *= 3;\nb ^= 4;\nc /= 5;\nw++;")
+
+    assert [(token.type, token.line, token.column) for token in tokens] == [
+        (TokenType.IDENTIFIER, 1, 1),
+        (TokenType.PLUSEQ, 1, 3),
+        (TokenType.NUMBER, 1, 6),
+        (TokenType.SEMICOLON, 1, 7),
+        (TokenType.IDENTIFIER, 2, 1),
+        (TokenType.DEC, 2, 2),
+        (TokenType.SEMICOLON, 2, 4),
+        (TokenType.IDENTIFIER, 3, 1),
+        (TokenType.MINUSEQ, 3, 3),
+        (TokenType.NUMBER, 3, 6),
+        (TokenType.SEMICOLON, 3, 7),
+        (TokenType.IDENTIFIER, 4, 1),
+        (TokenType.STAREQ, 4, 3),
+        (TokenType.NUMBER, 4, 6),
+        (TokenType.SEMICOLON, 4, 7),
+        (TokenType.IDENTIFIER, 5, 1),
+        (TokenType.CARETEQ, 5, 3),
+        (TokenType.NUMBER, 5, 6),
+        (TokenType.SEMICOLON, 5, 7),
+        (TokenType.IDENTIFIER, 6, 1),
+        (TokenType.SLASHEQ, 6, 3),
+        (TokenType.NUMBER, 6, 6),
+        (TokenType.SEMICOLON, 6, 7),
+        (TokenType.IDENTIFIER, 7, 1),
+        (TokenType.INC, 7, 2),
+        (TokenType.SEMICOLON, 7, 4),
+        (TokenType.EOF, 7, 4),
+    ]
+
+
 def test_skips_full_line_comments():
     """
     Test that the lexer ignores lines that start with '#'.
     """
     assert token_types('# full line comment\nprint("ok");') == [
-        TokenType.PRINT,
+        TokenType.IDENTIFIER,
         TokenType.LPAREN,
         TokenType.STRING,
         TokenType.RPAREN,
@@ -198,7 +324,7 @@ def test_skips_trailing_comments():
         TokenType.EQ,
         TokenType.NUMBER,
         TokenType.SEMICOLON,
-        TokenType.PRINT,
+        TokenType.IDENTIFIER,
         TokenType.LPAREN,
         TokenType.IDENTIFIER,
         TokenType.RPAREN,

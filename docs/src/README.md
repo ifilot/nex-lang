@@ -1,26 +1,19 @@
 # The NEX Book
 
-NEX is a small experimental programming language implemented in Python. It is
-deliberately modest in size: the goal is not to compete with production
-languages, but to make the core ideas of language design easy to see. If you
-are curious about how a programming language works internally, NEX is intended
-to be small enough to understand and large enough to feel real.
+NEX is a small interpreted programming language for learning the foundations of
+programming. It emphasizes explicit types, clear control flow, and predictable
+rules, so new programmers can focus on how values, variables, functions, and
+scope work together.
 
-This book is the home for the current NEX language definition. At this stage,
-the project is focused less on adding many new features and more on making the
-existing core explicit, consistent, and pleasant to learn from. In practice,
-that means the language is being treated as a carefully documented teaching
-language: every feature should have a clear purpose, a clear rule, and a clear
-error when used incorrectly.
+NEX is deliberately compact. It includes the core building blocks of
+programming such as integers, strings, booleans, variables, expressions,
+functions, and loops, but leaves out larger abstraction systems such as
+classes and first-class functions. That keeps attention on the basic patterns
+of programming and on how simple constructs can be combined to solve larger
+problems.
 
-The current NEX core has several defining traits. It uses explicit variable
-declarations with strong runtime type checks, so programs must make their
-intent visible and type mismatches are reported instead of being silently
-coerced. It has first-class values of type `int`, `str`, and `bool`, block-
-based lexical scoping, expression evaluation with operator precedence, and a
-small set of control-flow constructs built around boolean conditions. In other
-words, it is a compact, C-like language core designed to show how values,
-variables, scopes, and statements fit together.
+This book explains NEX as a language for learning. It aims to show not only
+what programs can be written, but also why they behave the way they do.
 
 Here is a small complete program:
 
@@ -29,13 +22,19 @@ int x = 0;
 
 while (x < 5) {
     print(x);
-    x = x + 1;
+    x++;
 }
 ```
 
 ## Installation
 
-NEX can be installed from PyPI:
+Install NEX locally in editable mode:
+
+```bash
+python -m pip install -e .
+```
+
+Once published, NEX can also be installed from PyPI:
 
 ```bash
 python -m pip install nex-lang
@@ -47,10 +46,29 @@ This installs the `nexlang` command-line runner. For example:
 nexlang examples/hello.nex
 ```
 
+The runner can also show intermediate views and execution timings:
+
+```bash
+nexlang tokens examples/hello.nex
+nexlang ast examples/hello.nex
+nexlang --times examples/hello.nex
+nexlang run --times --color examples/hello.nex
+```
+
+Use `--times` to print a timing summary for lexing, parsing, interpretation,
+and total execution. Add `--color` or `-c` if you want that timing table
+highlighted with colors.
+
 The reference chapters describe the language as it exists today. They focus on
 source-level behavior rather than interpreter internals, but they are written
 with implementation-minded readers in mind. When the implementation and the
 book disagree, that is a bug to fix rather than a reason to guess.
+
+When writing documentation, fenced <code class="language-nex">```nex</code>
+blocks are highlighted automatically. Inline snippets can also be highlighted,
+but inline Markdown backticks do not carry language information. For inline NEX
+syntax, use raw HTML such as
+<code class="language-nex">&lt;code class="language-nex"&gt;arr.length()&lt;/code&gt;</code>.
 
 The current implementation also provides structured diagnostics for lexing,
 parsing, and runtime failures. These diagnostics report the phase together with

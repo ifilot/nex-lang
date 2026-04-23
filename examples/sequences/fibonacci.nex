@@ -1,0 +1,14 @@
+#
+# Generate Fibonacci numbers iteratively.
+# Keeps only the two previous values instead of storing the full sequence.
+#
+int a = 0;
+int b = 1;
+
+for (int count = 0; count < 12; count = count + 1) {
+    print(b);
+
+    int next = a + b;
+    a = b;
+    b = next;
+}

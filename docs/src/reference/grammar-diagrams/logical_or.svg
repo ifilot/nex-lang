@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="448" height="152" viewBox="0 0 448 152" role="img" aria-labelledby="title-logical_or desc-logical_or">
+<title id="title-logical_or">&lt;logical-or&gt; syntax diagram</title>
+<desc id="desc-logical_or">Syntax diagram for &lt;logical-or&gt; generated from the grammar reference.</desc>
+<rect x="0.5" y="0.5" width="447" height="151" rx="18" fill="#fbfcfe" stroke="#d6deea"/>
+<text x="28" y="28" fill="#14324a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" font-weight="700">&lt;logical-or&gt;</text>
+<line x1="28" y1="92" x2="46" y2="92" stroke="#6a7d95" stroke-width="2"/>
+<rect x="46" y="78" width="122" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
+<text x="107.0" y="97" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;logical-and&gt;</text>
+<line x1="168" y1="92" x2="186" y2="92" stroke="#6a7d95" stroke-width="2"/>
+<line x1="186" y1="92" x2="204" y2="92" stroke="#6a7d95" stroke-width="2"/>
+<line x1="384" y1="92" x2="402" y2="92" stroke="#6a7d95" stroke-width="2"/>
+<rect x="204" y="78" width="40" height="28" rx="8" fill="#eef7ea" stroke="#8fbc8f" stroke-width="1.5"/>
+<text x="224.0" y="97" text-anchor="middle" fill="#204b24" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">||</text>
+<line x1="244" y1="92" x2="262" y2="92" stroke="#6a7d95" stroke-width="2"/>
+<rect x="262" y="78" width="122" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
+<text x="323.0" y="97" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;logical-and&gt;</text>
+<path d="M 186 92 A 6 6 0 0 0 192 86 L 192 72 A 6 6 0 0 1 198 66 L 390 66 A 6 6 0 0 1 396 72 L 396 86 A 6 6 0 0 0 402 92" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<polygon points="220,61 210,66 220,71" fill="#6a7d95"/>
+<line x1="402" y1="92" x2="420" y2="92" stroke="#6a7d95" stroke-width="2"/>
+<circle cx="22" cy="92" r="4.5" fill="#6a7d95"/>
+<circle cx="426" cy="92" r="4.5" fill="#6a7d95"/>
+</svg>

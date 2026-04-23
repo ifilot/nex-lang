@@ -23,3 +23,7 @@ class NexParseError(NexError):
 
 class NexRuntimeError(NexError):
     pass
+
+
+class NexIndexError(NexRuntimeError):
+    pass

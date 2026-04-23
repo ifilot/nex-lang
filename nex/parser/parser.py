@@ -1,15 +1,25 @@
 from typing import Tuple
 
 from ..common import NexParseError
-from ..interpreter.expr import Binary, FuncCall, Literal, Unary, Variable
+from ..interpreter.expr import (
+    Binary,
+    FuncCall,
+    Index,
+    Literal,
+    MethodCall,
+    Postfix,
+    Unary,
+    Variable,
+)
 from ..interpreter.stmt import (
+    ArrayDecl,
     Assign,
     Block,
     ExprStmt,
     For,
     FuncDecl,
     If,
-    Print,
+    IndexAssign,
     Return,
     VarDecl,
     While,
@@ -33,15 +43,23 @@ from ..lexer.tokentype import TokenType
 #                       | <if-stmt>
 #                       | <while-stmt>
 #                       | <for-stmt>
-#                       | <print-stmt>
+#                       | <block>
 #                       | <assignment-stmt>
 #                       | <expr-stmt>
 #
 # <typed-decl>        ::= <typed-decl-core> ";"
 #
-# <typed-decl-core>   ::= <type> <identifier> "=" <expression>
+# <typed-decl-core>   ::= <scalar-typed-decl-core> | <array-decl-core>
 #
-# <type>              ::= "int" | "str" | "bool"
+# <scalar-typed-decl-core> ::= <scalar-type> <identifier> "=" <expression>
+#
+# <array-decl-core>   ::= <array-type> <identifier>
+#
+# <type>              ::= <scalar-type> | <array-type>
+#
+# <scalar-type>       ::= "int" | "str" | "bool"
+#
+# <array-type>        ::= "array" "<" ( "int" | "str" ) ">"
 #
 # <function-decl>     ::= "fn" <identifier> "(" [ <parameters> ] ")" "->" <return-type> <block>
 #
@@ -72,9 +90,11 @@ from ..lexer.tokentype import TokenType
 #
 # <assignment-stmt>   ::= <assignment-core> ";"
 #
-# <assignment-core>   ::= <identifier> "=" <expression>
+# <assignment-core>   ::= <assignment-target> <assignment-op> <expression>
 #
-# <print-stmt>        ::= "print" "(" <expression> ")" ";"
+# <assignment-op>     ::= "=" | "+=" | "-=" | "*=" | "/=" | "^="
+#
+# <assignment-target> ::= <identifier> | <index-expr>
 #
 # <expr-stmt>         ::= <expression> ";"
 #
@@ -88,20 +108,26 @@ from ..lexer.tokentype import TokenType
 #
 # <term>              ::= <factor> (("+" | "-") <factor>)*
 #
-# <factor>            ::= <unary> (("*" | "/" | "%") <unary>)*
+# <factor>            ::= <power> (("*" | "/" | "%") <power>)*
+#
+# <power>             ::= <unary> ["^" <power>]
 #
 # <unary>             ::= ("-" | "!") <unary>
-#                       | <primary>
+#                       | <postfix>
+#
+# <postfix>           ::= <primary> ( <call-suffix> | <index-suffix> | <method-suffix> | <postfix-update> )*
+#
+# <call-suffix>       ::= "(" [ <arguments> ] ")"
+# <index-suffix>      ::= "[" <expression> "]"
+# <method-suffix>     ::= "." <identifier> "(" [ <arguments> ] ")"
+# <postfix-update>    ::= "++" | "--"
 #
 # <primary>           ::= <number>
 #                       | <string>
 #                       | "true"
 #                       | "false"
-#                       | <function-call>
 #                       | <identifier>
 #                       | "(" <expression> ")"
-#
-# <function-call>     ::= <identifier> "(" [ <arguments> ] ")"
 #
 # <arguments>         ::= <expression> ("," <expression>)*
 
@@ -116,6 +142,7 @@ class Parser:
         self.tokens = tokens
         self.pos = 0
         self.function_depth = 0  # keep track whether we are parsing a function
+        self.block_depth = 0  # keep track whether we are inside any block
 
     def parse(self):
         """
@@ -134,12 +161,10 @@ class Parser:
         """
         Parse a statement
         """
-        if self._match(TokenType.INT):
-            return self._int_decl()
-        elif self._match(TokenType.STR):
-            return self._str_decl()
-        elif self._match(TokenType.BOOL):
-            return self._bool_decl()
+        if self._starts_type():
+            return self._typed_decl(self._parse_type())
+        elif self._match(TokenType.FUNCTION):
+            return self._function_decl()
         elif self._match(TokenType.RETURN):
             return self._return_stmt()
         elif self._match(TokenType.IF):
@@ -148,32 +173,117 @@ class Parser:
             return self._while_stmt()
         elif self._match(TokenType.FOR):
             return self._for_stmt()
-        elif self._match(TokenType.FUNCTION):
-            return self._function_decl()
-        elif self._match(TokenType.PRINT):
-            return self._print_stmt()
-        elif self._check(TokenType.IDENTIFIER):
-            if self.tokens[self.pos + 1].type == TokenType.EQ:
-                return self._assign_stmt()
+        elif self._check(TokenType.LBRACE):
+            return self._block_stmt()
+        else:
+            assign_stmt = self._try_assign_stmt()
+            if assign_stmt is not None:
+                return assign_stmt
         return self._expr_stmt()
 
-    def _int_decl(self):
+    def _typed_decl(self, declared_type, require_semicolon=True):
         """
-        Parse an integer declaration.
+        Parse a typed variable declaration after the type keyword was consumed.
         """
-        return self._typed_decl("int")
+        name = self._consume(TokenType.IDENTIFIER, "Expect variable name.")
 
-    def _str_decl(self):
-        """
-        Parse a string declaration.
-        """
-        return self._typed_decl("str")
+        if self._is_array_type(declared_type):
+            if self._check(TokenType.EQ):
+                raise NexParseError(
+                    "array declarations must not have an initializer",
+                    line=self._peek().line,
+                    column=self._peek().column,
+                )
+            if require_semicolon:
+                self._consume(TokenType.SEMICOLON, "Expect ';'.")
+            return ArrayDecl(
+                name.lexeme,
+                declared_type,
+                line=name.line,
+                column=name.column,
+            )
 
-    def _bool_decl(self):
+        self._consume(TokenType.EQ, "Expect '=' after name.")
+        initializer = self._expression()
+        if require_semicolon:
+            self._consume(TokenType.SEMICOLON, "Expect ';'.")
+        return VarDecl(
+            name.lexeme,
+            initializer,
+            declared_type,
+            line=name.line,
+            column=name.column,
+        )
+
+    def _function_decl(self):
         """
-        Parse a boolean declaration.
+        Parse a function declaration.
         """
-        return self._typed_decl("bool")
+        fn_token = self._previous()
+        if self.function_depth > 0 or self.block_depth > 0:
+            raise NexParseError(
+                "nested functions are not allowed",
+                line=fn_token.line,
+                column=fn_token.column,
+            )
+
+        # increment function depth (can in principle never exceed 1, because
+        # nested functions are not allowed)
+        self.function_depth += 1
+
+        name = self._consume(TokenType.IDENTIFIER, "Expect variable name.")
+        self._consume(TokenType.LPAREN, "Expect '(")
+
+        # consume parameters, check for duplicates
+        param_types = []
+        param_names = []
+        while self._starts_type():
+            paramtype = self._parse_type()
+            paramname = self._consume(
+                TokenType.IDENTIFIER, "Expect variable name"
+            ).lexeme
+            if paramname in param_names:
+                raise NexParseError(
+                    f"duplicate parameter `{paramname}` encountered",
+                    line=self._previous().line,
+                    column=self._previous().column,
+                )
+
+            param_types.append(paramtype)
+            param_names.append(paramname)
+
+            if not self._check(TokenType.COMMA):
+                break
+            self._advance()
+
+        self._consume(TokenType.RPAREN, "Expect ')'")
+        self._consume(TokenType.RETTYPE, "Expect '->'")
+
+        try:
+            # grab return type
+            return_type = self._parse_type(allow_void=True)
+
+            # grab function body
+            body = self._block_stmt()
+        finally:
+            # decrement function depth even if parsing the body fails
+            self.function_depth -= 1
+
+        # assemble parameters
+        params = [
+            (paramtype, paramname)
+            for paramtype, paramname in zip(param_types, param_names)
+        ]
+
+        return FuncDecl(
+            name.lexeme,
+            len(params),
+            tuple(params),
+            body,
+            return_type,
+            line=fn_token.line,
+            column=fn_token.column,
+        )
 
     def _return_stmt(self):
         """
@@ -196,117 +306,6 @@ class Parser:
             expr,
             line=ret.line,
             column=ret.column,
-        )
-
-    def _typed_decl(self, declared_type, require_semicolon=True):
-        """
-        Parse a typed variable declaration after the type keyword was consumed.
-        """
-        name = self._consume(TokenType.IDENTIFIER, "Expect variable name.")
-        self._consume(TokenType.EQ, "Expect '=' after name.")
-        initializer = self._expression()
-        if require_semicolon:
-            self._consume(TokenType.SEMICOLON, "Expect ';'.")
-        return VarDecl(
-            name.lexeme,
-            initializer,
-            declared_type,
-            line=name.line,
-            column=name.column,
-        )
-
-    def _function_decl(self):
-        # increment function depth (can in principle never exceed 1, because
-        # nested functions are not allowed)
-        self.function_depth += 1
-
-        if self.function_depth > 1:
-            raise NexParseError(
-                "nested functions are not allowed",
-                line=self._peek().line,
-                column=self._peek().column,
-            )
-
-        fn_token = self._previous()
-        name = self._consume(TokenType.IDENTIFIER, "Expect variable name.")
-        self._consume(TokenType.LPAREN, "Expect '(")
-
-        # consume parameters, check for duplicates
-        param_types = []
-        param_names = []
-        while self._match(TokenType.INT, TokenType.STR, TokenType.BOOL):
-            paramtype = self._previous().lexeme
-            paramname = self._consume(
-                TokenType.IDENTIFIER, "Expect variable name"
-            ).lexeme
-            if paramname in param_names:
-                raise NexParseError(
-                    f"duplicate parameter `{paramname}` encountered",
-                    line=self._previous().line,
-                    column=self._previous().column,
-                )
-
-            param_types.append(paramtype)
-            param_names.append(paramname)
-
-            if not self._check(TokenType.COMMA):
-                break
-            self._advance()
-
-        self._consume(TokenType.RPAREN, "Expect ')'")
-        self._consume(TokenType.RETTYPE, "Expect '->'")
-
-        # grab return type
-        if self._match(TokenType.INT, TokenType.STR, TokenType.BOOL, TokenType.VOID):
-            return_type = self._previous()
-        else:
-            raise NexParseError(
-                "unexpected return type",
-                line=self._peek().line,
-                column=self._peek().column,
-            )
-
-        # grab function body
-        body = self._block_stmt()
-
-        # decrement function depth
-        self.function_depth -= 1
-
-        # assemble parameters
-        params = [
-            (paramtype, paramname)
-            for paramtype, paramname in zip(param_types, param_names)
-        ]
-
-        return FuncDecl(
-            name.lexeme,
-            len(params),
-            tuple(params),
-            body,
-            return_type.lexeme,
-            line=fn_token.line,
-            column=fn_token.column,
-        )
-
-    def _function_call(self):
-        callee = self._consume(TokenType.IDENTIFIER, "Expect function name.")
-        self._consume(TokenType.LPAREN, "Expect '('")
-
-        # consume function values
-        arguments = []
-        while not self._check(TokenType.RPAREN):
-            arguments.append(self._expression())
-            if self._check(TokenType.COMMA):
-                self._advance()
-
-        self._consume(TokenType.RPAREN, "Expect ')'")
-
-        return FuncCall(
-            callee.lexeme,  # callee name
-            len(arguments),  # arity
-            tuple(arguments),  # argument expressions
-            line=callee.line,
-            column=callee.column,
         )
 
     def _if_stmt(self):
@@ -378,17 +377,11 @@ class Parser:
         if self._check(TokenType.SEMICOLON):
             return None
 
-        if self._match(TokenType.INT):
-            return self._typed_decl("int", require_semicolon=False)
-        if self._match(TokenType.STR):
-            return self._typed_decl("str", require_semicolon=False)
-        if self._match(TokenType.BOOL):
-            return self._typed_decl("bool", require_semicolon=False)
-        if (
-            self._check(TokenType.IDENTIFIER)
-            and self.tokens[self.pos + 1].type == TokenType.EQ
-        ):
-            return self._assign_stmt(require_semicolon=False)
+        if self._starts_type():
+            return self._typed_decl(self._parse_type(), require_semicolon=False)
+        assign_stmt = self._try_assign_stmt(require_semicolon=False)
+        if assign_stmt is not None:
+            return assign_stmt
         return self._expr_stmt(require_semicolon=False)
 
     def _for_iter_clause(self):
@@ -398,11 +391,9 @@ class Parser:
         if self._check(TokenType.RPAREN):
             return None
 
-        if (
-            self._check(TokenType.IDENTIFIER)
-            and self.tokens[self.pos + 1].type == TokenType.EQ
-        ):
-            return self._assign_stmt(require_semicolon=False)
+        assign_stmt = self._try_assign_stmt(require_semicolon=False)
+        if assign_stmt is not None:
+            return assign_stmt
         return self._expr_stmt(require_semicolon=False)
 
     def _block_stmt(self):
@@ -411,9 +402,13 @@ class Parser:
         """
         statements = []
         self._consume(TokenType.LBRACE, "Expect '{'.")
-        while not self._check(TokenType.RBRACE):
-            statements.append(self._statement())
-        self._consume(TokenType.RBRACE, "Expect '}'.")
+        self.block_depth += 1
+        try:
+            while not self._check(TokenType.RBRACE) and not self._is_at_end():
+                statements.append(self._statement())
+            self._consume(TokenType.RBRACE, "Expect '}'.")
+        finally:
+            self.block_depth -= 1
         return Block(tuple(statements))
 
     def _assign_stmt(self, require_semicolon=True):
@@ -421,12 +416,12 @@ class Parser:
         Parse an assignment statement (set a value to variable), optionally
         check that it ends with a semicolon.
         """
-        name = self._consume(TokenType.IDENTIFIER, "Expect variable name.")
-        self._consume(TokenType.EQ, "Expect '='.")
+        target = self._assignment_target()
+        operator = self._assignment_operator()
         expr = self._expression()
         if require_semicolon:
             self._consume(TokenType.SEMICOLON, "Expect ';'.")
-        return Assign(name.lexeme, expr, line=name.line, column=name.column)
+        return self._build_assignment_stmt(target, operator, expr)
 
     def _expr_stmt(self, require_semicolon=True):
         """
@@ -437,17 +432,6 @@ class Parser:
         if require_semicolon:
             self._consume(TokenType.SEMICOLON, "Expect ';'.")
         return ExprStmt(expr, line=expr.line, column=expr.column)
-
-    def _print_stmt(self):
-        """
-        Parse a print statement
-        """
-        print_token = self._previous()
-        self._consume(TokenType.LPAREN, "Expect '('.")
-        value = self._expression()
-        self._consume(TokenType.RPAREN, "Expect ')'.")
-        self._consume(TokenType.SEMICOLON, "Expect ';'.")
-        return Print(value, line=print_token.line, column=print_token.column)
 
     def _expression(self):
         """
@@ -522,12 +506,27 @@ class Parser:
         """
         Parse factors
         """
-        expr = self._unary()
+        expr = self._power()
 
         while self._match(TokenType.STAR, TokenType.SLASH, TokenType.PERCENT):
             operator = self._previous()
             op = operator.lexeme
-            right = self._unary()
+            right = self._power()
+            expr = Binary(expr, op, right, line=operator.line, column=operator.column)
+
+        return expr
+
+    def _power(self):
+        """
+        Parse exponentiation. This operator binds more tightly than
+        multiplication and associates to the right.
+        """
+        expr = self._unary()
+
+        if self._match(TokenType.CARET):
+            operator = self._previous()
+            op = operator.lexeme
+            right = self._power()
             expr = Binary(expr, op, right, line=operator.line, column=operator.column)
 
         return expr
@@ -536,19 +535,41 @@ class Parser:
         """
         Parse unary
         """
-        if (
-            self._check(TokenType.IDENTIFIER)
-            and self.tokens[self.pos + 1].type == TokenType.LPAREN
-        ):
-            return self._function_call()
-
         while self._match(TokenType.MINUS, TokenType.EXCLAMATION):
             operator = self._previous()
             op = operator.lexeme
             right = self._unary()
             return Unary(op, right, line=operator.line, column=operator.column)
 
-        return self._primary()
+        return self._postfix()
+
+    def _postfix(self):
+        """
+        Parse postfix expressions. NEX currently supports function-call postfixes
+        and postfix increment/decrement operators.
+        """
+        expr = self._primary()
+
+        while True:
+            if self._match(TokenType.LPAREN):
+                expr = self._finish_function_call(expr)
+                continue
+
+            if self._match(TokenType.LBRACKET):
+                expr = self._finish_index(expr)
+                continue
+
+            if self._match(TokenType.DOT):
+                expr = self._finish_method_call(expr)
+                continue
+
+            if self._match(TokenType.INC, TokenType.DEC):
+                expr = self._finish_postfix_update(expr)
+                continue
+
+            break
+
+        return expr
 
     def _primary(self):
         """
@@ -583,6 +604,229 @@ class Parser:
             "expected expression",
             line=self._peek().line,
             column=self._peek().column,
+        )
+
+    def _starts_type(self, allow_void=False):
+        """
+        Check whether the current token begins a type annotation.
+        """
+        type_tokens = (TokenType.INT, TokenType.STR, TokenType.BOOL, TokenType.ARRAY)
+        if allow_void:
+            type_tokens += (TokenType.VOID,)
+        return self._peek().type in type_tokens if not self._is_at_end() else False
+
+    def _parse_type(self, allow_void=False):
+        """
+        Parse a type annotation and return its canonical string representation.
+        """
+        if self._match(TokenType.INT, TokenType.STR, TokenType.BOOL):
+            return self._previous().lexeme
+
+        if allow_void and self._match(TokenType.VOID):
+            return self._previous().lexeme
+
+        if self._match(TokenType.ARRAY):
+            self._consume(TokenType.LT, "Expect '<' after 'array'.")
+
+            if self._match(TokenType.INT, TokenType.STR):
+                element_type = self._previous().lexeme
+            elif self._match(TokenType.BOOL, TokenType.ARRAY, TokenType.VOID):
+                raise NexParseError(
+                    f"unsupported array element type `{self._previous().lexeme}`; expected int or str",
+                    line=self._previous().line,
+                    column=self._previous().column,
+                )
+            else:
+                raise NexParseError(
+                    "expect array element type",
+                    line=self._peek().line,
+                    column=self._peek().column,
+                )
+
+            self._consume(TokenType.GT, "Expect '>' after array element type.")
+            return f"array<{element_type}>"
+
+        if allow_void:
+            message = "unexpected return type"
+        else:
+            message = "expect type"
+
+        raise NexParseError(
+            message,
+            line=self._peek().line,
+            column=self._peek().column,
+        )
+
+    def _is_array_type(self, declared_type: str) -> bool:
+        return declared_type.startswith("array<")
+
+    def _try_assign_stmt(self, require_semicolon=True):
+        """
+        Attempt to parse an assignment statement without committing on failure.
+        """
+        if not self._check(TokenType.IDENTIFIER):
+            return None
+
+        start = self.pos
+        target = self._assignment_target()
+        if not self._check_assignment_operator():
+            self.pos = start
+            return None
+        operator = self._assignment_operator()
+        expr = self._expression()
+        if require_semicolon:
+            self._consume(TokenType.SEMICOLON, "Expect ';'.")
+        return self._build_assignment_stmt(target, operator, expr)
+
+    def _assignment_target(self):
+        """
+        Parse the left-hand side of an assignment.
+        """
+        name = self._consume(TokenType.IDENTIFIER, "Expect variable name.")
+        target = Variable(name.lexeme, line=name.line, column=name.column)
+
+        while self._match(TokenType.LBRACKET):
+            target = self._finish_index(target)
+
+        return target
+
+    def _check_assignment_operator(self):
+        return any(
+            self._check(token_type)
+            for token_type in (
+                TokenType.EQ,
+                TokenType.PLUSEQ,
+                TokenType.MINUSEQ,
+                TokenType.STAREQ,
+                TokenType.CARETEQ,
+                TokenType.SLASHEQ,
+            )
+        )
+
+    def _assignment_operator(self):
+        if self._match(
+            TokenType.EQ,
+            TokenType.PLUSEQ,
+            TokenType.MINUSEQ,
+            TokenType.STAREQ,
+            TokenType.CARETEQ,
+            TokenType.SLASHEQ,
+        ):
+            return self._previous()
+
+        raise NexParseError(
+            "Expect assignment operator.",
+            line=self._peek().line,
+            column=self._peek().column,
+        )
+
+    def _build_assignment_stmt(self, target, operator, expr):
+        if operator.type != TokenType.EQ:
+            expr = Binary(
+                target,
+                operator.lexeme[0],
+                expr,
+                line=operator.line,
+                column=operator.column,
+            )
+
+        if isinstance(target, Variable):
+            return Assign(
+                target.name,
+                expr,
+                operator.lexeme,
+                line=target.line,
+                column=target.column,
+            )
+        return IndexAssign(
+            target,
+            expr,
+            operator.lexeme,
+            line=target.line,
+            column=target.column,
+        )
+
+    def _finish_function_call(self, callee):
+        """
+        Parse a function call suffix after the opening '(' was already
+        consumed.
+        """
+        if not isinstance(callee, Variable):
+            raise NexParseError(
+                "only named functions can be called",
+                line=self._previous().line,
+                column=self._previous().column,
+            )
+
+        # consume function values
+        arguments = []
+        if not self._check(TokenType.RPAREN):
+            while True:
+                arguments.append(self._expression())
+                if not self._match(TokenType.COMMA):
+                    break
+
+        self._consume(TokenType.RPAREN, "Expect ')'")
+
+        return FuncCall(
+            callee.name,  # callee name
+            len(arguments),  # arity
+            tuple(arguments),  # argument expressions
+            line=callee.line,
+            column=callee.column,
+        )
+
+    def _finish_index(self, receiver):
+        """
+        Parse an indexing postfix after the opening '[' was already consumed.
+        """
+        bracket = self._previous()
+        index = self._expression()
+        self._consume(TokenType.RBRACKET, "Expect ']'.")
+        return Index(receiver, index, line=bracket.line, column=bracket.column)
+
+    def _finish_method_call(self, receiver):
+        """
+        Parse a method-style call after the '.' token was already consumed.
+        """
+        dot = self._previous()
+        method = self._consume(TokenType.IDENTIFIER, "Expect method name.")
+        self._consume(TokenType.LPAREN, "Expect '(' after method name.")
+
+        arguments = []
+        if not self._check(TokenType.RPAREN):
+            while True:
+                arguments.append(self._expression())
+                if not self._match(TokenType.COMMA):
+                    break
+
+        self._consume(TokenType.RPAREN, "Expect ')'")
+
+        return MethodCall(
+            receiver,
+            method.lexeme,
+            len(arguments),
+            tuple(arguments),
+            line=dot.line,
+            column=dot.column,
+        )
+
+    def _finish_postfix_update(self, expr):
+        """
+        Parse a postfix increment/decrement suffix after the operator token was
+        already consumed. These operators are restricted to variables.
+        """
+        operator = self._previous()
+
+        if not isinstance(expr, Variable):
+            raise NexParseError(
+                "postfix operators require a variable operand",
+                line=operator.line,
+                column=operator.column,
+            )
+
+        return Postfix(
+            expr, operator.lexeme, line=operator.line, column=operator.column
         )
 
     # --------------------------------------------------------------------------

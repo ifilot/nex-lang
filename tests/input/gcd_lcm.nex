@@ -1,0 +1,27 @@
+#
+# Euclid's algorithm plus a derived helper.
+# Demonstrates functions calling functions, local temporaries, and a `while` loop.
+#
+fn gcd(int a, int b) -> int {
+    while (b != 0) {
+        int next = a % b;
+        a = b;
+        b = next;
+    }
+
+    return a;
+}
+
+fn lcm(int a, int b) -> int {
+    return (a / gcd(a, b)) * b;
+}
+
+fn show_pair(int a, int b) -> void {
+    print(a);
+    print(b);
+    print(gcd(a, b));
+    print(lcm(a, b));
+}
+
+show_pair(12, 18);
+show_pair(21, 6);

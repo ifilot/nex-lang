@@ -1,0 +1,26 @@
+#
+# Print all prime numbers in a range.
+# Demonstrates a helper function reused inside a loop-driven search.
+#
+fn is_prime(int n) -> bool {
+    if (n < 2) {
+        return false;
+    }
+
+    for (int divisor = 2; divisor * divisor <= n; divisor += 1) {
+        if (n % divisor == 0) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+int lower = 2;
+int upper = 50;
+
+for (int candidate = lower; candidate <= upper; candidate += 1) {
+    if (is_prime(candidate)) {
+        print(candidate);
+    }
+}

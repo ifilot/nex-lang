@@ -1,8 +1,0 @@
-#
-# Arithmetic and operator precedence.
-# Demonstrates `+`, `*`, `/`, and the effect of parentheses.
-#
-print(5 + 8);
-print(1+2*3+4);         # This yields `11` because multiplication binds tighter.
-print((1+2) * (3+4));   # Parentheses override the default precedence rules.
-print(5/2);             # Arithmetic is integer-based, so this yields `2`.

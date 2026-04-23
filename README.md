@@ -72,6 +72,22 @@ You can also run the CLI module directly:
 python -m nex.cli examples/hello.nex
 ```
 
+The CLI also supports a few inspection and reporting options:
+
+```bash
+nexlang tokens examples/hello.nex
+nexlang ast examples/hello.nex
+nexlang --times examples/hello.nex
+nexlang run --times --color examples/hello.nex
+```
+
+- `tokens` prints the token stream and stops after lexing.
+- `ast` prints the parsed syntax tree and stops after parsing.
+- `--times` shows a formatted timing summary for the lexer, parser,
+  interpreter, and total runtime after the program finishes.
+- `--color` (or `-c`) colorizes the timing summary. It is intended to be used
+  together with `--times`.
+
 ## Documentation
 
 The language reference lives in the `mdBook` project under `docs/`.
@@ -79,8 +95,13 @@ The language reference lives in the `mdBook` project under `docs/`.
 Build it locally with:
 
 ```bash
+python scripts/generate_grammar_diagrams.py
 ~/.cargo/bin/mdbook build docs
 ```
+
+The grammar page diagrams are generated from the fenced grammar block in
+`docs/src/reference/grammar.md`, so rerun the generator whenever that grammar
+changes.
 
 Once GitHub Pages is enabled for this repository, the published book will be
 available at:
@@ -89,16 +110,28 @@ available at:
 https://ifilot.github.io/nex-lang/
 ```
 
-## Releases
+## VS Code Syntax Highlighting
 
-PyPI releases are published from Git tags that start with `v`, for example:
+A lightweight VS Code syntax-highlighting extension for `.nex` files lives at:
 
 ```text
-v0.2.0
+editors/vscode/nex-syntax
 ```
 
-The published package name is `nex-lang`. The installed CLI command remains
-`nexlang`.
+If you are using VS Code through WSL, you can expose that extension to the WSL
+server with:
+
+```bash
+cd editors/vscode/nex-syntax
+mkdir -p ~/.vscode-server/extensions && ln -s "$(pwd)" ~/.vscode-server/extensions/local.nex-syntax
+```
+
+After that, reload the VS Code window.
+
+## Releases
+
+PyPI releases are published from Git tags that start with `v`. The published
+package name is `nex-lang`. The installed CLI command remains `nexlang`.
 
 ## Testing
 
@@ -131,9 +164,3 @@ nex/
 tests/           Unit tests
 examples/        Example programs
 ```
-
-## Current Status
-
-This is an early interpreter project and the language is still evolving. The
-syntax is intentionally simple and currently leans toward a small C-like
-language.

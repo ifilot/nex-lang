@@ -2,15 +2,25 @@ import pytest
 
 from nex import Interpreter
 from nex.common import NexParseError, NexRuntimeError
-from nex.interpreter.expr import Binary, FuncCall, Literal, Unary, Variable
+from nex.interpreter.expr import (
+    Binary,
+    FuncCall,
+    Index,
+    Literal,
+    MethodCall,
+    Postfix,
+    Unary,
+    Variable,
+)
 from nex.interpreter.stmt import (
+    ArrayDecl,
     Assign,
     Block,
     ExprStmt,
     For,
     FuncDecl,
     If,
-    Print,
+    IndexAssign,
     Return,
     VarDecl,
     While,
@@ -33,6 +43,22 @@ def test_parses_variable_declaration():
     assert len(program) == 1
     stmt = program[0]
     assert stmt == VarDecl("x", Binary(Literal(1), "+", Literal(2)), "int")
+
+
+def test_parses_array_variable_declaration():
+    program = parse("array<int> xs;")
+
+    assert len(program) == 1
+    assert program[0] == ArrayDecl("xs", "array<int>")
+
+
+def test_rejects_scalar_declaration_without_initializer():
+    with pytest.raises(NexParseError) as excinfo:
+        parse("int x;")
+
+    assert excinfo.value.message == "expect '=' after name"
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 6
 
 
 def test_parses_expression_statement():
@@ -68,6 +94,33 @@ def test_parses_modulus_expression_statement():
     stmt = program[0]
     assert isinstance(stmt, ExprStmt)
     assert stmt.expr == Binary(Literal(5), "%", Literal(2))
+
+
+def test_parses_power_expression_statement():
+    program = parse("2 ^ 3;")
+
+    assert len(program) == 1
+    stmt = program[0]
+    assert isinstance(stmt, ExprStmt)
+    assert stmt.expr == Binary(Literal(2), "^", Literal(3))
+
+
+def test_parses_power_with_higher_precedence_than_factor():
+    program = parse("2 * 3 ^ 4;")
+
+    assert len(program) == 1
+    assert program[0] == ExprStmt(
+        Binary(Literal(2), "*", Binary(Literal(3), "^", Literal(4)))
+    )
+
+
+def test_parses_power_as_right_associative():
+    program = parse("2 ^ 3 ^ 2;")
+
+    assert len(program) == 1
+    assert program[0] == ExprStmt(
+        Binary(Literal(2), "^", Binary(Literal(3), "^", Literal(2)))
+    )
 
 
 def test_parses_two_character_comparison_expression_statements():
@@ -111,8 +164,12 @@ def test_parses_if_else_statement():
     assert isinstance(stmt.else_branch, Block)
     assert len(stmt.then_branch.statements) == 1
     assert len(stmt.else_branch.statements) == 1
-    assert isinstance(stmt.then_branch.statements[0], Print)
-    assert isinstance(stmt.else_branch.statements[0], Print)
+    assert stmt.then_branch.statements[0] == ExprStmt(
+        FuncCall("print", 1, (Literal("ok"),))
+    )
+    assert stmt.else_branch.statements[0] == ExprStmt(
+        FuncCall("print", 1, (Literal("no"),))
+    )
 
 
 def test_parses_while_statement():
@@ -127,7 +184,19 @@ def test_parses_while_statement():
     assert stmt.condition.right == Literal(3)
     assert isinstance(stmt.body, Block)
     assert len(stmt.body.statements) == 1
-    assert isinstance(stmt.body.statements[0], Print)
+    assert stmt.body.statements[0] == ExprStmt(FuncCall("print", 1, (Variable("x"),)))
+
+
+def test_parses_standalone_block_statement():
+    program = parse("{ int x = 1; print(x); }")
+
+    assert len(program) == 1
+    stmt = program[0]
+    assert isinstance(stmt, Block)
+    assert stmt.statements == (
+        VarDecl("x", Literal(1), "int"),
+        ExprStmt(FuncCall("print", 1, (Variable("x"),))),
+    )
 
 
 def test_parses_function_declaration_without_parameters():
@@ -142,7 +211,7 @@ def test_parses_function_declaration_without_parameters():
     assert stmt.return_type == "void"
     assert isinstance(stmt.body, Block)
     assert len(stmt.body.statements) == 1
-    assert stmt.body.statements[0] == Print(Literal("hi"))
+    assert stmt.body.statements[0] == ExprStmt(FuncCall("print", 1, (Literal("hi"),)))
 
 
 def test_parses_function_declaration_with_parameters_and_return():
@@ -158,6 +227,40 @@ def test_parses_function_declaration_with_parameters_and_return():
     assert isinstance(stmt.body, Block)
     assert len(stmt.body.statements) == 1
     assert stmt.body.statements[0] == Return(Binary(Variable("a"), "+", Variable("b")))
+
+
+def test_parses_function_declaration_with_array_types():
+    program = parse(
+        "fn clone(array<int> xs, array<str> ys) -> array<str> { return ys; }"
+    )
+
+    assert len(program) == 1
+    stmt = program[0]
+    assert isinstance(stmt, FuncDecl)
+    assert stmt.arguments == (("array<int>", "xs"), ("array<str>", "ys"))
+    assert stmt.return_type == "array<str>"
+    assert stmt.body.statements == (Return(Variable("ys")),)
+
+
+def test_rejects_array_initializer():
+    with pytest.raises(NexParseError) as excinfo:
+        parse("array<int> xs = 1;")
+
+    assert excinfo.value.message == "array declarations must not have an initializer"
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 15
+
+
+def test_rejects_unsupported_array_element_type():
+    with pytest.raises(NexParseError) as excinfo:
+        parse("array<bool> flags = nope;")
+
+    assert (
+        excinfo.value.message
+        == "unsupported array element type `bool`; expected int or str"
+    )
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 7
 
 
 def test_parses_return_without_expression():
@@ -208,6 +311,15 @@ def test_rejects_return_outside_function_with_structured_parse_error():
     assert excinfo.value.column == 1
 
 
+def test_rejects_function_declaration_inside_block():
+    with pytest.raises(NexParseError) as excinfo:
+        parse("if (true) { fn inner() -> void { return; } }")
+
+    assert excinfo.value.message == "nested functions are not allowed"
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 13
+
+
 def test_parses_function_call_as_expression_statement():
     program = parse("hello();")
 
@@ -217,13 +329,101 @@ def test_parses_function_call_as_expression_statement():
     assert stmt.expr == FuncCall("hello", 0, ())
 
 
+def test_parses_method_call_as_expression_statement():
+    program = parse("arr.resize(100);")
+
+    assert len(program) == 1
+    stmt = program[0]
+    assert isinstance(stmt, ExprStmt)
+    assert stmt.expr == MethodCall(Variable("arr"), "resize", 1, (Literal(100),))
+
+
+def test_parses_zero_argument_method_call():
+    program = parse("arr.length();")
+
+    stmt = program[0]
+    assert isinstance(stmt, ExprStmt)
+    assert stmt.expr == MethodCall(Variable("arr"), "length", 0, ())
+
+
+def test_parses_index_expression_with_negative_offset():
+    program = parse("arr[-1];")
+
+    stmt = program[0]
+    assert isinstance(stmt, ExprStmt)
+    assert stmt.expr == Index(Variable("arr"), Unary("-", Literal(1)))
+
+
+def test_parses_index_assignment_statement():
+    program = parse("arr[-1] = 42;")
+
+    stmt = program[0]
+    assert isinstance(stmt, IndexAssign)
+    assert stmt.op == "="
+    assert stmt.target == Index(Variable("arr"), Unary("-", Literal(1)))
+    assert stmt.expr == Literal(42)
+
+
+def test_parses_compound_variable_assignment_statement():
+    program = parse("x += 1; x *= 2; x ^= 3; x /= 4; x -= 5;")
+
+    assert program[0] == Assign("x", Binary(Variable("x"), "+", Literal(1)), "+=")
+    assert program[1] == Assign("x", Binary(Variable("x"), "*", Literal(2)), "*=")
+    assert program[2] == Assign("x", Binary(Variable("x"), "^", Literal(3)), "^=")
+    assert program[3] == Assign("x", Binary(Variable("x"), "/", Literal(4)), "/=")
+    assert program[4] == Assign("x", Binary(Variable("x"), "-", Literal(5)), "-=")
+
+
+def test_parses_compound_index_assignment_statement():
+    program = parse("arr[-1] += 42;")
+
+    stmt = program[0]
+    assert isinstance(stmt, IndexAssign)
+    assert stmt.op == "+="
+    assert stmt.target == Index(Variable("arr"), Unary("-", Literal(1)))
+    assert stmt.expr == Binary(
+        Index(Variable("arr"), Unary("-", Literal(1))),
+        "+",
+        Literal(42),
+    )
+
+
+def test_parses_postfix_increment_as_expression_statement():
+    program = parse("i++;")
+
+    assert len(program) == 1
+    stmt = program[0]
+    assert isinstance(stmt, ExprStmt)
+    assert stmt.expr == Postfix(Variable("i"), "++")
+
+
+def test_parses_postfix_decrement_inside_expression():
+    program = parse("print(i--);")
+
+    assert len(program) == 1
+    stmt = program[0]
+    assert isinstance(stmt, ExprStmt)
+    assert stmt.expr == FuncCall("print", 1, (Postfix(Variable("i"), "--"),))
+
+
+def test_rejects_postfix_update_on_non_variable_operand():
+    with pytest.raises(NexParseError) as excinfo:
+        parse("(1 + 2)++;")
+
+    assert excinfo.value.message == "postfix operators require a variable operand"
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 8
+
+
 def test_parses_function_call_inside_print_expression():
     program = parse("print(add(1, 2));")
 
     assert len(program) == 1
     stmt = program[0]
-    assert isinstance(stmt, Print)
-    assert stmt.expr == FuncCall("add", 2, (Literal(1), Literal(2)))
+    assert isinstance(stmt, ExprStmt)
+    assert stmt.expr == FuncCall(
+        "print", 1, (FuncCall("add", 2, (Literal(1), Literal(2))),)
+    )
 
 
 def test_parses_nested_function_call_arguments():
@@ -252,10 +452,10 @@ def test_parses_for_statement_with_typed_initializer():
     assert stmt.condition.left == Variable("i")
     assert stmt.condition.op == "<"
     assert stmt.condition.right == Literal(3)
-    assert stmt.iter == Assign("i", Binary(Variable("i"), "+", Literal(1)))
+    assert stmt.iter == Assign("i", Binary(Variable("i"), "+", Literal(1)), "=")
     assert isinstance(stmt.body, Block)
     assert len(stmt.body.statements) == 1
-    assert isinstance(stmt.body.statements[0], Print)
+    assert stmt.body.statements[0] == ExprStmt(FuncCall("print", 1, (Variable("i"),)))
 
 
 def test_parses_for_statement_with_assignment_initializer():
@@ -263,8 +463,17 @@ def test_parses_for_statement_with_assignment_initializer():
 
     stmt = program[0]
     assert isinstance(stmt, For)
-    assert stmt.init == Assign("i", Literal(0))
-    assert stmt.iter == Assign("i", Binary(Variable("i"), "+", Literal(1)))
+    assert stmt.init == Assign("i", Literal(0), "=")
+    assert stmt.iter == Assign("i", Binary(Variable("i"), "+", Literal(1)), "=")
+
+
+def test_parses_for_statement_with_compound_assignment_iteration():
+    program = parse("for (i = 0; i < 3; i += 1) { print(i); }")
+
+    stmt = program[0]
+    assert isinstance(stmt, For)
+    assert stmt.init == Assign("i", Literal(0), "=")
+    assert stmt.iter == Assign("i", Binary(Variable("i"), "+", Literal(1)), "+=")
 
 
 def test_parses_for_statement_with_empty_initializer_and_iteration():
@@ -286,7 +495,7 @@ def test_parses_for_statement_with_expression_initializer():
     stmt = program[0]
     assert isinstance(stmt, For)
     assert stmt.init == ExprStmt(Binary(Literal(1), "+", Literal(2)))
-    assert stmt.iter == Assign("i", Binary(Variable("i"), "+", Literal(1)))
+    assert stmt.iter == Assign("i", Binary(Variable("i"), "+", Literal(1)), "=")
 
 
 def test_parses_for_statement_with_expression_iteration():
@@ -298,13 +507,14 @@ def test_parses_for_statement_with_expression_iteration():
     assert stmt.iter == ExprStmt(Binary(Variable("i"), "+", Literal(1)))
 
 
-def test_rejects_print_statement_in_for_initializer_clause():
-    with pytest.raises(NexParseError) as excinfo:
-        parse("for (print(1); i < 3; i = i + 1) { print(i); }")
+def test_parses_function_call_in_for_initializer_clause():
+    program = parse("for (print(1); i < 3; i = i + 1) { print(i); }")
 
-    assert excinfo.value.message == "expected expression"
-    assert excinfo.value.line == 1
-    assert excinfo.value.column == 6
+    assert len(program) == 1
+    stmt = program[0]
+    assert isinstance(stmt, For)
+    assert stmt.init == ExprStmt(FuncCall("print", 1, (Literal(1),)))
+    assert stmt.body.statements[0] == ExprStmt(FuncCall("print", 1, (Variable("i"),)))
 
 
 def test_rejects_missing_semicolon_with_structured_parse_error():
@@ -325,6 +535,15 @@ def test_rejects_missing_closing_paren_with_structured_parse_error():
     assert excinfo.value.column == 14
 
 
+def test_rejects_malformed_assignment_without_hiding_expression_error():
+    with pytest.raises(NexParseError) as excinfo:
+        parse("x = ;")
+
+    assert excinfo.value.message == "expected expression"
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 5
+
+
 def test_executes_expression_statement_without_output(capsys):
     program = parse("1 + 2;")
 
@@ -340,7 +559,25 @@ def test_executes_unary_not_expression(capsys):
     Interpreter().run(program)
 
     captured = capsys.readouterr()
-    assert captured.out == "False\nTrue\n"
+    assert captured.out == "false\ntrue\n"
+
+
+def test_executes_postfix_increment_and_returns_original_value(capsys):
+    program = parse("int i = 1; print(i++); print(i);")
+
+    Interpreter().run(program)
+
+    captured = capsys.readouterr()
+    assert captured.out == "1\n2\n"
+
+
+def test_executes_postfix_decrement_and_returns_original_value(capsys):
+    program = parse("int i = 2; print(i--); print(i);")
+
+    Interpreter().run(program)
+
+    captured = capsys.readouterr()
+    assert captured.out == "2\n1\n"
 
 
 def test_rejects_unary_not_on_non_boolean():
@@ -355,6 +592,20 @@ def test_rejects_unary_not_on_non_boolean():
     )
     assert excinfo.value.line == 1
     assert excinfo.value.column == 1
+
+
+def test_rejects_postfix_increment_on_non_integer():
+    program = parse('str s = "x"; s++;')
+
+    with pytest.raises(NexRuntimeError) as excinfo:
+        Interpreter().run(program)
+
+    assert (
+        excinfo.value.message
+        == "cannot apply postfix operator `++` to type str; expected int"
+    )
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 15
 
 
 def test_rejects_unary_minus_on_non_integer():
@@ -377,7 +628,7 @@ def test_executes_boolean_literals(capsys):
     Interpreter().run(program)
 
     captured = capsys.readouterr()
-    assert captured.out == "True\nFalse\n"
+    assert captured.out == "true\nfalse\n"
 
 
 def test_executes_string_concatenation_and_comparison(capsys):
@@ -386,7 +637,7 @@ def test_executes_string_concatenation_and_comparison(capsys):
     Interpreter().run(program)
 
     captured = capsys.readouterr()
-    assert captured.out == "hello\nTrue\n"
+    assert captured.out == "hello\ntrue\n"
 
 
 def test_executes_two_character_comparisons(capsys):
@@ -397,7 +648,7 @@ def test_executes_two_character_comparisons(capsys):
     Interpreter().run(program)
 
     captured = capsys.readouterr()
-    assert captured.out == "True\nTrue\nFalse\nTrue\nTrue\n"
+    assert captured.out == "true\ntrue\nfalse\ntrue\ntrue\n"
 
 
 def test_executes_logical_operators(capsys):
@@ -408,7 +659,7 @@ def test_executes_logical_operators(capsys):
     Interpreter().run(program)
 
     captured = capsys.readouterr()
-    assert captured.out == "True\nFalse\nTrue\nFalse\n"
+    assert captured.out == "true\nfalse\ntrue\nfalse\n"
 
 
 def test_short_circuits_logical_operators():

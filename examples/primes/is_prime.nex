@@ -1,0 +1,26 @@
+#
+# Reusable primality test.
+# Shows helper functions, early returns, and trial division without arrays.
+#
+fn is_prime(int n) -> bool {
+    if (n < 2) {
+        return false;
+    }
+
+    for (int divisor = 2; divisor * divisor <= n; divisor = divisor + 1) {
+        if (n % divisor == 0) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+print(2);
+print(is_prime(2));
+
+print(25);
+print(is_prime(25));
+
+print(97);
+print(is_prime(97));

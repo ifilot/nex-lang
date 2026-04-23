@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="282" height="230" viewBox="0 0 282 230" role="img" aria-labelledby="title-for_iter desc-for_iter">
+<title id="title-for_iter">&lt;for-iter&gt; syntax diagram</title>
+<desc id="desc-for_iter">Syntax diagram for &lt;for-iter&gt; generated from the grammar reference.</desc>
+<rect x="0.5" y="0.5" width="281" height="229" rx="18" fill="#fbfcfe" stroke="#d6deea"/>
+<text x="28" y="28" fill="#14324a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" font-weight="700">&lt;for-iter&gt;</text>
+<line x1="28" y1="70" x2="46" y2="70" stroke="#6a7d95" stroke-width="2"/>
+<rect x="64" y="56" width="58" height="28" rx="8" fill="#fff4df" stroke="#f0c16a" stroke-width="1.5"/>
+<text x="93.0" y="75" text-anchor="middle" fill="#7a4d00" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">empty</text>
+<line x1="46" y1="70" x2="64" y2="70" stroke="#6a7d95" stroke-width="2"/>
+<line x1="122" y1="70" x2="236" y2="70" stroke="#6a7d95" stroke-width="2"/>
+<rect x="64" y="106" width="154" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
+<text x="141.0" y="125" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;assignment-core&gt;</text>
+<path d="M 46 70 A 6 6 0 0 1 52 76 L 52 114 A 6 6 0 0 0 58 120 L 64 120" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 218 120 L 224 120 A 6 6 0 0 0 230 114 L 230 76 A 6 6 0 0 1 236 70 " fill="none" stroke="#6a7d95" stroke-width="2"/>
+<rect x="64" y="156" width="114" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
+<text x="121.0" y="175" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;expression&gt;</text>
+<path d="M 46 70 A 6 6 0 0 1 52 76 L 52 164 A 6 6 0 0 0 58 170 L 64 170" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<path d="M 178 170 L 224 170 A 6 6 0 0 0 230 164 L 230 76 A 6 6 0 0 1 236 70 " fill="none" stroke="#6a7d95" stroke-width="2"/>
+<line x1="236" y1="70" x2="254" y2="70" stroke="#6a7d95" stroke-width="2"/>
+<circle cx="22" cy="70" r="4.5" fill="#6a7d95"/>
+<circle cx="260" cy="70" r="4.5" fill="#6a7d95"/>
+</svg>

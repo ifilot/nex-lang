@@ -1,5 +1,7 @@
 from nex.common import NexRuntimeError
 
+from .nex_array import NexArray
+
 
 class Environment:
     """
@@ -84,6 +86,8 @@ class Environment:
             return type(value) is str
         if declared_type == "bool":
             return type(value) is bool
+        if declared_type.startswith("array<"):
+            return isinstance(value, NexArray) and value.declared_type == declared_type
 
         raise RuntimeError(f"Unknown type: {declared_type}")
 
@@ -97,5 +101,7 @@ class Environment:
             return "str"
         if type(value) is bool:
             return "bool"
+        if isinstance(value, NexArray):
+            return value.declared_type
 
         return type(value).__name__

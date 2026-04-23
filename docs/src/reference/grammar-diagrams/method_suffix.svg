@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="540" height="152" viewBox="0 0 540 152" role="img" aria-labelledby="title-method_suffix desc-method_suffix">
+<title id="title-method_suffix">&lt;method-suffix&gt; syntax diagram</title>
+<desc id="desc-method_suffix">Syntax diagram for &lt;method-suffix&gt; generated from the grammar reference.</desc>
+<rect x="0.5" y="0.5" width="539" height="151" rx="18" fill="#fbfcfe" stroke="#d6deea"/>
+<text x="28" y="28" fill="#14324a" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="20" font-weight="700">&lt;method-suffix&gt;</text>
+<line x1="28" y1="92" x2="46" y2="92" stroke="#6a7d95" stroke-width="2"/>
+<rect x="46" y="78" width="40" height="28" rx="8" fill="#eef7ea" stroke="#8fbc8f" stroke-width="1.5"/>
+<text x="66.0" y="97" text-anchor="middle" fill="#204b24" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">.</text>
+<line x1="86" y1="92" x2="104" y2="92" stroke="#6a7d95" stroke-width="2"/>
+<rect x="104" y="78" width="114" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
+<text x="161.0" y="97" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;identifier&gt;</text>
+<line x1="218" y1="92" x2="236" y2="92" stroke="#6a7d95" stroke-width="2"/>
+<rect x="236" y="78" width="40" height="28" rx="8" fill="#eef7ea" stroke="#8fbc8f" stroke-width="1.5"/>
+<text x="256.0" y="97" text-anchor="middle" fill="#204b24" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">(</text>
+<line x1="276" y1="92" x2="294" y2="92" stroke="#6a7d95" stroke-width="2"/>
+<line x1="294" y1="92" x2="312" y2="92" stroke="#6a7d95" stroke-width="2"/>
+<line x1="418" y1="92" x2="436" y2="92" stroke="#6a7d95" stroke-width="2"/>
+<rect x="312" y="78" width="106" height="28" rx="8" fill="#e9f2ff" stroke="#8cb0e8" stroke-width="1.5"/>
+<text x="365.0" y="97" text-anchor="middle" fill="#123a6b" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">&lt;arguments&gt;</text>
+<path d="M 294 92 A 6 6 0 0 0 300 86 L 300 72 A 6 6 0 0 1 306 66 L 424 66 A 6 6 0 0 1 430 72 L 430 86 A 6 6 0 0 0 436 92" fill="none" stroke="#6a7d95" stroke-width="2"/>
+<line x1="436" y1="92" x2="454" y2="92" stroke="#6a7d95" stroke-width="2"/>
+<rect x="454" y="78" width="40" height="28" rx="8" fill="#eef7ea" stroke="#8fbc8f" stroke-width="1.5"/>
+<text x="474.0" y="97" text-anchor="middle" fill="#204b24" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="13">)</text>
+<line x1="494" y1="92" x2="512" y2="92" stroke="#6a7d95" stroke-width="2"/>
+<circle cx="22" cy="92" r="4.5" fill="#6a7d95"/>
+<circle cx="518" cy="92" r="4.5" fill="#6a7d95"/>
+</svg>

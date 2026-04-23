@@ -1,5 +1,20 @@
-from nex.interpreter.expr import Binary, FuncCall, Literal, Variable
-from nex.interpreter.stmt import Block, ExprStmt, FuncDecl, Return
+from nex.interpreter.expr import (
+    Binary,
+    FuncCall,
+    Index,
+    Literal,
+    MethodCall,
+    Postfix,
+    Variable,
+)
+from nex.interpreter.stmt import (
+    ArrayDecl,
+    Block,
+    ExprStmt,
+    FuncDecl,
+    IndexAssign,
+    Return,
+)
 from nex.pretty_printer import PrettyPrinter
 
 
@@ -79,5 +94,90 @@ def test_pretty_prints_return_without_expression():
             "      `- Block",
             "         `- Return",
             "            `- Expr: None",
+        ]
+    )
+
+
+def test_pretty_prints_postfix_expression():
+    program = [ExprStmt(Postfix(Variable("i"), "++"))]
+
+    rendered = PrettyPrinter().print_program(program)
+
+    assert rendered == "\n".join(
+        [
+            "Program",
+            "`- ExprStmt",
+            "   `- Postfix(++)",
+            "      `- Variable(i)",
+        ]
+    )
+
+
+def test_pretty_prints_array_types_in_function_signature():
+    program = [
+        FuncDecl(
+            "clone",
+            2,
+            (("array<int>", "xs"), ("array<str>", "ys")),
+            Block((Return(Variable("ys")),)),
+            "array<str>",
+        )
+    ]
+
+    rendered = PrettyPrinter().print_program(program)
+
+    assert rendered == "\n".join(
+        [
+            "Program",
+            "`- FuncDecl [clone(array<int> xs, array<str> ys) -> array<str>]",
+            "   |- Arity: 2",
+            "   `- Body",
+            "      `- Block",
+            "         `- Return",
+            "            `- Expr",
+            "               `- Variable(ys)",
+        ]
+    )
+
+
+def test_pretty_prints_array_declaration():
+    program = [ArrayDecl("arr", "array<int>")]
+
+    rendered = PrettyPrinter().print_program(program)
+
+    assert rendered == "\n".join(
+        [
+            "Program",
+            "`- ArrayDecl(array<int> arr)",
+        ]
+    )
+
+
+def test_pretty_prints_method_call_and_index_assignment():
+    program = [
+        ExprStmt(MethodCall(Variable("arr"), "resize", 1, (Literal(100),))),
+        IndexAssign(Index(Variable("arr"), Literal(0)), Literal(42)),
+    ]
+
+    rendered = PrettyPrinter().print_program(program)
+
+    assert rendered == "\n".join(
+        [
+            "Program",
+            "|- ExprStmt",
+            "|  `- MethodCall [resize]",
+            "|     |- Receiver",
+            "|     |  `- Variable(arr)",
+            "|     `- Argument 1",
+            "|        `- Literal(100)",
+            "`- IndexAssign",
+            "   |- Target",
+            "   |  `- Index",
+            "   |     |- Receiver",
+            "   |     |  `- Variable(arr)",
+            "   |     `- Offset",
+            "   |        `- Literal(0)",
+            "   `- Expr",
+            "      `- Literal(42)",
         ]
     )

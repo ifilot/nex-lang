@@ -1,7 +1,10 @@
-from nex.common import NexRuntimeError
+from nex.common import NexIndexError, NexRuntimeError
 
 from .environment import Environment
-from .function_store import Function, FunctionStore, NexFunctionStoreError
+from .expr import Binary, Index
+from .function import BuiltinFunction, UserFunction
+from .function_store import FunctionStore, NexFunctionStoreError
+from .nex_array import NexArray
 
 
 class NexReturnSignal(Exception):
@@ -74,11 +77,27 @@ class Interpreter:
             column=node.initializer.column,
         )
 
+    def exec_ArrayDecl(self, node):
+        """
+        Declare an empty array value.
+        """
+        self.env.declare(
+            node.name,
+            node.type,
+            self._make_empty_array(node.type),
+            line=node.line,
+            column=node.column,
+        )
+
     def exec_Assign(self, node):
         """
         Assigns a value to variable or declares and initializes a new variable
         """
-        val = self.eval(node.expr)
+        if node.op == "=":
+            val = self.eval(node.expr)
+        else:
+            current = self.env.lookup(node.name, line=node.line, column=node.column)
+            val = self._eval_compound_assignment_value(node.expr, current)
         self.env.assign(
             node.name,
             val,
@@ -88,21 +107,38 @@ class Interpreter:
             value_column=node.expr.column,
         )
 
-    def exec_Print(self, node):
+    def exec_IndexAssign(self, node):
         """
-        Built-in print function that outputs the result of an expression to the
-        screen
+        Assign into an indexed array slot.
         """
-        val = self.eval(node.expr)
-        valtype = self._runtime_type_name(val)
-        if valtype in ["str", "bool", "int"]:
-            print(val)
+        receiver, index = self._resolve_index_target(node.target)
+        if node.op == "=":
+            value = self.eval(node.expr)
         else:
-            valtype
+            try:
+                current = receiver.get(index)
+            except IndexError:
+                raise NexIndexError(
+                    f"array index {index} out of bounds for length {receiver.length()}",
+                    line=node.target.index.line,
+                    column=node.target.index.column,
+                )
+            value = self._eval_compound_assignment_value(node.expr, current)
+        if not self._matches_type(receiver.element_type, value):
             raise NexRuntimeError(
-                f"print function is undefined for type `{valtype}`",
-                line=node.line,
-                column=node.column,
+                f"cannot assign value of type {self._runtime_type_name(value)} "
+                f"to {receiver.declared_type} element",
+                line=node.expr.line,
+                column=node.expr.column,
+            )
+
+        try:
+            receiver.set(index, value)
+        except IndexError:
+            raise NexIndexError(
+                f"array index {index} out of bounds for length {receiver.length()}",
+                line=node.target.index.line,
+                column=node.target.index.column,
             )
 
     def exec_Block(self, node):
@@ -129,9 +165,7 @@ class Interpreter:
         """
         Declare a new function
         """
-        func = Function(
-            node.callee, node.arity, node.arguments, node.body, node.return_type
-        )
+        func = UserFunction(node.callee, node.arguments, node.return_type, node.body)
         try:
             self.function_store.declare_function(func)
         except NexFunctionStoreError as e:
@@ -277,6 +311,199 @@ class Interpreter:
             return left or right
 
         right = self.eval(node.right)
+        return self._apply_binary_operator(node, left, right)
+
+    def eval_Variable(self, node):
+        """
+        Evaluates a variable and returns the value bound to it.
+        """
+        return self.env.lookup(node.name, line=node.line, column=node.column)
+
+    def eval_Index(self, node):
+        """
+        Evaluate an indexed array access.
+        """
+        receiver = self.eval(node.receiver)
+        if not isinstance(receiver, NexArray):
+            raise NexRuntimeError(
+                f"cannot index value of type {self._runtime_type_name(receiver)}; expected array",
+                line=node.line,
+                column=node.column,
+            )
+
+        index = self.eval(node.index)
+        if type(index) is not int:
+            raise NexRuntimeError(
+                f"array index must evaluate to int, got {self._runtime_type_name(index)}",
+                line=node.index.line,
+                column=node.index.column,
+            )
+
+        try:
+            return receiver.get(index)
+        except IndexError:
+            raise NexIndexError(
+                f"array index {index} out of bounds for length {receiver.length()}",
+                line=node.index.line,
+                column=node.index.column,
+            )
+
+    def eval_FuncCall(self, node):
+        """
+        Evaluates a function call
+        """
+        # evaluate all argument expressions
+        argvalues = [self.eval(arg) for arg in node.arguments]
+
+        # resolve the best overload for this call site
+        try:
+            func = self._resolve_function_overload(node.callee, argvalues)
+        except NexFunctionStoreError as e:
+            raise NexRuntimeError(e.message, line=node.line, column=node.column)
+
+        return self._invoke_function(
+            func, argvalues, line=node.line, column=node.column
+        )
+
+    def eval_MethodCall(self, node):
+        """
+        Evaluate a method-style call by lowering it to a regular function call
+        with the receiver as the first argument.
+        """
+        receiver = self.eval(node.receiver)
+        argvalues = [receiver]
+        argvalues.extend(self.eval(arg) for arg in node.arguments)
+
+        try:
+            func = self._resolve_function_overload(node.method, argvalues)
+        except NexFunctionStoreError as e:
+            raise NexRuntimeError(e.message, line=node.line, column=node.column)
+
+        return self._invoke_function(
+            func, argvalues, line=node.line, column=node.column
+        )
+
+    def _invoke_function(
+        self, func, argvalues: list[object], *, line: int, column: int
+    ):
+        """
+        Invoke a resolved builtin or user-defined function.
+        """
+
+        # call a user-defined function
+        if isinstance(func, UserFunction):
+            caller_values = self.env.values
+            self.env.values = [caller_values[0], {}]
+            try:
+                for param, arg in zip(func.params, argvalues):
+                    self.env.declare(param[1], param[0], arg)
+
+                try:
+                    for stmt in func.body:
+                        self.exec(stmt)
+                except NexReturnSignal as ret:
+                    if not self._matches_type(func.return_type, ret.value):
+                        argtype = self._runtime_type_name(ret.value)
+                        raise NexRuntimeError(
+                            f"return value has wrong type, expected `{func.return_type}` while got `{argtype}`",
+                            line=line,
+                            column=column,
+                        )
+                    return ret.value
+            finally:
+                self.env.values = caller_values
+
+            # if no return value was encountered, the return value is "void" and it
+            # should be explicitly checked then that the function returns this
+            if not self._matches_type(func.return_type, None):
+                raise NexRuntimeError(
+                    f"non-void function `{func.callee}` returned void",
+                    line=line,
+                    column=column,
+                )
+
+            return None
+
+        # call a builtin function
+        if isinstance(func, BuiltinFunction):
+            try:
+                ret = func.call(argvalues)
+            except NexRuntimeError:
+                raise
+            except Exception as exc:
+                raise NexRuntimeError(
+                    f"builtin function `{func.callee}` failed: {exc}",
+                    line=line,
+                    column=column,
+                ) from exc
+            if not self._matches_type(func.return_type, ret):
+                argtype = self._runtime_type_name(ret)
+                raise NexRuntimeError(
+                    f"return value has wrong type, expected `{func.return_type}` while got `{argtype}`",
+                    line=line,
+                    column=column,
+                )
+            return ret
+
+        raise RuntimeError("unknown function subtype")
+
+    def eval_Postfix(self, node):
+        """
+        Evaluate a postfix increment/decrement expression. The expression
+        returns the original value and updates the variable as a side effect.
+        """
+        if not hasattr(node.expr, "name"):
+            raise NexRuntimeError(
+                f"postfix operator `{node.op}` expects a variable operand",
+                line=node.line,
+                column=node.column,
+            )
+
+        current = self.eval(node.expr)
+        if type(current) is not int:
+            raise NexRuntimeError(
+                f"cannot apply postfix operator `{node.op}` to type "
+                f"{self._runtime_type_name(current)}; expected int",
+                line=node.line,
+                column=node.column,
+            )
+
+        delta = 1 if node.op == "++" else -1
+        self.env.assign(
+            node.expr.name,
+            current + delta,
+            line=node.line,
+            column=node.column,
+        )
+        return current
+
+    def _resolve_index_target(self, target: Index) -> tuple[NexArray, int]:
+        receiver = self.eval(target.receiver)
+        if not isinstance(receiver, NexArray):
+            raise NexRuntimeError(
+                f"cannot index-assign value of type {self._runtime_type_name(receiver)}; expected array",
+                line=target.line,
+                column=target.column,
+            )
+
+        index = self.eval(target.index)
+        if type(index) is not int:
+            raise NexRuntimeError(
+                f"array index must evaluate to int, got {self._runtime_type_name(index)}",
+                line=target.index.line,
+                column=target.index.column,
+            )
+
+        return receiver, index
+
+    def _eval_compound_assignment_value(self, expr, current: object):
+        if not isinstance(expr, Binary):
+            raise RuntimeError("compound assignment expected lowered binary expression")
+
+        right = self.eval(expr.right)
+        return self._apply_binary_operator(expr, current, right)
+
+    def _apply_binary_operator(self, node: Binary, left: object, right: object):
         if node.op == "+":
             if self._both_of_type(left, right, int) or self._both_of_type(
                 left, right, str
@@ -288,6 +515,18 @@ class Interpreter:
                 line=node.line,
                 column=node.column,
             )
+
+        if node.op == "^":
+            self._require_matching_types(
+                node, node.op, left, right, int, "int operands"
+            )
+            if right < 0:
+                raise NexRuntimeError(
+                    "operator `^` does not support negative exponents",
+                    line=node.line,
+                    column=node.column,
+                )
+            return left**right
 
         if node.op in ("-", "*", "/", "%"):
             self._require_matching_types(
@@ -302,7 +541,7 @@ class Interpreter:
                     raise NexRuntimeError(
                         "division by zero", line=node.line, column=node.column
                     )
-                return int(left / right)
+                return self._truncate_division_toward_zero(left, right)
             if node.op == "%":
                 if right == 0:
                     raise NexRuntimeError(
@@ -330,10 +569,18 @@ class Interpreter:
             )
 
         if node.op in ("==", "!="):
-            if type(left) is not type(right):
+            left_type = self._runtime_type_name(left)
+            right_type = self._runtime_type_name(right)
+            if left_type == "void" or right_type == "void":
+                raise NexRuntimeError(
+                    f"operator `{node.op}` does not support void operands",
+                    line=node.line,
+                    column=node.column,
+                )
+            if left_type != right_type:
                 raise NexRuntimeError(
                     f"operator `{node.op}` expects operands of the same type, got "
-                    f"{self._runtime_type_name(left)} and {self._runtime_type_name(right)}",
+                    f"{left_type} and {right_type}",
                     line=node.line,
                     column=node.column,
                 )
@@ -341,81 +588,13 @@ class Interpreter:
 
         raise NotImplementedError(f"Unsupported operator: {node.op}")
 
-    def eval_Variable(self, node):
-        """
-        Evaluates a variable and returns the value bound to it.
-        """
-        return self.env.lookup(node.name, line=node.line, column=node.column)
-
-    def eval_FuncCall(self, node):
-        """
-        Evaluates a function call
-        """
-        # try to grab the function definition from the function store
-        try:
-            func = self.function_store.lookup_function(node.callee)
-        except NexFunctionStoreError as e:
-            raise NexRuntimeError(e.message, line=node.line, column=node.column)
-
-        # check whether all variables match
-        if node.arity != func.arity:
-            raise NexRuntimeError(
-                f"incorrect number of arguments provided {node.arity} != {func.arity}",
-                line=node.line,
-                column=node.column,
-            )
-
-        # evaluate all argument expressions
-        argvalues = []
-        for arg in node.arguments:
-            argvalues.append(self.eval(arg))
-
-        # check all parameter types
-        for param, arg in zip(func.arguments, argvalues):
-            if not self._matches_type(param[0], arg):
-                argtype = self._runtime_type_name(arg)
-                raise NexRuntimeError(
-                    f"param `{param[1]}` has the wrong type, encountered `{argtype}` while expected `{param[0]}`",
-                    line=node.line,
-                    column=node.column,
-                )
-
-        # push new environment
-        self.env.push()
-
-        # allocate all variables
-        for param, arg in zip(func.arguments, argvalues):
-            self.env.declare(param[1], param[0], arg)
-
-        try:
-            for stmt in func.body:
-                self.exec(stmt)
-        except NexReturnSignal as ret:
-            if not self._matches_type(func.return_type, ret.value):
-                argtype = self._runtime_type_name(ret.value)
-                raise NexRuntimeError(
-                    f"return value has wrong type, expected `{func.return_type}` while got `{argtype}`",
-                    line=node.line,
-                    column=node.column,
-                )
-            return ret.value
-        finally:
-            self.env.pop()
-
-        # if no return value was encountered, the return value is "void" and it
-        # should be explicitly checked then that the function returns this
-        if not self._matches_type(func.return_type, None):
-            raise NexRuntimeError(
-                f"non-void function `{func.callee}` returned void",
-                line=node.line,
-                column=node.column,
-            )
-
     # -------------------------------------------------------------------------
     # HELPERS
     # -------------------------------------------------------------------------
 
     def _matches_type(self, declared_type: str, val: object):
+        if declared_type == "any":
+            return val is not None
         if declared_type == "int":
             return type(val) is int
         if declared_type == "str":
@@ -424,6 +603,8 @@ class Interpreter:
             return type(val) is bool
         if declared_type == "void":
             return val is None
+        if declared_type.startswith("array<"):
+            return isinstance(val, NexArray) and val.declared_type == declared_type
 
         raise NexRuntimeError(f"unknown type: `{declared_type}`")
 
@@ -436,8 +617,59 @@ class Interpreter:
             return "bool"
         if val is None:
             return "void"
+        if isinstance(val, NexArray):
+            return val.declared_type
 
         return type(val).__name__
+
+    def _make_empty_array(self, declared_type: str) -> NexArray:
+        if declared_type == "array<int>":
+            return NexArray("int")
+        if declared_type == "array<str>":
+            return NexArray("str")
+        raise NexRuntimeError(f"unknown array type: `{declared_type}`")
+
+    def _resolve_function_overload(self, callee: str, argvalues: list[object]):
+        overloads = self.function_store.lookup_function(callee)
+        arity_matches = [
+            func for func in overloads if len(func.params) == len(argvalues)
+        ]
+        if not arity_matches:
+            raise NexFunctionStoreError(
+                f"no overload of function `{callee}` accepts {len(argvalues)} arguments"
+            )
+
+        compatible: list[tuple[int, object]] = []
+        for func in arity_matches:
+            score = 0
+            for param, arg in zip(func.params, argvalues):
+                param_type = param[0]
+                if param_type == "any":
+                    if not self._matches_type(param_type, arg):
+                        break
+                    score += 1
+                    continue
+                if not self._matches_type(param_type, arg):
+                    break
+                score += 2
+            else:
+                compatible.append((score, func))
+
+        if not compatible:
+            argtypes = ", ".join(self._runtime_type_name(arg) for arg in argvalues)
+            raise NexFunctionStoreError(
+                f"no overload of function `{callee}` matches argument types ({argtypes})"
+            )
+
+        best_score = max(score for score, _ in compatible)
+        best = [func for score, func in compatible if score == best_score]
+        if len(best) > 1:
+            argtypes = ", ".join(self._runtime_type_name(arg) for arg in argvalues)
+            raise NexFunctionStoreError(
+                f"call to function `{callee}` is ambiguous for argument types ({argtypes})"
+            )
+
+        return best[0]
 
     def _checked_condition(self, expr):
         val = self.eval(expr)
@@ -454,6 +686,12 @@ class Interpreter:
 
     def _both_of_type(self, left: object, right: object, expected_type: type) -> bool:
         return type(left) is expected_type and type(right) is expected_type
+
+    def _truncate_division_toward_zero(self, left: int, right: int) -> int:
+        quotient = abs(left) // abs(right)
+        if (left < 0) != (right < 0):
+            return -quotient
+        return quotient
 
     def _require_matching_types(
         self,
