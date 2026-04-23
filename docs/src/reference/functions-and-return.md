@@ -41,6 +41,10 @@ Parameters are typed, just like variables. That means `a` and `b` are local
 names that exist only inside the function body, and each one has a declared
 type.
 
+The special `any` type is not part of the ordinary user-facing function type
+system. It is reserved for selected built-in functions such as `print(...)`,
+where the runtime intentionally accepts values of different concrete types.
+
 ## Calling functions
 
 A function call uses the function name followed by parentheses.
@@ -91,6 +95,8 @@ NEX currently supports these return types:
 - `int`
 - `str`
 - `bool`
+- `array<int>`
+- `array<str>`
 - `void`
 
 A `void` function does not produce a usable value. It may use plain `return;`
@@ -137,18 +143,21 @@ Using `return` outside a function is a parse error.
 
 NEX follows these rules for functions:
 
-- function names must be unique
+- functions may share a name if their parameter-type signatures differ
 - parameter names must be unique within one function
 - nested function declarations are not allowed
 - a function must be declared before it is called
-- calls must provide the correct number of arguments
-- each argument must match the declared parameter type
+- calls must provide the correct number of arguments for some matching overload
+- each argument must match the declared parameter type of the selected overload
 - non-void functions must return a value of the declared type
 - `return` is only allowed inside a function body
 
 These rules keep function behavior explicit. That makes the language easier to
 teach and easier to reason about, because the interpreter never has to guess
 what a call or return statement was supposed to mean.
+
+When several overloads share the same name, NEX resolves the call using the
+argument count and argument types.
 
 That means the following program is invalid:
 

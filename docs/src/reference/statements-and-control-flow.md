@@ -154,6 +154,7 @@ Array syntax appears in both statements and expressions:
 ```nex
 array<int> arr;
 arr.resize(3);
+arr.reset();
 arr[0] = 10;
 int last = arr[-1];
 ```
@@ -162,5 +163,6 @@ Here:
 
 - `array<int> arr;` is a declaration statement
 - `arr.resize(3);` is an expression statement
+- `arr.reset();` is an expression statement
 - `arr[0] = 10;` is an assignment statement
 - `arr[-1]` is an expression used inside an initializer

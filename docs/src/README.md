@@ -64,6 +64,12 @@ source-level behavior rather than interpreter internals, but they are written
 with implementation-minded readers in mind. When the implementation and the
 book disagree, that is a bug to fix rather than a reason to guess.
 
+When writing documentation, fenced <code class="language-nex">```nex</code>
+blocks are highlighted automatically. Inline snippets can also be highlighted,
+but inline Markdown backticks do not carry language information. For inline NEX
+syntax, use raw HTML such as
+<code class="language-nex">&lt;code class="language-nex"&gt;arr.length()&lt;/code&gt;</code>.
+
 The current implementation also provides structured diagnostics for lexing,
 parsing, and runtime failures. These diagnostics report the phase together with
 source line and column information when available, which makes NEX a better

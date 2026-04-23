@@ -49,6 +49,13 @@ code.language-nex .hljs-type {
   font-weight: 700;
 }
 
+pre code.language-nex .hljs-meta,
+code.language-nex .hljs-meta {
+  color: #7c5c2e;
+  font-style: italic;
+  font-weight: 600;
+}
+
 pre code.language-nex .hljs-built_in,
 code.language-nex .hljs-built_in {
   color: #0f766e;

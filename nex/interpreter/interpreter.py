@@ -3,6 +3,7 @@ from nex.common import NexRuntimeError
 from .environment import Environment
 from .function import BuiltinFunction, UserFunction
 from .function_store import FunctionStore, NexFunctionStoreError
+from .nex_array import NexArray
 
 
 class NexReturnSignal(Exception):
@@ -75,6 +76,18 @@ class Interpreter:
             column=node.initializer.column,
         )
 
+    def exec_ArrayDecl(self, node):
+        """
+        Declare an empty array value.
+        """
+        self.env.declare(
+            node.name,
+            node.type,
+            self._make_empty_array(node.type),
+            line=node.line,
+            column=node.column,
+        )
+
     def exec_Assign(self, node):
         """
         Assigns a value to variable or declares and initializes a new variable
@@ -88,6 +101,44 @@ class Interpreter:
             value_line=node.expr.line,
             value_column=node.expr.column,
         )
+
+    def exec_IndexAssign(self, node):
+        """
+        Assign into an indexed array slot.
+        """
+        receiver = self.eval(node.target.receiver)
+        if not isinstance(receiver, NexArray):
+            raise NexRuntimeError(
+                f"cannot index-assign value of type {self._runtime_type_name(receiver)}; expected array",
+                line=node.target.line,
+                column=node.target.column,
+            )
+
+        index = self.eval(node.target.index)
+        if type(index) is not int:
+            raise NexRuntimeError(
+                f"array index must evaluate to int, got {self._runtime_type_name(index)}",
+                line=node.target.index.line,
+                column=node.target.index.column,
+            )
+
+        value = self.eval(node.expr)
+        if not self._matches_type(receiver.element_type, value):
+            raise NexRuntimeError(
+                f"cannot assign value of type {self._runtime_type_name(value)} "
+                f"to {receiver.declared_type} element",
+                line=node.expr.line,
+                column=node.expr.column,
+            )
+
+        try:
+            receiver.set(index, value)
+        except IndexError:
+            raise NexRuntimeError(
+                f"array index {index} out of bounds for length {receiver.length()}",
+                line=node.target.index.line,
+                column=node.target.index.column,
+            )
 
     def exec_Block(self, node):
         """
@@ -329,6 +380,35 @@ class Interpreter:
         """
         return self.env.lookup(node.name, line=node.line, column=node.column)
 
+    def eval_Index(self, node):
+        """
+        Evaluate an indexed array access.
+        """
+        receiver = self.eval(node.receiver)
+        if not isinstance(receiver, NexArray):
+            raise NexRuntimeError(
+                f"cannot index value of type {self._runtime_type_name(receiver)}; expected array",
+                line=node.line,
+                column=node.column,
+            )
+
+        index = self.eval(node.index)
+        if type(index) is not int:
+            raise NexRuntimeError(
+                f"array index must evaluate to int, got {self._runtime_type_name(index)}",
+                line=node.index.line,
+                column=node.index.column,
+            )
+
+        try:
+            return receiver.get(index)
+        except IndexError:
+            raise NexRuntimeError(
+                f"array index {index} out of bounds for length {receiver.length()}",
+                line=node.index.line,
+                column=node.index.column,
+            )
+
     def eval_FuncCall(self, node):
         """
         Evaluates a function call
@@ -341,6 +421,35 @@ class Interpreter:
             func = self._resolve_function_overload(node.callee, argvalues)
         except NexFunctionStoreError as e:
             raise NexRuntimeError(e.message, line=node.line, column=node.column)
+
+        return self._invoke_function(
+            func, argvalues, line=node.line, column=node.column
+        )
+
+    def eval_MethodCall(self, node):
+        """
+        Evaluate a method-style call by lowering it to a regular function call
+        with the receiver as the first argument.
+        """
+        receiver = self.eval(node.receiver)
+        argvalues = [receiver]
+        argvalues.extend(self.eval(arg) for arg in node.arguments)
+
+        try:
+            func = self._resolve_function_overload(node.method, argvalues)
+        except NexFunctionStoreError as e:
+            raise NexRuntimeError(e.message, line=node.line, column=node.column)
+
+        return self._invoke_function(
+            func, argvalues, line=node.line, column=node.column
+        )
+
+    def _invoke_function(
+        self, func, argvalues: list[object], *, line: int, column: int
+    ):
+        """
+        Invoke a resolved builtin or user-defined function.
+        """
 
         # call a user-defined function
         if isinstance(func, UserFunction):
@@ -356,8 +465,8 @@ class Interpreter:
                     argtype = self._runtime_type_name(ret.value)
                     raise NexRuntimeError(
                         f"return value has wrong type, expected `{func.return_type}` while got `{argtype}`",
-                        line=node.line,
-                        column=node.column,
+                        line=line,
+                        column=column,
                     )
                 return ret.value
             finally:
@@ -368,8 +477,8 @@ class Interpreter:
             if not self._matches_type(func.return_type, None):
                 raise NexRuntimeError(
                     f"non-void function `{func.callee}` returned void",
-                    line=node.line,
-                    column=node.column,
+                    line=line,
+                    column=column,
                 )
 
             return None
@@ -383,15 +492,15 @@ class Interpreter:
             except Exception as exc:
                 raise NexRuntimeError(
                     f"builtin function `{func.callee}` failed: {exc}",
-                    line=node.line,
-                    column=node.column,
+                    line=line,
+                    column=column,
                 ) from exc
             if not self._matches_type(func.return_type, ret):
                 argtype = self._runtime_type_name(ret)
                 raise NexRuntimeError(
                     f"return value has wrong type, expected `{func.return_type}` while got `{argtype}`",
-                    line=node.line,
-                    column=node.column,
+                    line=line,
+                    column=column,
                 )
             return ret
 
@@ -442,6 +551,8 @@ class Interpreter:
             return type(val) is bool
         if declared_type == "void":
             return val is None
+        if declared_type.startswith("array<"):
+            return isinstance(val, NexArray) and val.declared_type == declared_type
 
         raise NexRuntimeError(f"unknown type: `{declared_type}`")
 
@@ -454,8 +565,17 @@ class Interpreter:
             return "bool"
         if val is None:
             return "void"
+        if isinstance(val, NexArray):
+            return val.declared_type
 
         return type(val).__name__
+
+    def _make_empty_array(self, declared_type: str) -> NexArray:
+        if declared_type == "array<int>":
+            return NexArray("int")
+        if declared_type == "array<str>":
+            return NexArray("str")
+        raise NexRuntimeError(f"unknown array type: `{declared_type}`")
 
     def _resolve_function_overload(self, callee: str, argvalues: list[object]):
         overloads = self.function_store.lookup_function(callee)

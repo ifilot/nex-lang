@@ -77,7 +77,9 @@ array<str> names;
 ```
 
 Array creation is currently always empty. Arrays therefore use declaration
-syntax without an initializer expression.
+syntax without an initializer expression. This makes array declarations a small
+special case in the current language: unlike scalar declarations, they create a
+valid value directly without needing an explicit initializer.
 
 Supported array types are:
 
@@ -94,14 +96,25 @@ str last = names[-1];
 Negative indices count from the back of the array. For example, `arr[-1]`
 refers to the last element and `arr[-2]` to the second-to-last element.
 
-Arrays also support method-style operations in the language surface:
+Elements can also be updated with indexed assignment:
+
+```nex
+numbers[0] = 10;
+names[-1] = "Ada";
+```
+
+Arrays also support resizing, resetting, and length queries:
 
 ```nex
 numbers.resize(10);
+numbers.reset();
 int count = numbers.length();
-numbers.push(42);
-int removed = numbers.pop();
 ```
+
+These method-style calls are surface syntax for ordinary function calls. In
+other words, `numbers.resize(10)` behaves like `resize(numbers, 10)`, and
+`numbers.length()` behaves like `length(numbers)`. Likewise,
+`numbers.reset()` behaves like `reset(numbers)`.
 
 ## Variable declarations
 

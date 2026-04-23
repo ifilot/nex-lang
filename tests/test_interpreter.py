@@ -1,7 +1,9 @@
+import numpy as np
 import pytest
 
 from nex import Interpreter, Lexer, Parser, __version__
 from nex.common import NexParseError, NexRuntimeError
+from nex.interpreter.nex_array import NexArray
 
 
 def run_source(source: str) -> None:
@@ -11,6 +13,11 @@ def run_source(source: str) -> None:
     tokens = Lexer(source).tokenize()
     program = Parser(tokens).parse()
     Interpreter().run(program)
+
+
+def parse_source(source: str):
+    tokens = Lexer(source).tokenize()
+    return Parser(tokens).parse()
 
 
 def test_executes_typed_assignment_and_print(capsys):
@@ -41,6 +48,153 @@ def test_rejects_assignment_of_wrong_type():
     )
     assert excinfo.value.line == 3
     assert excinfo.value.column == 17
+
+
+def test_array_declaration_creates_empty_backend_values():
+    interpreter = Interpreter()
+    interpreter.run(parse_source("array<int> xs; array<str> ys;"))
+
+    xs = interpreter.env.lookup("xs")
+    ys = interpreter.env.lookup("ys")
+
+    assert isinstance(xs, NexArray)
+    assert xs.declared_type == "array<int>"
+    assert xs.length() == 0
+    assert isinstance(xs.storage, np.ndarray)
+
+    assert isinstance(ys, NexArray)
+    assert ys.declared_type == "array<str>"
+    assert ys.length() == 0
+    assert ys.storage == []
+
+
+def test_reads_array_element_with_negative_index(capsys):
+    interpreter = Interpreter()
+    interpreter.run(parse_source("array<int> xs;"))
+    xs = interpreter.env.lookup("xs")
+    xs.storage = np.array([10, 20, 30], dtype=np.int64)
+
+    interpreter.run(parse_source("print(xs[-1]);"))
+
+    captured = capsys.readouterr()
+    assert captured.out == "30\n"
+
+
+def test_assigns_array_element_with_negative_index(capsys):
+    interpreter = Interpreter()
+    interpreter.run(parse_source("array<str> names;"))
+    names = interpreter.env.lookup("names")
+    names.storage = ["Ada", "Grace"]
+
+    interpreter.run(parse_source('names[-1] = "Linus"; print(names[-1]);'))
+
+    captured = capsys.readouterr()
+    assert captured.out == "Linus\n"
+    assert names.storage == ["Ada", "Linus"]
+
+
+def test_rejects_out_of_bounds_array_access():
+    interpreter = Interpreter()
+    interpreter.run(parse_source("array<int> xs;"))
+
+    with pytest.raises(NexRuntimeError) as excinfo:
+        interpreter.run(parse_source("print(xs[0]);"))
+
+    assert excinfo.value.message == "array index 0 out of bounds for length 0"
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 10
+
+
+def test_rejects_out_of_bounds_array_assignment():
+    interpreter = Interpreter()
+    interpreter.run(parse_source("array<int> xs;"))
+
+    with pytest.raises(NexRuntimeError) as excinfo:
+        interpreter.run(parse_source("xs[-1] = 1;"))
+
+    assert excinfo.value.message == "array index -1 out of bounds for length 0"
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 4
+
+
+def test_rejects_array_assignment_of_wrong_element_type():
+    interpreter = Interpreter()
+    interpreter.run(parse_source("array<int> xs;"))
+    xs = interpreter.env.lookup("xs")
+    xs.storage = np.array([1], dtype=np.int64)
+
+    with pytest.raises(NexRuntimeError) as excinfo:
+        interpreter.run(parse_source('xs[0] = "hello";'))
+
+    assert (
+        excinfo.value.message == "cannot assign value of type str to array<int> element"
+    )
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 9
+
+
+def test_builtin_length_supports_direct_and_method_style_calls(capsys):
+    interpreter = Interpreter()
+    interpreter.run(parse_source("array<int> xs;"))
+    xs = interpreter.env.lookup("xs")
+    xs.storage = np.array([10, 20, 30], dtype=np.int64)
+
+    interpreter.run(parse_source("print(length(xs)); print(xs.length());"))
+
+    captured = capsys.readouterr()
+    assert captured.out == "3\n3\n"
+
+
+def test_builtin_resize_supports_direct_and_method_style_calls(capsys):
+    interpreter = Interpreter()
+    interpreter.run(parse_source("array<str> names;"))
+    names = interpreter.env.lookup("names")
+    names.storage = ["Ada"]
+
+    interpreter.run(
+        parse_source(
+            "resize(names, 3); print(names[1]); names.resize(4); print(names.length());"
+        )
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out == "\n4\n"
+    assert names.storage == ["Ada", "", "", ""]
+
+
+def test_builtin_resize_rejects_negative_sizes():
+    interpreter = Interpreter()
+    interpreter.run(parse_source("array<int> xs;"))
+
+    with pytest.raises(NexRuntimeError) as excinfo:
+        interpreter.run(parse_source("resize(xs, -1);"))
+
+    assert (
+        excinfo.value.message
+        == "builtin function `resize` failed: size must be non-negative"
+    )
+    assert excinfo.value.line == 1
+    assert excinfo.value.column == 1
+
+
+def test_builtin_reset_supports_direct_and_method_style_calls(capsys):
+    interpreter = Interpreter()
+    interpreter.run(parse_source("array<int> xs; array<str> names;"))
+    xs = interpreter.env.lookup("xs")
+    names = interpreter.env.lookup("names")
+    xs.storage = np.array([10, 20, 30], dtype=np.int64)
+    names.storage = ["Ada", "Grace"]
+
+    interpreter.run(
+        parse_source(
+            "reset(xs); names.reset(); print(xs[0]); print(xs[-1]); print(names[0]); print(names[-1]);"
+        )
+    )
+
+    captured = capsys.readouterr()
+    assert captured.out == "0\n0\n\n\n"
+    assert xs.storage.tolist() == [0, 0, 0]
+    assert names.storage == ["", ""]
 
 
 def test_rejects_if_condition_that_is_not_bool():

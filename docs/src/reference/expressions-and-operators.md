@@ -91,13 +91,18 @@ Method-style calls are postfix expressions attached to a receiver:
 
 ```nex
 arr.resize(100);
+arr.reset();
 int size = arr.length();
-arr.push(42);
-int removed = arr.pop();
 ```
 
-This syntax is used for array operations such as resizing, length queries,
-push, and pop.
+This syntax is currently used for array operations such as resizing, resetting,
+and length queries.
+
+Method calls in NEX use a uniform function call style. That means the receiver
+expression becomes the first argument of an ordinary function call. For
+example, `arr.length()` behaves like `length(arr)`, and `arr.resize(100)`
+behaves like `resize(arr, 100)`. In the same way, `arr.reset()` behaves like
+`reset(arr)`.
 
 ### Postfix increment and decrement
 

@@ -289,7 +289,7 @@ forms in the general grammar.
 - Postfix `++` and `--` are also part of the expression grammar. In the current
   implementation they are restricted to variable operands.
 - Postfix expressions now also include array indexing such as `arr[-1]` and
-  method-style calls such as `arr.length()` or `arr.push(1)`.
+  method-style calls such as `arr.length()`, `arr.resize(3)`, or `arr.reset()`.
 - `for` reuses declaration, assignment, and expression forms in its header, but
   without extra trailing semicolons inside those clauses.
 - The grammar allows repeated comparison operators syntactically. Runtime type

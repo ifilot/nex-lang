@@ -1,4 +1,12 @@
-from .builtin import nex_input, nex_print, nex_print_inline, nex_version
+from .builtin import (
+    nex_input,
+    nex_length,
+    nex_print,
+    nex_print_inline,
+    nex_reset,
+    nex_resize,
+    nex_version,
+)
 from .function import BuiltinFunction, Function
 
 
@@ -14,12 +22,18 @@ class FunctionStore:
 
     def __init__(self):
         """
-        Default initializer
+        Initialize the function registry and preload builtin functions.
         """
         self.functions = {}
         self._load_builtin_functions()
 
     def declare_function(self, func: Function):
+        """
+        Register one function overload under its callee name.
+
+        Overloads may share the same name as long as their parameter-type
+        signatures differ. Redeclaring an identical signature is rejected.
+        """
         overloads = self.functions.setdefault(func.callee, [])
         if any(existing.param_types == func.param_types for existing in overloads):
             signature = ", ".join(func.param_types)
@@ -29,51 +43,99 @@ class FunctionStore:
         overloads.append(func)
 
     def lookup_function(self, callee: str):
+        """
+        Return all overloads registered for the given function name.
+        """
         if callee in self.functions:
             return self.functions[callee]
         else:
             raise NexFunctionStoreError(f"undefined function `{callee}`")
 
     def _load(self, func):
+        """
+        Insert one builtin function through the normal declaration path.
+        """
         self.declare_function(func)
 
+    def _load_from_specs(self, specs):
+        """
+        Build builtin function objects from a compact sequence of specs.
+        """
+        for spec in specs:
+            self._load(
+                BuiltinFunction(
+                    spec["callee"],
+                    spec["params"],
+                    spec["return_type"],
+                    spec["handler"],
+                )
+            )
+
     def _load_builtin_functions(self):
-        # print function
-        self._load(
-            BuiltinFunction(
-                "print",
-                (("any", "msg"),),  # never forget the trailing comma!
-                "void",
-                nex_print,
-            )
-        )
-
-        # print without newline function
-        self._load(
-            BuiltinFunction(
-                "print_inline",
-                (("any", "msg"),),  # never forget the trailing comma!
-                "void",
-                nex_print_inline,
-            )
-        )
-
-        # version function
-        self._load(
-            BuiltinFunction(
-                "version",
-                (),  # empty tuple
-                "str",
-                nex_version,
-            )
-        )
-
-        # version function
-        self._load(
-            BuiltinFunction(
-                "input",
-                (),  # empty tuple
-                "str",
-                nex_input,
-            )
+        """
+        Register the builtin function overload set available in every program.
+        """
+        self._load_from_specs(
+            [
+                {
+                    "callee": "print",
+                    "params": (("any", "msg"),),
+                    "return_type": "void",
+                    "handler": nex_print,
+                },
+                {
+                    "callee": "print_inline",
+                    "params": (("any", "msg"),),
+                    "return_type": "void",
+                    "handler": nex_print_inline,
+                },
+                {
+                    "callee": "version",
+                    "params": (),
+                    "return_type": "str",
+                    "handler": nex_version,
+                },
+                {
+                    "callee": "input",
+                    "params": (),
+                    "return_type": "str",
+                    "handler": nex_input,
+                },
+                {
+                    "callee": "resize",
+                    "params": (("array<int>", "arr"), ("int", "size")),
+                    "return_type": "void",
+                    "handler": nex_resize,
+                },
+                {
+                    "callee": "resize",
+                    "params": (("array<str>", "arr"), ("int", "size")),
+                    "return_type": "void",
+                    "handler": nex_resize,
+                },
+                {
+                    "callee": "length",
+                    "params": (("array<int>", "arr"),),
+                    "return_type": "int",
+                    "handler": nex_length,
+                },
+                {
+                    "callee": "length",
+                    "params": (("array<str>", "arr"),),
+                    "return_type": "int",
+                    "handler": nex_length,
+                },
+                {
+                    "callee": "reset",
+                    "params": (("array<int>", "arr"),),
+                    "return_type": "void",
+                    "handler": nex_reset,
+                },
+                {
+                    "callee": "reset",
+                    "params": (("array<str>", "arr"),),
+                    "return_type": "void",
+                    "handler": nex_reset,
+                },
+            ]
         )
