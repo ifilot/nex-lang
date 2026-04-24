@@ -5,7 +5,26 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "nex-lang"
 dynamic = ["version"]
+description = "A small experimental programming language implemented in Python."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+keywords = ["interpreter", "language", "lexer", "parser", "programming-language"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Environment :: Console",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Software Development :: Compilers",
+]
 dependencies = ["colorama>=0.4.6"]
+
+[project.urls]
+Documentation = "https://ifilot.github.io/nex-lang/"
+Issues = "https://github.com/ifilot/nex-lang/issues"
+Repository = "https://github.com/ifilot/nex-lang"
 
 [project.optional-dependencies]
 dev = ["pre-commit>=4", "pytest>=8", "ruff>=0.6"]

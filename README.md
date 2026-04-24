@@ -1,7 +1,10 @@
 # NEX
 
+[![PyPI Version](https://img.shields.io/pypi/v/nex-lang)](https://pypi.org/project/nex-lang/)
+[![Python Version](https://img.shields.io/badge/dynamic/toml?url=https%3A%2F%2Fraw.githubusercontent.com%2Fifilot%2Fnex-lang%2Fmaster%2Fpyproject.toml&query=%24.project.requires-python&label=python)](https://github.com/ifilot/nex-lang/blob/master/pyproject.toml)
 [![Unit Tests](https://github.com/ifilot/nex-lang/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/ifilot/nex-lang/actions/workflows/unit-tests.yml)
 [![Docs](https://github.com/ifilot/nex-lang/actions/workflows/docs.yml/badge.svg)](https://github.com/ifilot/nex-lang/actions/workflows/docs.yml)
+![License: GPLv3](https://img.shields.io/badge/license-GPLv3-blue)
 
 `NEX` is a small experimental programming language implemented in Python.
 
@@ -132,6 +135,20 @@ After that, reload the VS Code window.
 
 PyPI releases are published from Git tags that start with `v`. The published
 package name is `nex-lang`. The installed CLI command remains `nexlang`.
+
+Before publishing, the release workflow checks that the tag matches
+`nex.__version__` exactly, for example `v0.3.0`, and that the package version
+does not already exist on PyPI.
+
+For local releases, create the tag through the guarded helper:
+
+```bash
+python scripts/create_release_tag.py
+```
+
+The helper creates `v<nex.__version__>` only after checking that the local Git
+tag does not already exist and that the package version is still available on
+PyPI.
 
 ## Testing
 

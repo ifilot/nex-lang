@@ -43,6 +43,9 @@ jobs:
       - name: Check generated grammar diagrams
         run: python scripts/generate_grammar_diagrams.py --check
 
+      - name: Check release version metadata
+        run: python scripts/check_release_version.py --skip-index-check
+
       - name: Run unit tests
         run: python -m pytest -q tests
 
